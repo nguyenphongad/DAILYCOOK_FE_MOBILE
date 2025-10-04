@@ -1,12 +1,11 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack, router } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
-import CustomSplashScreen from '@/components/SplashScreen';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -39,7 +38,6 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
-  const [showSplash, setShowSplash] = useState(true);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -56,29 +54,16 @@ export default function RootLayout() {
     return null;
   }
 
-  // Xử lý kết thúc splash screen và điều hướng
-  const handleSplashFinish = () => {
-    setShowSplash(false);
-    // Delay một chút để đảm bảo state đã được cập nhật
-    setTimeout(() => {
-      router.replace('/(auth)/Login');
-    }, 100);
-  };
-
-  // Hiển thị màn hình Splash khi khởi động
-  if (showSplash) {
-    return <CustomSplashScreen onFinish={handleSplashFinish} />;
-  }
-
+  // Trả về navigation layout để điều hướng bình thường
   return <RootLayoutNav />;
 }
 
 function RootLayoutNav() {
   return (
     <ThemeProvider value={customLightTheme}>
-      {/* Đặt StatusBar style là "dark" để hiển thị chữ đen trên nền trắng */}
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen 

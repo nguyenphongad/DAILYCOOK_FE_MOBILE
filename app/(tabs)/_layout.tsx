@@ -43,11 +43,12 @@ export default function TabLayout() {
 			<StatusBar style="dark" />
 			<Tabs
 				screenOptions={{
-					tabBarActiveTintColor: '#3498db', // Màu khi active
+					tabBarActiveTintColor: '#35A55E', // Màu khi active - đã đổi từ #3498db sang #35A55E
 					tabBarInactiveTintColor: '#7f8c8d', // Màu khi không active
 					tabBarStyle: { 
 						backgroundColor: '#FFFFFF',  // Màu nền của tab bar
 						borderTopColor: '#e0e0e0',  // Màu viền trên của tab bar
+						marginTop: -50, 
 					},
 					headerStyle: {
 						backgroundColor: '#FFFFFF', // Màu nền của header
@@ -56,7 +57,7 @@ export default function TabLayout() {
 					headerTitleStyle: {
 						fontWeight: 'bold',
 					},
-					headerShown: true,
+					headerShown: false,
 				}}>
 				{tabMenus.map((tab) => (
 					<Tabs.Screen
