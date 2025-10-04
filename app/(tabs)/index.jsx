@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, FlatList, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, FlatList, Dimensions, Animated } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import HeaderComponent from '../../components/header/HeaderComponent';
@@ -21,42 +21,50 @@ const nutritionGoals = [
     id: '1',
     label: 'Protein',
     value: 215,
+    maxValue: 250, // Giá trị tối đa để tính %
     unit: 'gram',
     postfix: '+',
     backgroundColor: '#FFFFFF',
     iconSource: require('../../assets/images/icons_home/protein.png'),
     textColor: '#000000',
+    progressColor: '#38B74C', // Màu của thanh tiến trình
   },
   {
     id: '2',
     label: 'Kcal',
     value: 259,
+    maxValue: 500,
     unit: 'gram',
     postfix: '+',
     backgroundColor: '#FFDBAA',
     iconSource: require('../../assets/images/icons_home/calories.png'),
     textColor: '#000000',
+    progressColor: '#FF8C00', // Màu cam đậm
   },
   {
     id: '3',
     label: 'Nước',
     value: 1200,
+    maxValue: 2000,
     unit: 'ml',
     postfix: '',
     backgroundColor: '#BAE5D0',
     iconSource: require('../../assets/images/icons_home/water-bottle.png'),
     textColor: '#000000',
+    progressColor: '#1E90FF', // Màu xanh dương đậm
   },
   // Thay đổi tài nguyên của mục Chất xơ, dùng lại icon calories đã có
   {
     id: '4',
     label: 'Chất xơ',
     value: 25,
+    maxValue: 35,
     unit: 'gr',
     postfix: '',
     backgroundColor: '#E6F7FF',
-    iconSource: require('../../assets/images/icons_home/calories.png'), // Dùng lại icon đã có
+    iconSource: require('../../assets/images/icons_home/calories.png'),
     textColor: '#000000',
+    progressColor: '#4169E1', // Màu xanh dương đậm
   }
 ];
 
@@ -126,6 +134,24 @@ export default function HomeScreen() {
   const [currentMonth, setCurrentMonth] = useState(getMonthName(today.getMonth() + 1));
   const [selectedDate, setSelectedDate] = useState(today.getDate().toString());
   
+  // Tạo refs cho animation các thanh tiến trình
+  const progressAnims = useRef(nutritionGoals.map(() => new Animated.Value(0))).current;
+
+  // Chạy animation khi component mount
+  useEffect(() => {
+    const animations = progressAnims.map((anim, index) => {
+      const progressPercentage = Math.min(nutritionGoals[index].value / nutritionGoals[index].maxValue, 1);
+      return Animated.timing(anim, {
+        toValue: progressPercentage,
+        duration: 1000,
+        delay: 300 + index * 200, // Tạo hiệu ứng lần lượt
+        useNativeDriver: false
+      });
+    });
+
+    Animated.stagger(100, animations).start();
+  }, []);
+  
   // Tạo mảng các tuần (-1: tuần trước, 0: tuần hiện tại)
   const weeks = [
     { id: '-1', days: getWeekDays(today, -1) },
@@ -191,7 +217,7 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.nutritionList}
-            renderItem={({ item }) => (
+            renderItem={({ item, index }) => (
               <View style={[styles.nutritionCard, { backgroundColor: item.backgroundColor }]}>
                 {/* Header row with label and icon */}
                 <View style={styles.nutritionCardHeader}>
@@ -212,6 +238,22 @@ export default function HomeScreen() {
                   <Text style={[styles.nutritionCardUnit]}>
                     {item.unit}
                   </Text>
+                </View>
+                
+                {/* Progress Bar */}
+                <View style={styles.progressBarContainer}>
+                  <Animated.View 
+                    style={[
+                      styles.progressBarFill, 
+                      { 
+                        backgroundColor: item.progressColor,
+                        width: progressAnims[index].interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0%', '100%']
+                        })
+                      }
+                    ]}
+                  />
                 </View>
               </View>
             )}
@@ -415,6 +457,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
     marginBottom: 5,
+    justifyContent: 'space-between', // Để phân bố không gian đều
   },
   nutritionCardHeader: {
     flexDirection: 'row',
@@ -430,9 +473,7 @@ const styles = StyleSheet.create({
   nutritionCardContent: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    flex: 1,
-    marginTop: 'auto',
-    marginBottom: 5,
+    marginBottom: 8, // Thêm khoảng cách trước thanh tiến trình
   },
   nutritionCardValue: {
     fontSize: 24,
@@ -686,5 +727,18 @@ const styles = StyleSheet.create({
   detailsButtonText: {
     color: 'white',
     fontWeight: '500',
+  },
+  // Thêm style cho thanh tiến trình
+  progressBarContainer: {
+    width: '100%',
+    height: 3,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    borderRadius: 1.5,
+    overflow: 'hidden', // Đảm bảo thanh tiến trình không vượt ra ngoài
+    marginBottom: 5,
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 1.5,
   },
 });
