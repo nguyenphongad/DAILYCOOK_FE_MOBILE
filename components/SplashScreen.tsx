@@ -1,35 +1,22 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image, Animated } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { router } from 'expo-router';
 
-type SplashScreenProps = {
-  onFinish: () => void;
-};
-
-export default function SplashScreen({ onFinish }: SplashScreenProps) {
-  const fadeAnim = new Animated.Value(0);
-  
+export default function SplashScreen() {
   useEffect(() => {
-    // Animation fade in
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
-    
-    // Chuyển hướng sau 3 giây - CHỈ gọi onFinish và để _layout.tsx xử lý việc chuyển hướng
+    // Đơn giản chỉ đợi 2 giây rồi chuyển đến màn hình login
     const timer = setTimeout(() => {
-      onFinish(); // Gọi callback để thông báo splash đã kết thúc
+      router.replace('/(auth)/Login');
     }, 2000);
     
     return () => clearTimeout(timer);
-  }, [onFinish]);
+  }, []);
   
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      <Animated.View style={{ opacity: fadeAnim, alignItems: 'center' }}>
-        {/* Logo trong hình vuông bo tròn */}
+      <View style={styles.contentWrapper}>
         <View style={styles.logoContainer}>
           <Image 
             source={require('../assets/images/logo.png')} 
@@ -38,12 +25,9 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
           />
         </View>
         
-        {/* Tên ứng dụng */}
         <Text style={styles.title}>DAILY COOK</Text>
-        
-        {/* Slogan */}
         <Text style={styles.subtitle}>Thực đơn nhà mình</Text>
-      </Animated.View>
+      </View>
     </View>
   );
 }
@@ -54,6 +38,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#35A55E',
+  },
+  contentWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   logoContainer: {
     width: 130,
@@ -80,4 +68,3 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   }
 });
-   

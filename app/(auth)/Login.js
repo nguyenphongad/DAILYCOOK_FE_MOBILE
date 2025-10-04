@@ -1,11 +1,40 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen() {
+  // Animation cho các phần tử trong login screen
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const bottomSectionAnim = useRef(new Animated.Value(100)).current;
+
+  useEffect(() => {
+    // Chạy animation khi component mount
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+        delay: 100,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+        delay: 100,
+      }),
+      Animated.timing(bottomSectionAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+        delay: 200,
+      }),
+    ]).start();
+  }, []);
+
   const handleGoogleLogin = () => {
     // Tạm thời chỉ điều hướng đến home mà không thực sự đăng nhập
     router.replace('/(tabs)');
@@ -14,53 +43,72 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      
+
       {/* Phần hình ảnh phía trên không bị mờ */}
       <View style={styles.topSection}>
         <Image
-          source={require('../../assets/images/image_top.jpg')} 
+          source={require('../../assets/images/image_top.jpg')}
           style={styles.backgroundImage}
         />
         
-        {/* Thay thế LinearGradient bằng View có màu nền */}
-        <View style={styles.overlayBottom} />
-      </View>
-      
-      <View style={styles.bottomSection}>
-        {/* Logo và text đặt ở giữa màn hình theo chiều dọc */}
-        <View style={styles.contentContainer}>
+        {/* Thêm lớp phủ màu đen đen */}
+        <View style={styles.darkOverlay} />
+        
+        <Animated.View 
+          style={[
+            styles.contentContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
+        >
           <View style={styles.logoContainer}>
-            <Image 
-              source={require('../../assets/images/logo.png')} 
+            <Image
+              source={require('../../assets/images/logo.png')}
               style={styles.logo}
               resizeMode="contain"
             />
           </View>
-          
+
           <Text style={styles.title}>DAILY COOK</Text>
           <Text style={styles.subtitle}>Thực đơn nhà mình</Text>
-        </View>
-        
+        </Animated.View>
+
+        {/* Thay thế LinearGradient bằng View có màu nền */}
+        <View style={styles.overlayBottom} />
+      </View>
+
+      <Animated.View 
+        style={[
+          styles.bottomSection,
+          {
+            transform: [{ translateY: bottomSectionAnim }],
+            opacity: fadeAnim
+          }
+        ]}
+      >
         <View style={styles.loginContainer}>
           <View style={styles.dividerContainer}>
             <View style={styles.divider} />
             <View style={styles.loginLabelContainer}>
-              <Text style={styles.loginLabel}>Đăng nhập</Text>
+              <Text style={styles.loginLabel}>ĐĂNG NHẬP</Text>
             </View>
           </View>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.googleButton}
             onPress={handleGoogleLogin}
+            activeOpacity={0.8} // Thêm feedback khi nhấn nút
           >
-            <Image 
+            <Image
               source={require('../../assets/images/google_icon.png')}
               style={styles.googleIcon}
             />
             <Text style={styles.googleText}>Đăng nhập bằng Google</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -84,52 +132,35 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
-  overlayBottom: {
+  // Thêm lớp phủ màu đen đen
+  darkOverlay: {
     position: 'absolute',
     left: 0,
     right: 0,
+    top: 0,
     bottom: 0,
-    height: 50,
-    backgroundColor: '#35A55E',
-    opacity: 0.95,
-  },
-  bottomSection: {
-    flex: 1,
-    backgroundColor: '#35A55E',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-    paddingBottom: 50,
-    opacity: 0.85,
-    zIndex: 1,
-    // Thay đổi justifyContent từ space-between để logo và title ở giữa màn hình
-    justifyContent: 'center', 
-    marginTop: 300
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Màu đen với độ trong suốt 0.5
+    zIndex: 1, // Đảm bảo lớp phủ nằm trên hình ảnh
   },
   contentContainer: {
     alignItems: 'center',
-    // Đặt logo và tiêu đề ở giữa màn hình theo chiều dọc
-    // marginBottom: height * 0.1, // Đẩy lên một chút từ chính giữa
+    position: 'absolute',
+    top: '15%',
+    width: '100%',
+    zIndex: 2, // Tăng zIndex để đảm bảo content hiện lên trên lớp phủ đen
   },
   logoContainer: {
-    width: 150,
-    height: 500,
-    // backgroundColor: '#FFFFFF',
+    width: 120,
+    height: 120,
+    backgroundColor: 'transparent', // Bỏ nền trắng
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    // marginBottom: -20,
-    marginTop: -480,
-    // Bỏ border mờ bằng cách thêm shadow nhỏ hơn
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 4,
-    // elevation: 3,
+    marginBottom: 20,
   },
   logo: {
     width: 120,
     height: 120,
-    // borderRadius: 200,
   },
   title: {
     fontSize: 34,
@@ -137,20 +168,36 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     letterSpacing: 1,
     marginBottom: 8,
-    marginTop: -150,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 18,
-    fontWeight: '600', // Đậm hơn
+    fontWeight: '600',
     color: '#FFFFFF',
-    marginTop:-10,
+    textAlign: 'center', // Đảm bảo căn giữa text
+    marginBottom: 10, // Thêm margin để tạo khoảng cách với các phần tử khác
+  },
+  bottomSection: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '29%', 
+    backgroundColor: '#35A55E',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingHorizontal: 25,
+    paddingVertical: 30,
+    zIndex: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 10,
   },
   loginContainer: {
     width: '100%',
-    position: 'absolute',
-    bottom: 80,
-    left: 40,
-    right: 40,
+    marginTop: 10,
   },
   dividerContainer: {
     position: 'relative',
@@ -162,19 +209,19 @@ const styles = StyleSheet.create({
     height: 1,
     width: '100%',
     backgroundColor: 'rgba(255,255,255,0.3)',
+    position: 'absolute', // Thay đổi thành absolute
+    top: 12, // Đặt vị trí của đường gạch ngang tại giữa của label
   },
   loginLabelContainer: {
-    position: 'absolute',
-    top: -15, // Điều chỉnh vị trí để phù hợp với text size lớn hơn
     paddingHorizontal: 20,
-    backgroundColor: 'transparent', // Nền trong suốt
+    backgroundColor: '#35A55E',
+    zIndex: 1, // Thêm zIndex để đảm bảo text hiện lên trên đường gạch ngang
   },
   loginLabel: {
-    fontSize: 22, // To hơn
-    fontWeight: '700', // Đậm hơn
+    fontSize: 20,
+    fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
-    // Thêm shadow để text nổi bật hơn trên nền trong suốt
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
@@ -182,8 +229,8 @@ const styles = StyleSheet.create({
   googleButton: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
-    borderRadius: 5,
-    paddingVertical: 14, // Cao hơn một chút
+    borderRadius: 15,
+    paddingVertical: 14,
     paddingHorizontal: 20,
     width: '100%',
     alignItems: 'center',
