@@ -1,30 +1,30 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Pressable, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 // Quản lý menu bằng JSON
 const tabMenus = [
 	{
 		name: 'index',
-		title: 'Trang chủ',
-		icon: 'home',
+		title: 'Món ăn',
+		icon: 'cutlery', // Thay đổi từ 'home' sang 'cutlery' (icon dao dĩa)
 	},
 	{
 		name: 'shopping',
 		title: 'Mua sắm',
-		icon: 'shopping-cart',
+		icon: 'shopping-basket', // Thay đổi từ 'shopping-cart' sang 'shopping-basket' (icon giỏ đựng)
 	},
 	{
 		name: 'about',
-		title: 'Giới thiệu',
-		icon: 'info-circle',
+		title: 'Danh Mục',
+		icon: 'list', // Thay đổi từ 'info-circle' sang 'list' (icon danh sách)
 	},
 	{
 		name: 'account',
 		title: 'Tài khoản',
-		icon: 'user',
+		icon: 'user', // Giữ nguyên 'user' (icon người dùng)
 	},
 ];
 

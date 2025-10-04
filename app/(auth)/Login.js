@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, Animated, ToastAndroid } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
 
@@ -36,8 +36,18 @@ export default function LoginScreen() {
   }, []);
 
   const handleGoogleLogin = () => {
-    // Tạm thời chỉ điều hướng đến home mà không thực sự đăng nhập
-    router.replace('/(tabs)');
+    // Hiển thị thông báo Toast khi đăng nhập thành công
+    ToastAndroid.showWithGravity(
+      'Đăng nhập thành công',
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM
+    );
+    
+    // Đặt timeout nhỏ để người dùng có thể thấy thông báo trước khi chuyển hướng
+    setTimeout(() => {
+      // Chuyển hướng đến màn hình chính
+      router.replace('/(tabs)');
+    }, 1000); // Đợi 1 giây trước khi chuyển hướng
   };
 
   return (
