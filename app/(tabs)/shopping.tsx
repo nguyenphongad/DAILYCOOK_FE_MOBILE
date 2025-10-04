@@ -1,12 +1,12 @@
 import { StyleSheet } from 'react-native';
 import { Text, View } from '@/components/Themed';
 
-export default function HomeScreen() {
+export default function ShoppingScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Trang chủ</Text>
+      <Text style={styles.title}>Mua sắm</Text>
       <View style={styles.separator} />
-      <Text style={styles.content}>Chào mừng đến với Daily Cook</Text>
+      <Text style={styles.content}>Danh sách sản phẩm mua sắm ở đây</Text>
     </View>
   );
 }
