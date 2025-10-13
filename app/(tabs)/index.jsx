@@ -4,6 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import HeaderComponent from '../../components/header/HeaderComponent';
 import { StatusBar } from 'expo-status-bar';
+import { router } from 'expo-router';
 
 // Giả lập dữ liệu
 const userData = {
@@ -113,18 +114,85 @@ const dateItems = Array(7).fill(0).map((_, index) => ({
   date: '01'
 }));
 
-const meals = [
-  {
-    id: '1',
-    timeOfDay: 'Buổi sáng',
-    name: 'Thịt kho ruốc',
-    description: 'Dành cho ngày làm việc',
-    calories: 290,
-    protein: 15,
-    carbs: 55,
-    imageUrl: require('../../assets/images/food1.png'),
-  }
-];
+// Bổ sung dữ liệu món ăn theo các bữa
+const mealsByTime = {
+  breakfast: [
+    {
+      id: '1',
+      name: 'Bánh mì trứng thịt',
+      description: 'Năng lượng cho buổi sáng',
+      calories: 320,
+      protein: 18,
+      carbs: 40,
+      typeMeal: 'Món chính', // Thêm loại món
+      imageUrl: require('../../assets/images/food1.png'),
+    },
+    {
+      id: '2',
+      name: 'Cháo trứng bắc thảo',
+      description: 'Nhẹ nhàng, dễ tiêu hóa',
+      calories: 250,
+      protein: 12,
+      carbs: 35,
+      typeMeal: 'Món phụ', // Thêm loại món
+      imageUrl: require('../../assets/images/food1.png'),
+    },
+     {
+      id: '3',
+      name: 'Cháo trứng bắc Hung',
+      description: 'Nhẹ nhàng, dễ tiêu hóa',
+      calories: 150,
+      protein: 12,
+      carbs: 35,
+      typeMeal: 'Món phụ', // Thêm loại món
+      imageUrl: require('../../assets/images/food1.png'),
+    },
+  ],
+  lunch: [
+    {
+      id: '3',
+      name: 'Cơm gà xối mỡ',
+      description: 'Bữa trưa đầy năng lượng',
+      calories: 450,
+      protein: 25,
+      carbs: 60,
+      typeMeal: 'Món chính', // Thêm loại món
+      imageUrl: require('../../assets/images/food1.png'),
+    },
+    {
+      id: '4',
+      name: 'Bún bò Huế',
+      description: 'Đậm đà hương vị Huế',
+      calories: 420,
+      protein: 22,
+      carbs: 55,
+      typeMeal: 'Món phụ', // Thêm loại món
+      imageUrl: require('../../assets/images/food1.png'),
+    },
+  ],
+  dinner: [
+    {
+      id: '5',
+      name: 'Cá hồi áp chảo',
+      description: 'Bữa tối nhẹ nhàng, giàu dưỡng chất',
+      calories: 380,
+      protein: 30,
+      carbs: 18,
+      typeMeal: 'Món chính', // Thêm loại món
+      imageUrl: require('../../assets/images/food1.png'),
+    },
+    {
+      id: '6',
+      name: 'Canh bí đỏ nấu tôm',
+      description: 'Bổ dưỡng, dễ ngủ',
+      calories: 280,
+      protein: 20,
+      carbs: 22,
+      typeMeal: 'Tráng miệng', // Thêm loại món
+      imageUrl: require('../../assets/images/food1.png'),
+    },
+  ]
+};
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -185,7 +253,86 @@ export default function HomeScreen() {
     
     return () => clearTimeout(timer);
   }, []);
+
+
+
+  // Tối ưu hàm xử lý khi nhấn vào nút chi tiết món ăn
+  const handleViewMealDetail = (mealId) => {
+    // Thêm phản hồi trực quan khi người dùng nhấn nút
+    Animated.sequence([
+      Animated.timing(new Animated.Value(1), {
+        toValue: 0.9,
+        duration: 100,
+        useNativeDriver: true
+      }),
+      Animated.timing(new Animated.Value(0.9), {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true
+      })
+    ]).start();
+    
+    // Sử dụng setTimeout với độ trễ ngắn để tránh hiệu ứng "đóng băng" UI
+    setTimeout(() => {
+      // Điều hướng đến trang chi tiết món ăn
+      router.push({
+        pathname: '/(stacks)/meals/MealDetail',
+        params: { id: mealId }
+      });
+    }, 50);
+  };
   
+  // Thêm state cho bộ lọc bữa ăn - đổi tên để phù hợp với dữ liệu
+  const [activeMeal, setActiveMeal] = useState('breakfast'); // breakfast, lunch, dinner
+  
+  // Lấy danh sách món ăn hiện tại dựa trên tab đã chọn
+  const currentMeals = mealsByTime[activeMeal] || [];
+  
+  // Hàm xem chi tiết thực đơn
+  const handleViewFullMenu = () => {
+    router.push({
+      pathname: '/(stacks)/meals/MealDetail',
+      params: { 
+        mealTime: activeMeal,
+        id: currentMeals.length > 0 ? currentMeals[0].id : 'default',
+        // Truyền dữ liệu món ăn dưới dạng chuỗi JSON
+        mealsData: JSON.stringify(mealsByTime)
+      }
+    });
+  };
+  
+  // Lấy chiều rộng màn hình để tính toán kích thước item
+  const screenWidth = Dimensions.get('window').width;
+  // Chiều rộng của mỗi item (2 item mỗi hàng, trừ đi padding và khoảng cách giữa các item)
+  const itemWidth = (screenWidth - 50) / 2; // 15px padding mỗi bên + 20px khoảng cách giữa  
+  // Nhóm món ăn thành các cặp (2 món mỗi hàng)
+  const chunkedMeals = [];
+  for (let i = 0; i < currentMeals.length; i += 2) {
+    chunkedMeals.push(currentMeals.slice(i, i + 2));
+  }
+  
+  // Render một item món ăn
+  const renderMenuItem = (item) => (
+    <TouchableOpacity 
+      style={[styles.menuItemCard, { width: itemWidth }]}
+      onPress={() => handleViewMealDetail(item.id)}
+      activeOpacity={0.7}
+    >
+      <Image source={item.imageUrl} style={styles.menuItemImage} />
+      {/* Hiển thị typeMeal */}
+      <View style={styles.typeMealContainer}>
+        <Text style={styles.typeMealText}>{item.typeMeal}</Text>
+      </View>
+      <View style={styles.menuItemContent}>
+        <Text style={styles.menuItemName}>{item.name}</Text>
+        <View style={styles.menuItemMacros}>
+          <Text style={styles.menuItemMacro}>🔥 {item.calories} kcal</Text>
+          <Text style={styles.menuItemMacro}>🥩 {item.protein}g</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
@@ -198,7 +345,6 @@ export default function HomeScreen() {
         />
       </HeaderComponent>
       
-      {/* Phần nội dung có thể scroll */}
       <ScrollView 
         showsVerticalScrollIndicator={false}
         style={styles.scrollContainer}
@@ -299,13 +445,14 @@ export default function HomeScreen() {
                     <TouchableOpacity 
                       key={day.id}
                       style={[
-                        styles.dateItem, 
+                        styles.dateItem,
                         day.isToday ? styles.activeDateItem : null,
                         day.isFuture ? styles.futureDateItem : null,
                       ]}
                       disabled={day.isFuture}
                       onPress={() => setSelectedDate(day.date)}
                     >
+                      {/* Thứ - không có viền và không có nền cho active */}
                       <Text 
                         style={[
                           styles.dayText, 
@@ -315,15 +462,23 @@ export default function HomeScreen() {
                       >
                         {day.day}
                       </Text>
-                      <Text 
-                        style={[
-                          styles.dateText, 
-                          day.isToday ? styles.activeDateText : null,
-                          day.isFuture ? styles.futureDateText : null,
-                        ]}
-                      >
-                        {day.date}
-                      </Text>
+                      
+                      {/* Ngày - có hình tròn với nền xanh đậm cho active */}
+                      <View style={[
+                        styles.dateCircle,
+                        day.isToday ? styles.activeDateCircle : null,
+                        day.isFuture ? styles.futureDateCircle : null,
+                      ]}>
+                        <Text 
+                          style={[
+                            styles.dateText, 
+                            day.isToday ? styles.activeDateText : null,
+                            day.isFuture ? styles.futureDateText : null,
+                          ]}
+                        >
+                          {day.date}
+                        </Text>
+                      </View>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -332,76 +487,130 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Recommendation Section */}
-        <View style={styles.recommendationContainer}>
-          <View style={styles.recommendationContent}>
-            <Ionicons name="sunny" size={24} color="#FFD700" style={styles.recommendationIcon} />
-            <Text style={styles.recommendationText}>
-              Dựa vào các thông tin dinh dưỡng của bạn, tôi đề xuất thực đơn cho 3 bữa chính trong ngày
+        {/* Thay đổi phần Recommendation Section */}
+        <View style={styles.menuSection}>
+          <View style={styles.menuHeader}>
+            <Text style={styles.sectionTitle}>Gợi ý thực đơn hôm nay</Text>
+            
+            <TouchableOpacity style={styles.settingsButton}>
+              <Ionicons name="options-outline" size={20} color="#35A55E" />
+            </TouchableOpacity>
+          </View>
+          
+          {/* AI recommendation card - Di chuyển lên trên */}
+          <View style={styles.aiRecommendationCard}>
+            <View style={styles.aiHeaderRow}>
+              <View style={styles.aiIconContainer}>
+                <Ionicons name="sparkles" size={18} color="#FFFFFF" />
+              </View>
+              <Text style={styles.aiHeaderText}>Gợi ý từ AI</Text>
+              
+              <TouchableOpacity 
+                style={styles.refreshButton}
+                activeOpacity={0.6}
+              >
+                <Ionicons name="refresh" size={16} color="#666666" />
+              </TouchableOpacity>
+            </View>
+            
+            <Text style={styles.aiDescription}>
+              Dựa trên sở thích và mục tiêu dinh dưỡng của bạn
             </Text>
           </View>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.greenButton}>
-              <Text style={styles.buttonText}>Chọn thực phẩm</Text>
+          
+          {/* Menu selector tabs */}
+          <View style={styles.mealTypeTabs}>
+            <TouchableOpacity 
+              style={[
+                styles.mealTypeTab, 
+                activeMeal === 'breakfast' && styles.activeMealTypeTab
+              ]}
+              onPress={() => setActiveMeal('breakfast')}
+            >
+              <Ionicons 
+                name="sunny-outline" 
+                size={16} 
+                color={activeMeal === 'breakfast' ? '#FFFFFF' : '#35A55E'} 
+              />
+              <Text 
+                style={[
+                  styles.mealTypeText,
+                  activeMeal === 'breakfast' && styles.activeMealTypeText
+                ]}
+              >
+                Buổi sáng
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.orangeButton}>
-              <Text style={styles.buttonText}>Tạo thực đơn mới</Text>
+            
+            <TouchableOpacity 
+              style={[
+                styles.mealTypeTab, 
+                activeMeal === 'lunch' && styles.activeMealTypeTab
+              ]}
+              onPress={() => setActiveMeal('lunch')}
+            >
+              <Ionicons 
+                name="restaurant-outline" 
+                size={16} 
+                color={activeMeal === 'lunch' ? '#FFFFFF' : '#35A55E'} 
+              />
+              <Text 
+                style={[
+                  styles.mealTypeText,
+                  activeMeal === 'lunch' && styles.activeMealTypeText
+                ]}
+              >
+                Buổi trưa
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[
+                styles.mealTypeTab, 
+                activeMeal === 'dinner' && styles.activeMealTypeTab
+              ]}
+              onPress={() => setActiveMeal('dinner')}
+            >
+              <Ionicons 
+                name="moon-outline" 
+                size={16} 
+                color={activeMeal === 'dinner' ? '#FFFFFF' : '#35A55E'} 
+              />
+              <Text 
+                style={[
+                  styles.mealTypeText,
+                  activeMeal === 'dinner' && styles.activeMealTypeText
+                ]}
+              >
+                Buổi tối
+              </Text>
             </TouchableOpacity>
           </View>
-        </View>
-
-        {/* Meal Times */}
-        <View style={styles.mealTimeContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.mealTimeScrollView}>
-            <TouchableOpacity style={styles.mealTimeButton}>
-              <Text style={styles.mealTimeText}>Buổi sáng</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.mealTimeButton, { backgroundColor: '#38B74C', marginHorizontal: 10 }]}>
-              <Text style={styles.mealTimeText}>Buổi trưa</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.mealTimeButton}>
-              <Text style={styles.mealTimeText}>Buổi tối</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-
-        {/* Food Items */}
-        {meals.map((meal) => (
-          <View key={meal.id} style={styles.mealItemContainer}>
-            <View style={styles.mealCard}>
-              <Image source={meal.imageUrl} style={styles.mealImage} />
-              <View style={styles.mealOverlay}>
-                <Text style={styles.mealType}>{meal.timeOfDay}</Text>
-                <Text style={styles.mealName}>{meal.name}</Text>
-                <Text style={styles.mealDescription}>{meal.description}</Text>
+          
+          {/* Thay thế FlatList ngang bằng grid view */}
+          <View style={styles.menuGrid}>
+            {chunkedMeals.map((row, rowIndex) => (
+              <View key={`row-${rowIndex}`} style={styles.menuRow}>
+                {row.map((item) => (
+                  <React.Fragment key={item.id}>
+                    {renderMenuItem(item)}
+                  </React.Fragment>
+                ))}
+                {/* Nếu hàng chỉ có 1 item, thêm placeholder để căn đều */}
+                {row.length === 1 && <View style={{ width: itemWidth }} />}
               </View>
-            </View>
-            
-            <View style={styles.nutritionInfoContainer}>
-              <View style={styles.nutritionInfoItem}>
-                <Text style={styles.nutritionInfoValue}>{meal.calories}</Text>
-                <Text style={styles.nutritionInfoLabel}>Calories</Text>
-                <View style={[styles.progressBar, styles.caloriesBar]} />
-              </View>
-              
-              <View style={styles.nutritionInfoItem}>
-                <Text style={styles.nutritionInfoValue}>{meal.protein}</Text>
-                <Text style={styles.nutritionInfoLabel}>Protein</Text>
-                <View style={[styles.progressBar, styles.proteinBar]} />
-              </View>
-              
-              <View style={styles.nutritionInfoItem}>
-                <Text style={styles.nutritionInfoValue}>{meal.carbs}</Text>
-                <Text style={styles.nutritionInfoLabel}>Carb (g)</Text>
-                <View style={[styles.progressBar, styles.carbsBar]} />
-              </View>
-            </View>
-            
-            <TouchableOpacity style={styles.detailsButton}>
-              <Text style={styles.detailsButtonText}>Chi tiết thực đơn</Text>
-            </TouchableOpacity>
+            ))}
           </View>
-        ))}
+          
+          {/* Nút xem chi tiết thực đơn - thay thế menuActionButtons */}
+          <TouchableOpacity 
+            style={styles.viewFullMenuButton}
+            onPress={handleViewFullMenu}
+          >
+            <Text style={styles.viewFullMenuText}>Chi tiết thực đơn</Text>
+            <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -540,102 +749,199 @@ const styles = StyleSheet.create({
     height: 65,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 12,
-    backgroundColor: '#F5F5F5',
-    marginHorizontal: 3, // Thêm khoảng cách nhỏ giữa các ngày
+    borderRadius:25,
+    backgroundColor: 'transparent', 
+    marginHorizontal: 3,
+    // Thêm viền xanh nhạt cho tất cả các item ngày
+    borderWidth: 1,
+    borderColor: 'rgba(53, 165, 94, 0.3)',
   },
   activeDateItem: {
-    backgroundColor: '#35A55E', // Màu chủ đạo đã thay đổi từ #38B74C
+    backgroundColor: 'transparent', 
+    // Viền xanh đậm cho item ngày active
+    borderWidth: 1,
+    borderColor: '#35A55E',
   },
   futureDateItem: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: 'transparent', 
+    // Viền xám nhạt cho ngày tương lai
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   dayText: {
     fontSize: 14,
     color: '#333',
     marginBottom: 4,
-  },
-  dateText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: '400',
   },
   activeDayText: {
-    color: 'white',
-  },
-  activeDateText: {
-    color: 'white',
+    color: '#35A55E', // Chỉ đổi màu chữ mà không đổi nền
+    fontWeight: '600',
   },
   futureDayText: {
     color: '#999',
   },
-  futureDateText: {
-    color: '#999',
+  
+  // Điều chỉnh lại style của date circle (không cần viền vì đã có viền ở item cha)
+  dateCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 0, // Bỏ viền của circle
+  },
+  activeDateCircle: {
+    backgroundColor: '#35A55E', // Nền xanh đậm cho ngày active
+    borderWidth: 0,
+  },
+  futureDateCircle: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
   },
   
-  recommendationContainer: {
-    backgroundColor: '#F5F5F5',
-    margin: 15,
-    borderRadius: 10,
-    padding: 15,
+  menuSection: {
+    marginTop: 10,
+    marginHorizontal: 15,
   },
-  recommendationContent: {
+  menuHeader: {
     flexDirection: 'row',
-    marginBottom: 15,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  recommendationIcon: {
+  settingsButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(53, 165, 94, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mealTypeTabs: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  mealTypeTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(53, 165, 94, 0.1)',
+    borderRadius: 20,
     marginRight: 10,
   },
-  recommendationText: {
-    flex: 1,
+  activeMealTypeTab: {
+    backgroundColor: '#35A55E',
+  },
+  mealTypeText: {
     fontSize: 14,
-    color: '#333',
+    color: '#35A55E',
+    marginLeft: 5,
+  },
+  activeMealTypeText: {
+    color: '#FFFFFF',
+  },
+  aiRecommendationCard: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+  },
+  aiHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  aiIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FFB800',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  aiHeaderText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+    flex: 1,
+  },
+  refreshButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  aiDescription: {
+    fontSize: 14,
+    color: '#666666',
     lineHeight: 20,
   },
-  buttonContainer: {
+  menuGrid: {
+    marginTop: 5,
+  },
+  menuRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  menuItemCard: {
+    // Xóa chiều rộng cố định
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  menuItemImage: {
+    width: '100%',
+    height: 100,
+    resizeMode: 'cover',
+  },
+  menuItemContent: {
+    padding: 10,
+  },
+  menuItemName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333333',
+    marginBottom: 5,
+  },
+  menuItemMacros: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  greenButton: {
-    backgroundColor: '#35A55E', // Màu chủ đạo đã thay đổi từ #38B74C
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    flex: 1,
-    marginRight: 10,
+  menuItemMacro: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  viewFullMenuButton: {
+    backgroundColor: '#35A55E',
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  orangeButton: {
-    backgroundColor: '#E86F50',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    flex: 1,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: '500',
-  },
-  mealTimeContainer: {
-    marginBottom: 15,
-  },
-  mealTimeScrollView: {
-    paddingHorizontal: 15,
-  },
-  mealTimeButton: {
-    backgroundColor: '#35A55E', // Màu chủ đạo đã thay đổi từ #38B74C
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-  },
-  mealTimeText: {
-    color: 'white',
-    fontWeight: '500',
-  },
-  mealItemContainer: {
-    marginHorizontal: 15,
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 15,
     marginBottom: 20,
+  },
+  viewFullMenuText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginRight: 8,
+  },
+  
+  // Cập nhật mealItemContainer để tương thích với thiết kế mới
+  mealItemContainer: {
     backgroundColor: 'white',
     borderRadius: 10,
     overflow: 'hidden',
@@ -644,101 +950,28 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    marginBottom: 20,
   },
-  mealCard: {
-    position: 'relative',
-    height: 180,
-  },
-  mealImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 10,
-  },
-  mealOverlay: {
+  
+  // Thêm style cho typeMeal
+  typeMealContainer: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 100,
-    justifyContent: 'flex-end',
-    paddingHorizontal: 15,
-    paddingBottom: 15,
-    backgroundColor: 'rgba(0,0,0,0.5)', // Thay thế gradient bằng một màu nền có độ trong suốt
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
+    top: 10,
+    right: 10,
+    backgroundColor: '#D32F2F', // Màu đỏ đậm
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
-  mealType: {
-    color: 'white',
-    fontSize: 12,
-    marginBottom: 4,
+  typeMealText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FFFFFF', // Chữ màu trắng
   },
-  mealName: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  mealDescription: {
-    color: 'white',
-    fontSize: 14,
-  },
-  nutritionInfoContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 15,
-  },
-  nutritionInfoItem: {
-    alignItems: 'center',
-    width: '30%',
-  },
-  nutritionInfoValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  nutritionInfoLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 5,
-  },
-  progressBar: {
-    width: '100%',
-    height: 4,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 2,
-    marginTop: 5,
-    position: 'relative',
-  },
-  caloriesBar: {
-    backgroundColor: '#FF9500',
-  },
-  proteinBar: {
-    backgroundColor: '#35A55E', // Màu chủ đạo đã thay đổi từ #38B74C
-  },
-  carbsBar: {
-    backgroundColor: '#35A55E', // Màu chủ đạo đã thay đổi từ #4CAF50
-  },
-  detailsButton: {
-    backgroundColor: '#35A55E', // Màu chủ đạo đã thay đổi từ #38B74C
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
-  },
-  detailsButtonText: {
-    color: 'white',
-    fontWeight: '500',
-  },
-  // Thêm style cho thanh tiến trình
-  progressBarContainer: {
-    width: '100%',
-    height: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-    borderRadius: 1.5,
-    overflow: 'hidden', // Đảm bảo thanh tiến trình không vượt ra ngoài
-    marginBottom: 5,
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 1.5,
+  
+  // Thay đổi màu chữ cho activeDateText từ xanh sang trắng
+  activeDateText: {
+    color: '#FFFFFF', // Đổi màu chữ thành trắng cho ngày active
+    fontWeight: '600',
   },
 });
