@@ -10,7 +10,7 @@ export default function ShoppingScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <HeaderComponent>
+      <HeaderComponent style={styles.header}>
         <Text style={styles.headerText}>Danh sách mua sắm</Text>
       </HeaderComponent>
       {/* Danh sách nguyên liệu */}
@@ -26,11 +26,11 @@ export default function ShoppingScreen() {
         <View style={styles.summary}>
           <View>
             <View style={styles.summaryDetail}>
-              <Ionicons name="cart-outline" size={20} color="#2e7d32" style={{ marginRight: 5 }} />
+              <Ionicons name="cart-outline" size={20} color="#35A55E" style={{ marginRight: 5 }} />
               <Text style={styles.summaryText}>Tổng số món: 2</Text>
             </View>
             <View style={styles.summaryDetail}>
-              <Ionicons name="checkbox" size={20} color="#2e7d32" marginRight={5} />
+              <Ionicons name="checkbox" size={20} color="#35A55E" marginRight={5} />
               <Text style={styles.summaryText}>Đang mua: 1</Text>
             </View>
           </View>
@@ -43,7 +43,7 @@ export default function ShoppingScreen() {
           <Text style={styles.groupTitle}>Thịt, cá, trứng & sữa</Text>
 
           <View style={[styles.item, styles.itemChecked]}>
-            <Ionicons name="checkbox" size={20} color="#2e7d32" />
+            <Ionicons name="checkbox" size={20} color="#35A55E" />
             <Text style={[styles.itemText, styles.itemTextChecked]}>Thịt lợn</Text>
           </View>
 
@@ -73,6 +73,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5EEDC',
     paddingHorizontal: 20,
   },
+  header: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   headerText: {
     fontSize: 18,
     fontWeight: '500',
@@ -91,16 +95,15 @@ const styles = StyleSheet.create({
   },
   markAll: {
     fontSize: 14,
-    color: '#2e7d32',
+    color: '#35A55E',
     fontWeight: '500',
   },
   scrollContainer: {
     flex: 1,
     marginTop: 10,
   },
-    contentContainer: {
-    paddingBottom: 60, 
-    
+  contentContainer: {
+    paddingBottom: 60,
   },
   groupContainer: {
     marginTop: 10,
@@ -122,7 +125,8 @@ const styles = StyleSheet.create({
   },
   itemChecked: {
     backgroundColor: '#E8F5E9',
-    borderColor: '#2e7d32',
+    borderColor: '#35A55E',
+    height: 40,
   },
   itemText: {
     fontSize: 14,
@@ -137,7 +141,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 90,
     right: 25,
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#35A55E',
     borderRadius: 50,
     padding: 16,
     elevation: 4,
@@ -148,7 +152,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   hideButtonText: {
-    color: '#2e7d32',
+    color: '#35A55E',
     fontSize: 14,
     fontWeight: '500',
   },
