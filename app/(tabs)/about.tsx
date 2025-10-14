@@ -40,7 +40,7 @@ export default function AboutScreen() {
           onPress={() => setActiveTab('recipes')}
         >
           <Text style={[styles.tabText, activeTab === 'recipes' && styles.activeText]}>
-            Công thức
+            Món ăn
           </Text>
         </TouchableOpacity>
       </View>
@@ -53,8 +53,8 @@ export default function AboutScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E3F2E1',
-    paddingHorizontal: 20,
+    backgroundColor: '#D4E9E1',
+    paddingHorizontal: 15,
   },
   header: {
     justifyContent: 'center',
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    backgroundColor: '#CBEAD0',
+    backgroundColor: 'rgba(53, 165, 94, 0.1)',
     borderRadius: 20,
     marginHorizontal: 40,
     height: 40,
@@ -89,9 +89,5 @@ const styles = StyleSheet.create({
   activeText: {
     fontWeight: '500',
     color: '#fff',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 10,
   },
 });

@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5EEDC',
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
   },
   header: {
     justifyContent: 'center',
@@ -110,8 +110,8 @@ const styles = StyleSheet.create({
   },
   groupTitle: {
     fontWeight: '500',
-    fontSize: 14,
-    marginBottom: 5,
+    fontSize: 15,
+    marginBottom: 10,
   },
   item: {
     flexDirection: 'row',
@@ -119,14 +119,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#aaa',
     borderRadius: 8,
-    padding: 8,
-    marginBottom: 6,
+    padding: 12,
+    marginBottom: 10,
     backgroundColor: '#fff',
   },
   itemChecked: {
     backgroundColor: '#E8F5E9',
     borderColor: '#35A55E',
-    height: 40,
   },
   itemText: {
     fontSize: 14,
