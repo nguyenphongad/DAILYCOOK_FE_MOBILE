@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, FlatList, Dimensions, Animated } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, FlatList, Dimensions, Animated, RefreshControl } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import HeaderComponent from '../../components/header/HeaderComponent';
@@ -194,6 +194,13 @@ const mealsByTime = {
   ]
 };
 
+// Thêm trạng thái hiển thị cho các bữa ăn
+const initialMealVisibility = {
+  breakfast: true,
+  lunch: true,
+  dinner: true,
+};
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const today = new Date();
@@ -201,6 +208,12 @@ export default function HomeScreen() {
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0); // 0: tuần hiện tại, -1: tuần trước, ...
   const [currentMonth, setCurrentMonth] = useState(getMonthName(today.getMonth() + 1));
   const [selectedDate, setSelectedDate] = useState(today.getDate().toString());
+  
+  // Thêm state cho trạng thái hiển thị bữa ăn
+  const [mealVisibility, setMealVisibility] = useState(initialMealVisibility);
+  
+  // Tối ưu state cho bộ lọc bữa ăn - đổi tên để phù hợp với dữ liệu
+  const [activeMeal, setActiveMeal] = useState('breakfast');
   
   // Tạo refs cho animation các thanh tiến trình
   const progressAnims = useRef(nutritionGoals.map(() => new Animated.Value(0))).current;
@@ -282,11 +295,35 @@ export default function HomeScreen() {
     }, 50);
   };
   
-  // Thêm state cho bộ lọc bữa ăn - đổi tên để phù hợp với dữ liệu
-  const [activeMeal, setActiveMeal] = useState('breakfast'); // breakfast, lunch, dinner
+  // Xử lý khi trạng thái hiển thị bữa ăn thay đổi
+  useEffect(() => {
+    console.log("Meal Visibility changed:", mealVisibility);
+    console.log("Available Meal Tabs:", availableMealTabs);
+    
+    // Lấy danh sách các bữa ăn đang hiển thị
+    const availableMeals = Object.keys(mealVisibility).filter(meal => 
+      mealVisibility[meal] && mealsByTime[meal]?.length > 0
+    );
+    
+    console.log("Available Meals:", availableMeals);
+    
+    // Nếu không có bữa ăn nào hiển thị thì không cần cập nhật
+    if (availableMeals.length === 0) return;
+    
+    // Nếu bữa ăn đang chọn không còn hiển thị, chuyển sang bữa đầu tiên có sẵn
+    if (!availableMeals.includes(activeMeal)) {
+      setActiveMeal(availableMeals[0]);
+      console.log("Setting active meal to:", availableMeals[0]);
+    }
+  }, [mealVisibility]);
   
-  // Lấy danh sách món ăn hiện tại dựa trên tab đã chọn
-  const currentMeals = mealsByTime[activeMeal] || [];
+  // Lấy danh sách các bữa ăn hiện có dữ liệu và được phép hiển thị
+  const availableMealTabs = Object.keys(mealsByTime).filter(meal => 
+    mealsByTime[meal]?.length > 0 && mealVisibility[meal] === true
+  );
+  
+  // Lấy danh sách món ăn hiện tại dựa trên tab đã chọn và visibility
+  const currentMeals = mealVisibility[activeMeal] ? mealsByTime[activeMeal] || [] : [];
   
   // Hàm xem chi tiết thực đơn
   const handleViewFullMenu = () => {
@@ -333,6 +370,23 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
+  // Thêm state cho RefreshControl
+  const [refreshing, setRefreshing] = useState(false);
+  
+  // Hàm xử lý khi người dùng kéo xuống để refresh
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    
+    // Mô phỏng tải dữ liệu
+    setTimeout(() => {
+      // console.log('Refreshing data...');
+      // Ví dụ: fetchUserData(), fetchNutritionGoals(), fetchMealData(), v.v.
+      
+      // Kết thúc refreshing sau 1.5 giây
+      setRefreshing(false);
+    }, 1500);
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
@@ -350,8 +404,19 @@ export default function HomeScreen() {
         style={styles.scrollContainer}
         contentContainerStyle={[
           styles.contentContainer,
-          { paddingTop: insets.top + 40 }
+          { paddingTop: insets.top + 30 }
         ]}
+        // Thêm RefreshControl vào ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#35A55E']} // Màu của loading indicator (Android)
+            tintColor="#35A55E" // Màu của loading indicator (iOS)
+            title="Đang tải..." // Text hiển thị bên dưới loading indicator (iOS)
+            titleColor="#35A55E" // Màu của text (iOS)
+          />
+        }
       >
         {/* Daily Nutrition Goals */}
         <View style={styles.nutritionSection}>
@@ -518,98 +583,135 @@ export default function HomeScreen() {
             </Text>
           </View>
           
-          {/* Menu selector tabs */}
-          <View style={styles.mealTypeTabs}>
-            <TouchableOpacity 
-              style={[
-                styles.mealTypeTab, 
-                activeMeal === 'breakfast' && styles.activeMealTypeTab
-              ]}
-              onPress={() => setActiveMeal('breakfast')}
-            >
-              <Ionicons 
-                name="sunny-outline" 
-                size={16} 
-                color={activeMeal === 'breakfast' ? '#FFFFFF' : '#35A55E'} 
-              />
-              <Text 
-                style={[
-                  styles.mealTypeText,
-                  activeMeal === 'breakfast' && styles.activeMealTypeText
-                ]}
-              >
-                Buổi sáng
+          {/* Menu selector tabs - Sửa lại logic hiển thị và căn chỉnh */}
+          {availableMealTabs.length > 0 && (
+            <View style={[
+              styles.mealTypeTabs,
+              availableMealTabs.length === 2 && styles.mealTypeTabsTwo,
+              availableMealTabs.length === 1 && styles.mealTypeTabsOne
+            ]}>
+              {/* Breakfast tab */}
+              {mealVisibility.breakfast === true && mealsByTime.breakfast?.length > 0 && (
+                <TouchableOpacity 
+                  style={[
+                    styles.mealTypeTab,
+                    availableMealTabs.length === 1 && styles.mealTypeTabFull,
+                    availableMealTabs.length === 2 && styles.mealTypeTabHalf,
+                    availableMealTabs.length === 3 && styles.mealTypeTabThird,
+                    activeMeal === 'breakfast' && styles.activeMealTypeTab
+                  ]}
+                  onPress={() => setActiveMeal('breakfast')}
+                >
+                  <Ionicons 
+                    name="sunny-outline" 
+                    size={16} 
+                    color={activeMeal === 'breakfast' ? '#FFFFFF' : '#35A55E'} 
+                  />
+                  <Text 
+                    style={[
+                      styles.mealTypeText,
+                      activeMeal === 'breakfast' && styles.activeMealTypeText
+                    ]}
+                  >
+                    Sáng
+                  </Text>
+                </TouchableOpacity>
+              )}
+              
+              {/* Lunch tab */}
+              {mealVisibility.lunch === true && mealsByTime.lunch?.length > 0 && (
+                <TouchableOpacity 
+                  style={[
+                    styles.mealTypeTab,
+                    availableMealTabs.length === 1 && styles.mealTypeTabFull,
+                    availableMealTabs.length === 2 && styles.mealTypeTabHalf,
+                    availableMealTabs.length === 3 && styles.mealTypeTabThird,
+                    activeMeal === 'lunch' && styles.activeMealTypeTab
+                  ]}
+                  onPress={() => setActiveMeal('lunch')}
+                >
+                  <Ionicons 
+                    name="restaurant-outline" 
+                    size={16} 
+                    color={activeMeal === 'lunch' ? '#FFFFFF' : '#35A55E'} 
+                  />
+                  <Text 
+                    style={[
+                      styles.mealTypeText,
+                      activeMeal === 'lunch' && styles.activeMealTypeText
+                    ]}
+                  >
+                    Trưa
+                  </Text>
+                </TouchableOpacity>
+              )}
+              
+              {/* Dinner tab */}
+              {mealVisibility.dinner === true && mealsByTime.dinner?.length > 0 && (
+                <TouchableOpacity 
+                  style={[
+                    styles.mealTypeTab,
+                    availableMealTabs.length === 1 && styles.mealTypeTabFull,
+                    availableMealTabs.length === 2 && styles.mealTypeTabHalf,
+                    availableMealTabs.length === 3 && styles.mealTypeTabThird,
+                    activeMeal === 'dinner' && styles.activeMealTypeTab
+                  ]}
+                  onPress={() => setActiveMeal('dinner')}
+                >
+                  <Ionicons 
+                    name="moon-outline" 
+                    size={16} 
+                    color={activeMeal === 'dinner' ? '#FFFFFF' : '#35A55E'} 
+                  />
+                  <Text 
+                    style={[
+                      styles.mealTypeText,
+                      activeMeal === 'dinner' && styles.activeMealTypeText
+                    ]}
+                  >
+                    Tối
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+          
+          {/* Hiển thị thông báo nếu không có bữa ăn nào được hiển thị */}
+          {availableMealTabs.length === 0 && (
+            <View style={styles.noMealContainer}>
+              <Text style={styles.noMealText}>
+                Không có bữa ăn nào được hiển thị. Vui lòng kiểm tra cài đặt.
               </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[
-                styles.mealTypeTab, 
-                activeMeal === 'lunch' && styles.activeMealTypeTab
-              ]}
-              onPress={() => setActiveMeal('lunch')}
-            >
-              <Ionicons 
-                name="restaurant-outline" 
-                size={16} 
-                color={activeMeal === 'lunch' ? '#FFFFFF' : '#35A55E'} 
-              />
-              <Text 
-                style={[
-                  styles.mealTypeText,
-                  activeMeal === 'lunch' && styles.activeMealTypeText
-                ]}
-              >
-                Buổi trưa
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[
-                styles.mealTypeTab, 
-                activeMeal === 'dinner' && styles.activeMealTypeTab
-              ]}
-              onPress={() => setActiveMeal('dinner')}
-            >
-              <Ionicons 
-                name="moon-outline" 
-                size={16} 
-                color={activeMeal === 'dinner' ? '#FFFFFF' : '#35A55E'} 
-              />
-              <Text 
-                style={[
-                  styles.mealTypeText,
-                  activeMeal === 'dinner' && styles.activeMealTypeText
-                ]}
-              >
-                Buổi tối
-              </Text>
-            </TouchableOpacity>
-          </View>
+            </View>
+          )}
           
           {/* Thay thế FlatList ngang bằng grid view */}
-          <View style={styles.menuGrid}>
-            {chunkedMeals.map((row, rowIndex) => (
-              <View key={`row-${rowIndex}`} style={styles.menuRow}>
-                {row.map((item) => (
-                  <React.Fragment key={item.id}>
-                    {renderMenuItem(item)}
-                  </React.Fragment>
-                ))}
-                {/* Nếu hàng chỉ có 1 item, thêm placeholder để căn đều */}
-                {row.length === 1 && <View style={{ width: itemWidth }} />}
-              </View>
-            ))}
-          </View>
+          {availableMealTabs.length > 0 && (
+            <View style={styles.menuGrid}>
+              {chunkedMeals.map((row, rowIndex) => (
+                <View key={`row-${rowIndex}`} style={styles.menuRow}>
+                  {row.map((item) => (
+                    <React.Fragment key={item.id}>
+                      {renderMenuItem(item)}
+                    </React.Fragment>
+                  ))}
+                  {/* Nếu hàng chỉ có 1 item, thêm placeholder để căn đều */}
+                  {row.length === 1 && <View style={{ width: itemWidth }} />}
+                </View>
+              ))}
+            </View>
+          )}
           
-          {/* Nút xem chi tiết thực đơn - thay thế menuActionButtons */}
-          <TouchableOpacity 
-            style={styles.viewFullMenuButton}
-            onPress={handleViewFullMenu}
-          >
-            <Text style={styles.viewFullMenuText}>Chi tiết thực đơn</Text>
-            <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
-          </TouchableOpacity>
+          {/* Nút xem chi tiết thực đơn - chỉ hiển thị khi có bữa ăn */}
+          {availableMealTabs.length > 0 && currentMeals.length > 0 && (
+            <TouchableOpacity 
+              style={styles.viewFullMenuButton}
+              onPress={handleViewFullMenu}
+            >
+              <Text style={styles.viewFullMenuText}>Chi tiết thực đơn</Text>
+              <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -822,15 +924,33 @@ const styles = StyleSheet.create({
   mealTypeTabs: {
     flexDirection: 'row',
     marginBottom: 16,
+    justifyContent: 'space-between', // Căn đều tất cả các tab
+    width: '100%', // Đảm bảo container sử dụng toàn bộ chiều rộng
+  },
+  mealTypeTabsTwo: {
+    justifyContent: 'space-between', // Nếu có 2 bữa thì căn đều 2 bên
+  },
+  mealTypeTabsOne: {
+    justifyContent: 'center', // Nếu chỉ có 1 bữa thì canh giữa
   },
   mealTypeTab: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8, // Giảm padding ngang
     backgroundColor: 'rgba(53, 165, 94, 0.1)',
     borderRadius: 20,
-    marginRight: 10,
+    justifyContent: 'center',
+    marginRight: 0, // Bỏ margin để không bị tràn
+  },
+  mealTypeTabHalf: {
+    flex: 0.48, // Khi có 2 bữa ăn thì mỗi tab chiếm 48% chiều rộng
+  },
+  mealTypeTabFull: {
+    flex: 1, // Khi chỉ có 1 bữa ăn thì tab chiếm 100% chiều rộng
+  },
+  mealTypeTabThird: {
+    flex: 0.32, // Khi có 3 bữa, mỗi tab chiếm khoảng 32% chiều rộng
   },
   activeMealTypeTab: {
     backgroundColor: '#35A55E',
@@ -973,5 +1093,17 @@ const styles = StyleSheet.create({
   activeDateText: {
     color: '#FFFFFF', // Đổi màu chữ thành trắng cho ngày active
     fontWeight: '600',
+  },
+  noMealContainer: {
+    padding: 20,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 10,
+    alignItems: 'center',
+    marginVertical: 15,
+  },
+  noMealText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
 });
