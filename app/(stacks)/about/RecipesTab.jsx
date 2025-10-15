@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
     View,
@@ -11,6 +12,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function RecipesTab() {
+    const router = useRouter(); 
     const [search, setSearch] = useState('');
 
     const recipes = [
@@ -21,6 +23,19 @@ export default function RecipesTab() {
         { id: 5, name: 'Ớt chuông', image: 'https://cdn.tgdd.vn/Files/2020/03/16/1240373/ot-chuong-co-tac-dung-gi-cach-bao-quan-ot-chuong-dung-cach-202003160857389765.jpg' },
         { id: 6, name: 'Dưa leo', image: 'https://cdn.tgdd.vn/Files/2021/03/29/1338064/dua-leo-an-song-co-tot-khong-va-nhung-loi-ich-khi-an-dua-leo-moi-ngay-202103291006554580.jpg' },
     ];
+
+
+    // Hàm điều hướng sang chi tiết
+    const handleViewMealDetail = (meals) => {
+        router.push({
+            pathname: '/(stacks)/meals/MealDetail1',
+            params: {
+                // mealId: meals.id,
+                // mealName: meals.name,
+                // mealImage: meals.image,
+            },
+        });
+    }
 
     return (
         <ScrollView
@@ -48,13 +63,17 @@ export default function RecipesTab() {
             {/* Danh sách món ăn (3 món / hàng) */}
             <View style={styles.gridContainer}>
                 {recipes.map((item) => (
-                    <View key={item.id} style={styles.card}>
+                    <TouchableOpacity
+                        key={item.id}
+                        style={styles.card}
+                        onPress={() => handleViewMealDetail(item)}
+                    >
                         <Image source={{ uri: item.image }} style={styles.logo} />
                         <Text style={styles.title}>{item.name}</Text>
-                    </View>
+                    </TouchableOpacity>
                 ))}
             </View>
-        </ScrollView>
+        </ScrollView >
     );
 }
 
@@ -102,11 +121,11 @@ const styles = StyleSheet.create({
     gridContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'flex-start', 
+        justifyContent: 'flex-start',
         gap: 10,
     },
     card: {
-        width: '31%', 
+        width: '31%',
         backgroundColor: '#fff',
         borderRadius: 10,
         padding: 8,

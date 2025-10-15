@@ -80,26 +80,24 @@ export default function IngredientsTab() {
 
     // Hàm điều hướng sang chi tiết
     const handleViewIngredientDetail = (ingredient) => {
-    router.push({
-        pathname: '/(stacks)/ingredients/IngredientDetail',
-        params: {
-            _id: ingredient._id,
-            nameIngredient: ingredient.nameIngredient,
-            ingredientImage: ingredient.ingredientImage,
-            description: ingredient.description,
-            ingredientCategory: ingredient.ingredientCategory,
-            defaultAmount: ingredient.defaultAmount,
-            defaultUnit: ingredient.defaultUnit,
-            calories: ingredient.nutrition.calories,
-            protein: ingredient.nutrition.protein,
-            carbs: ingredient.nutrition.carbs,
-            fat: ingredient.nutrition.fat,
-            commonUses: JSON.stringify(ingredient.commonUses),
-        },
-    });
-};
-
-
+        router.push({
+            pathname: '/(stacks)/ingredients/IngredientDetail',
+            params: {
+                _id: ingredient._id,
+                nameIngredient: ingredient.nameIngredient,
+                ingredientImage: ingredient.ingredientImage,
+                description: ingredient.description,
+                ingredientCategory: ingredient.ingredientCategory,
+                defaultAmount: ingredient.defaultAmount,
+                defaultUnit: ingredient.defaultUnit,
+                calories: ingredient.nutrition.calories,
+                protein: ingredient.nutrition.protein,
+                carbs: ingredient.nutrition.carbs,
+                fat: ingredient.nutrition.fat,
+                commonUses: JSON.stringify(ingredient.commonUses),
+            },
+        });
+    }
     // Lọc theo từ khóa tìm kiếm
     const filteredIngredients = ingredients.filter((item) =>
         item.nameIngredient.toLowerCase().includes(search.toLowerCase())

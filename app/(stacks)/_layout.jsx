@@ -71,7 +71,13 @@ export default function StackLayout() {
           title: 'Chi tiết thực phẩm'
         }}
       />
-
+      
+      <Stack.Screen
+        name="meals/MealDetail1"
+        options={{
+          title: 'Chi tiết món ăn',
+        }}
+      />
 
 
 
