@@ -6,12 +6,105 @@ import {
     StyleSheet,
     TextInput,
     TouchableOpacity,
-    Image
+    Image,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { router } from 'expo-router';
 
 export default function IngredientsTab() {
     const [search, setSearch] = useState('');
+
+    // 🧺 Dữ liệu mẫu (mock data)
+    const ingredients = [
+        {
+            "_id": "1",
+            "nameIngredient": "Thịt gà",
+            "description": "Thịt gà là thực phẩm gia cầm phổ biến nhất trên thế giới.[3] Do có chi phí thấp và dễ chăn nuôi hơn so với các động vật khác như trâu bò hoặc lợn, nên gà đã trở thành loại thực phẩm không thể thiếu trong ẩm thực của nhiều nền văn hóa trên thế giới, đồng thời thịt của chúng đã được biến tấu để phù hợp với khẩu vị của từng khu vực. Thịt gà có thể được chế biến theo nhiều cách khác nhau tùy theo mục đích của chúng, bao gồm bỏ lò, nướng, quay, chiên hoặc luộc, cùng nhiều phương pháp khác. Kể từ nửa sau của thế kỷ 20, thịt gà chế biến sẵn đã trở thành một mặt hàng chủ yếu của dòng thực phẩm thức ăn nhanh. Loại thịt này đôi khi được coi là tốt cho sức khỏe hơn thịt đỏ, trong đó nồng độ cholesterol và chất béo bão hòa thấp hơn hẳn.",
+            "ingredientCategory": "3",
+            "ingredientImage": "https://suckhoedoisong.qltns.mediacdn.vn/324455921873985536/2024/9/16/thit-ga-1726458605898981451967.jpg",
+            "defaultAmount": 100,
+            "defaultUnit": "g",
+            "nutrition": {
+                "calories": 239,
+                "protein": 27,
+                "carbs": 1,
+                "fat": 14
+            },
+            "commonUses": [
+                "Xào",
+                "Luộc",
+                "Nướng"
+            ]
+        },
+        {
+            "_id": "2",
+            "nameIngredient": "Cà rốt",
+            "description": "Rau củ giàu vitamin A",
+            "ingredientCategory": "1",
+            "ingredientImage": "https://cdn.tienphong.vn/images/7f5c70d3e738104229acfb7638bb6b02ac67c58eec83f4c6727d92353613fbb8196bf8171bdf00ee59e632379267a678db1b10efbc027cba1d42798aca4c668b/Carrots_Nantes1_RYXE.jpg",
+            "defaultAmount": 1,
+            "defaultUnit": "củ",
+            "nutrition": {
+                "calories": 41,
+                "protein": 1,
+                "carbs": 10,
+                "fat": 0
+            },
+            "commonUses": [
+                "Xào",
+                "Canh",
+                "Salad"
+            ]
+        },
+        {
+            "_id": "3",
+            "nameIngredient": "Sữa tươi TH true MILK",
+            "description": "Đồ uống giàu canxi",
+            "ingredientCategory": "5",
+            "ingredientImage": "https://suachobeyeu.vn/upload/images/sua-tuoi-th-true-milk-co-duong-hop-180ml-4-2.jpg",
+            "defaultAmount": 100,
+            "defaultUnit": "ml",
+            "nutrition": {
+                "calories": 42,
+                "protein": 3.4,
+                "carbs": 5,
+                "fat": 1
+            },
+            "commonUses": [
+                "Uống",
+                "Pha chế",
+                "Làm bánh"
+            ]
+        },
+    ];
+
+    // Hàm điều hướng sang chi tiết
+    const handleViewIngredientDetail = (ingredient) => {
+    router.push({
+        pathname: '/(stacks)/ingredients/IngredientDetail',
+        params: {
+            _id: ingredient._id,
+            nameIngredient: ingredient.nameIngredient,
+            ingredientImage: ingredient.ingredientImage,
+            description: ingredient.description,
+            ingredientCategory: ingredient.ingredientCategory,
+            defaultAmount: ingredient.defaultAmount,
+            defaultUnit: ingredient.defaultUnit,
+            calories: ingredient.nutrition.calories,
+            protein: ingredient.nutrition.protein,
+            carbs: ingredient.nutrition.carbs,
+            fat: ingredient.nutrition.fat,
+            commonUses: JSON.stringify(ingredient.commonUses),
+        },
+    });
+};
+
+
+    // Lọc theo từ khóa tìm kiếm
+    const filteredIngredients = ingredients.filter((item) =>
+        item.nameIngredient.toLowerCase().includes(search.toLowerCase())
+    );
+
 
     return (
         <ScrollView
@@ -37,19 +130,26 @@ export default function IngredientsTab() {
                 </TouchableOpacity>
             </View>
 
-            {/* Danh sách item */}
-            <View style={styles.card}>
-                <Image
-                    source={{ uri: 'https://hips.hearstapps.com/hmg-prod/images/fresh-ripe-watermelon-slices-on-wooden-table-royalty-free-image-1684966820.jpg?crop=0.6673xw:1xh;center,top&resize=1800:*' }}
-                    style={styles.logo}
-                />
-                <View style={styles.cardContent}>
-                    <Text style={styles.title}>Dưa hấu</Text>
-                    <Text style={styles.description}>
-                        Dưa hấu (Citrullus lanatus) là loại trái cây giải khát giàu nước, giúp thanh nhiệt và cung cấp vitamin A, C.
-                    </Text>
-                </View>
-            </View>
+            {/* Danh sách nguyên liệu */}
+            {filteredIngredients.map((ingredient) => (
+                <TouchableOpacity
+                    key={ingredient.id}
+                    style={styles.card}
+                    onPress={() => handleViewIngredientDetail(ingredient)}
+                >
+                    <Image source={{ uri: ingredient.ingredientImage }} style={styles.logo} />
+                    <View style={styles.cardContent}>
+                        <Text style={styles.title}>{ingredient.nameIngredient}</Text>
+                        <Text style={styles.description} numberOfLines={2}>
+                            {ingredient.description}
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+            ))}
+
+            {filteredIngredients.length === 0 && (
+                <Text style={styles.noResult}>Không tìm thấy thực phẩm nào</Text>
+            )}
         </ScrollView>
     );
 }
@@ -59,7 +159,6 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        // paddingHorizontal: 10,
         paddingVertical: 20,
     },
 
@@ -127,5 +226,11 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#333',
         lineHeight: 18,
+    },
+    noResult: {
+        textAlign: 'center',
+        color: '#666',
+        marginTop: 20,
+        fontSize: 14,
     },
 });
