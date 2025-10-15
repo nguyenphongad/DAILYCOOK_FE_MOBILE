@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, ScrollView, Image, Text, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import HeaderComponent from '../../components/header/HeaderComponent';
-import { Ionicons } from '@expo/vector-icons'; // Thêm lại import Ionicons
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import LogoutConfirmSheet from '../../components/sheet/LogoutConfirmSheet';
+import AppInfoSheet from '../../components/sheet/AppInfoSheet';
 
 // Thông tin người dùng
 const userData = {
@@ -15,7 +17,7 @@ const userData = {
 
 // Danh sách các mục trong phần Dinh Dưỡng
 const nutritionItems = [
-  { 
+  {
     id: 'personal-info',
     title: 'Thông tin cá nhân | gia đình',
     icon: require('../../assets/images/icons_account/s1.png'),
@@ -63,9 +65,17 @@ const nutritionItems = [
 const planItems = [
   {
     id: 'meal-schedule',
+    title: 'Kế hoạch thực đơn',
+    icon: require('../../assets/images/icons_account/s6-1.png'),
+    navigateTo: '/plan/meal-schedule',
+    badge: null,
+    rightComponent: 'arrow'
+  },
+  {
+    id: 'meal-history',
     title: 'Lịch sử chế độ ăn uống',
     icon: require('../../assets/images/icons_account/s6.png'),
-    navigateTo: '/plan/meal-schedule',
+    navigateTo: '/plan/meal-history',
     badge: null,
     rightComponent: 'arrow'
   },
@@ -85,7 +95,7 @@ const generalItems = [
     id: 'app-info',
     title: 'Thông tin ứng dụng',
     icon: require('../../assets/images/icons_account/s8.png'),
-    navigateTo: '/general/app-info',
+    navigateTo: null, // Không cần navigateTo vì sẽ mở sheet tại chỗ
     badge: null,
     rightComponent: 'arrow'
   },
@@ -93,20 +103,32 @@ const generalItems = [
 
 export default function AccountScreen() {
   const insets = useSafeAreaInsets();
+  const [isLogoutSheetOpen, setIsLogoutSheetOpen] = useState(false);
+  const [isAppInfoSheetOpen, setIsAppInfoSheetOpen] = useState(false);
 
   // Hàm xử lý khi nhấn vào một mục
-  const handleItemPress = (navigateTo) => {
-    console.log(`Navigate to: ${navigateTo}`);
-    // Implement navigation later
-    // router.push(navigateTo);
+  const handleItemPress = (item) => {
+    if (item.id === 'app-info') {
+      setIsAppInfoSheetOpen(true);
+    } else if (item.navigateTo) {
+      console.log(`Navigate to: ${item.navigateTo}`);
+      // Implement navigation later
+      // router.push(item.navigateTo);
+    }
+  };
+
+  // Hàm xử lý đăng xuất
+  const handleLogout = () => {
+    console.log('User logged out');
+    // Implement actual logout logic here
   };
 
   // Component hiển thị một mục trong danh sách
   const renderListItem = (item) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       key={item.id}
       style={styles.listItem}
-      onPress={() => handleItemPress(item.navigateTo)}
+      onPress={() => handleItemPress(item)}
     >
       <View style={styles.listItemLeft}>
         <Image source={item.icon} style={styles.listItemIcon} />
@@ -119,11 +141,11 @@ export default function AccountScreen() {
             <Text style={styles.badgeText}>{item.badge}</Text>
           </View>
         )}
-        
+
         {item.rightComponent === 'arrow' && (
           <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
         )}
-        
+
         {item.rightComponent === 'text' && (
           <Text style={styles.rightText}>{item.rightText}</Text>
         )}
@@ -134,14 +156,14 @@ export default function AccountScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
-      
+
       {/* Header */}
       <HeaderComponent style={styles.header}>
         <Text style={styles.headerTitle}>Cá Nhân</Text>
       </HeaderComponent>
-      
+
       {/* Phần nội dung có thể scroll */}
-      <ScrollView 
+      <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={[
           styles.scrollContent,
@@ -151,9 +173,9 @@ export default function AccountScreen() {
       >
         {/* Profile Section */}
         <View style={styles.profileSection}>
-          <Image 
-            source={{ uri: userData.avatarUrl }} 
-            style={styles.avatar} 
+          <Image
+            source={{ uri: userData.avatarUrl }}
+            style={styles.avatar}
           />
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{userData.name}</Text>
@@ -186,11 +208,30 @@ export default function AccountScreen() {
         </View>
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={() => setIsLogoutSheetOpen(true)}
+        >
           <Ionicons name="log-out-outline" size={24} color="#FFFFFF" style={styles.logoutIcon} />
           <Text style={styles.logoutText}>Đăng xuất</Text>
         </TouchableOpacity>
+
+        <Text style={styles.versionText}>Phiên bản 5.0</Text>
+
       </ScrollView>
+
+      {/* Logout Confirmation Sheet */}
+      <LogoutConfirmSheet
+        isOpen={isLogoutSheetOpen}
+        onClose={() => setIsLogoutSheetOpen(false)}
+        onConfirm={handleLogout}
+      />
+
+      {/* App Info Sheet */}
+      <AppInfoSheet
+        isOpen={isAppInfoSheetOpen}
+        onClose={() => setIsAppInfoSheetOpen(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -199,7 +240,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F7F1E5',
-    paddingTop:-40
+    paddingTop: -40
   },
   header: {
     justifyContent: 'center',
@@ -256,7 +297,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     paddingRight: 10,
     marginHorizontal: 10,
-    elevation:0.7
+    elevation: 0.7
   },
   sectionTitle: {
     fontSize: 16,
@@ -279,7 +320,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F0F0F0',
     backgroundColor: '#F5f5f5',
     borderRadius: 12,
-    marginBottom:10
+    marginBottom: 10
   },
   listItemLeft: {
     flexDirection: 'row',
@@ -336,5 +377,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+  versionText: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: 'rgba(0, 0, 0, 0.6)',
+    marginTop: 8,
   },
 });
