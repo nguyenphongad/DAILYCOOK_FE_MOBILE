@@ -24,10 +24,10 @@ const HeaderLeft = ({ goBack, title, onGoBack }) => {
   
   return (
     <TouchableOpacity 
-      style={[styles.headerLeftContainer, { marginLeft: 10 }]} 
+      style={[styles.headerLeftContainer]} 
       onPress={handleGoBack}
     >
-      <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+      <Ionicons name="chevron-back" size={23} color="#FFFFFF" />
       {title ? <Text style={styles.headerLeftTitle}>{title}</Text> : null}
     </TouchableOpacity>
   );
@@ -37,10 +37,14 @@ const styles = StyleSheet.create({
   headerLeftContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
   },
   headerLeftTitle: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     marginLeft: 5,
     fontWeight: '500',
   }

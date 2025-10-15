@@ -330,7 +330,7 @@ export default function HomeScreen() {
   // Hàm xem chi tiết thực đơn
   const handleViewFullMenu = () => {
     router.push({
-      pathname: '/(stacks)/meals/MealDetail',
+      pathname: '/(stacks)/mealPlan/MealPlanDetail',
       params: { 
         mealTime: activeMeal,
         id: currentMeals.length > 0 ? currentMeals[0].id : 'default',

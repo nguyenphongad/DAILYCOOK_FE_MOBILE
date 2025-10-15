@@ -241,11 +241,11 @@ const styles = StyleSheet.create({
     paddingTop: -40
   },
   header: {
-    justifyContent: 'center',
+    justifyContent: 'left',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '600',
     color: 'white',
   },
