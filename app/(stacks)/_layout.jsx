@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const HeaderLeft = ({ goBack, title, onGoBack }) => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  
+
   const handleGoBack = () => {
     if (typeof onGoBack === 'function') {
       onGoBack();
@@ -16,10 +16,10 @@ const HeaderLeft = ({ goBack, title, onGoBack }) => {
       router.push(goBack || '/');
     }
   };
-  
+
   return (
-    <TouchableOpacity 
-      style={[styles.headerLeftContainer, { marginLeft: 10 }]} 
+    <TouchableOpacity
+      style={[styles.headerLeftContainer, { marginLeft: 10 }]}
       onPress={handleGoBack}
     >
       <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
@@ -50,11 +50,11 @@ export default function StackLayout() {
           color: "#fff",
         },
         headerStyle: {
-          backgroundColor: '#35A55E', 
+          backgroundColor: '#35A55E',
         },
       }}
     >
-      
+
       {/* Meal Routes */}
       <Stack.Screen
         name="meals/MealDetail"
@@ -64,7 +64,13 @@ export default function StackLayout() {
       />
 
 
-    {/* các màn hfinh stack ghi ở day toạ router */}
+      {/* các màn hfinh stack ghi ở day toạ router */}
+      <Stack.Screen
+        name="ingredients/IngredientDetail"
+        options={{
+          title: 'Chi tiết thực phẩm'
+        }}
+      />
 
 
 
