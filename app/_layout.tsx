@@ -4,9 +4,11 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { Text, View } from 'react-native';
-import 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
+import { TamaguiProvider } from 'tamagui';
+import tamaguiConfig from '../tamagui.config';
+import 'react-native-reanimated';
+import { PortalProvider } from '@tamagui/portal';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -61,24 +63,28 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   return (
-    <ThemeProvider value={customLightTheme}>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen 
-          name="modal" 
-          options={{ 
-            presentation: 'modal',
-            headerStyle: {
-              backgroundColor: '#FFFFFF',
-            },
-            headerShown: true,
-            headerTintColor: '#2c3e50',
-          }} 
-        />
-      </Stack>
-    </ThemeProvider>
+    <TamaguiProvider config={tamaguiConfig}>
+      <PortalProvider>
+        <ThemeProvider value={customLightTheme}>
+          <StatusBar style="dark" />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen 
+              name="modal" 
+              options={{ 
+                presentation: 'modal',
+                headerStyle: {
+                  backgroundColor: '#FFFFFF',
+                },
+                headerShown: true,
+                headerTintColor: '#2c3e50',
+              }} 
+            />
+          </Stack>
+        </ThemeProvider>
+      </PortalProvider>
+    </TamaguiProvider>
   );
 }

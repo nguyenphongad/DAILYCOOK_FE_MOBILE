@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, ScrollView, Image, Text, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import HeaderComponent from '../../components/header/HeaderComponent';
-import { Ionicons } from '@expo/vector-icons'; // Thêm lại import Ionicons
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import LogoutConfirmSheet from '../../components/sheet/LogoutConfirmSheet';
 
 // Thông tin người dùng
 const userData = {
@@ -63,9 +64,17 @@ const nutritionItems = [
 const planItems = [
   {
     id: 'meal-schedule',
+    title: 'Kế hoạch thực đơn',
+    icon: require('../../assets/images/icons_account/s6-1.png'),
+    navigateTo: '/plan/meal-schedule',
+    badge: null,
+    rightComponent: 'arrow'
+  },
+  {
+    id: 'meal-history',
     title: 'Lịch sử chế độ ăn uống',
     icon: require('../../assets/images/icons_account/s6.png'),
-    navigateTo: '/plan/meal-schedule',
+    navigateTo: '/plan/meal-history',
     badge: null,
     rightComponent: 'arrow'
   },
@@ -93,12 +102,20 @@ const generalItems = [
 
 export default function AccountScreen() {
   const insets = useSafeAreaInsets();
+  const [isLogoutSheetOpen, setIsLogoutSheetOpen] = useState(false);
 
   // Hàm xử lý khi nhấn vào một mục
   const handleItemPress = (navigateTo) => {
     console.log(`Navigate to: ${navigateTo}`);
     // Implement navigation later
     // router.push(navigateTo);
+  };
+
+  // Hàm xử lý đăng xuất
+  const handleLogout = () => {
+    console.log('User logged out');
+    // Implement actual logout logic here
+    // For example: clear authentication tokens, redirect to login screen, etc.
   };
 
   // Component hiển thị một mục trong danh sách
@@ -186,11 +203,21 @@ export default function AccountScreen() {
         </View>
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity 
+          style={styles.logoutButton}
+          onPress={() => setIsLogoutSheetOpen(true)}
+        >
           <Ionicons name="log-out-outline" size={24} color="#FFFFFF" style={styles.logoutIcon} />
           <Text style={styles.logoutText}>Đăng xuất</Text>
         </TouchableOpacity>
       </ScrollView>
+      
+      {/* Logout Confirmation Sheet */}
+      <LogoutConfirmSheet 
+        isOpen={isLogoutSheetOpen}
+        onClose={() => setIsLogoutSheetOpen(false)}
+        onConfirm={handleLogout}
+      />
     </SafeAreaView>
   );
 }
