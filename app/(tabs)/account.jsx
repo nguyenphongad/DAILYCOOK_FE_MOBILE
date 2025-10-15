@@ -19,9 +19,9 @@ const userData = {
 const nutritionItems = [
   {
     id: 'personal-info',
-    title: 'Thông tin cá nhân | gia đình',
+    title: 'Thông tin cá nhân',
     icon: require('../../assets/images/icons_account/s1.png'),
-    navigateTo: '/nutrition/personal-info',
+    navigateTo: '/(stacks)/account/PersonalInfo',
     badge: null,
     rightComponent: 'arrow'
   },
@@ -29,7 +29,7 @@ const nutritionItems = [
     id: 'goals',
     title: 'Mục tiêu',
     icon: require('../../assets/images/icons_account/s2.png'),
-    navigateTo: '/nutrition/goals',
+    navigateTo: '/account/goals',
     badge: null,
     rightComponent: 'arrow'
   },
@@ -37,7 +37,7 @@ const nutritionItems = [
     id: 'diet',
     title: 'Chế độ ăn',
     icon: require('../../assets/images/icons_account/s3.png'),
-    navigateTo: '/nutrition/diet',
+    navigateTo: '/account/diet',
     badge: null,
     rightComponent: 'arrow'
   },
@@ -45,7 +45,7 @@ const nutritionItems = [
     id: 'disliked-food',
     title: 'Thực phẩm không thích',
     icon: require('../../assets/images/icons_account/s4.png'),
-    navigateTo: '/nutrition/disliked-food',
+    navigateTo: '/account/disliked-food',
     badge: 4,
     badgeColor: '#E86F50',
     rightComponent: 'arrow'
@@ -111,9 +111,7 @@ export default function AccountScreen() {
     if (item.id === 'app-info') {
       setIsAppInfoSheetOpen(true);
     } else if (item.navigateTo) {
-      console.log(`Navigate to: ${item.navigateTo}`);
-      // Implement navigation later
-      // router.push(item.navigateTo);
+      router.push(item.navigateTo);
     }
   };
 
@@ -243,11 +241,11 @@ const styles = StyleSheet.create({
     paddingTop: -40
   },
   header: {
-    justifyContent: 'center',
+    justifyContent: 'left',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '600',
     color: 'white',
   },

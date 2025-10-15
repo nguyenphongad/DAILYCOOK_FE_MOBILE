@@ -57,9 +57,9 @@ export default function StackLayout() {
 
       {/* Meal Routes */}
       <Stack.Screen
-        name="meals/MealDetail"
+        name="mealPlan/MealPlanDetail"
         options={{
-          title: 'Chi tiết món ăn',
+          title: 'Chi tiết thực đơn',
         }}
       />
 
@@ -71,11 +71,21 @@ export default function StackLayout() {
           title: 'Chi tiết thực phẩm'
         }}
       />
-      
+
       <Stack.Screen
-        name="meals/MealDetail1"
+        name="meals/MealDetail"
         options={{
           title: 'Chi tiết món ăn',
+        }}
+      />
+
+
+
+      {/* các stack của account */}
+      <Stack.Screen
+        name="account/PersonalInfo"
+        options={{
+          title: 'Thông tin cá nhân',
         }}
       />
 
