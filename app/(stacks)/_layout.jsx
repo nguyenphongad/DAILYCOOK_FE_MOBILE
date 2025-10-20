@@ -90,6 +90,14 @@ export default function StackLayout() {
       />
 
 
+       <Stack.Screen
+        name="account/DietType"
+        options={{
+          title: 'Chọn chế độ ăn',
+        }}
+      />
+
+
 
 
 

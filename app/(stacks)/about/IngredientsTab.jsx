@@ -131,7 +131,7 @@ export default function IngredientsTab() {
             {/* Danh sách nguyên liệu */}
             {filteredIngredients.map((ingredient) => (
                 <TouchableOpacity
-                    key={ingredient.id}
+                    key={ingredient._id}
                     style={styles.card}
                     onPress={() => handleViewIngredientDetail(ingredient)}
                 >

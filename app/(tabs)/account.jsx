@@ -37,7 +37,7 @@ const nutritionItems = [
     id: 'diet',
     title: 'Chế độ ăn',
     icon: require('../../assets/images/icons_account/s3.png'),
-    navigateTo: '/account/diet',
+    navigateTo: '/account/DietType',
     badge: null,
     rightComponent: 'arrow'
   },
