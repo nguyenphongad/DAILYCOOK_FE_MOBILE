@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, Animated, ToastAndroid } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
+import LoadingComponent from '../../components/loading/LoadingComponent';
 
 const { width, height } = Dimensions.get('window');
 
@@ -10,6 +11,9 @@ export default function LoginScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const bottomSectionAnim = useRef(new Animated.Value(100)).current;
+  
+  // Thêm state cho loading
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // Chạy animation khi component mount
@@ -36,6 +40,9 @@ export default function LoginScreen() {
   }, []);
 
   const handleGoogleLogin = () => {
+    // Hiển thị loading trước khi đăng nhập
+    setIsLoading(true);
+    
     // Hiển thị thông báo Toast khi đăng nhập thành công
     ToastAndroid.showWithGravity(
       'Đăng nhập thành công',
@@ -45,9 +52,12 @@ export default function LoginScreen() {
     
     // Đặt timeout nhỏ để người dùng có thể thấy thông báo trước khi chuyển hướng
     setTimeout(() => {
+      // Tắt loading
+      setIsLoading(false);
+      
       // Chuyển hướng đến màn hình chính
       router.replace('/(tabs)');
-    }, 1000); // Đợi 1 giây trước khi chuyển hướng
+    }, 2000); // Tăng thời gian chờ lên 2 giây để hiển thị loading rõ ràng hơn
   };
 
   return (
@@ -119,6 +129,9 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
       </Animated.View>
+      
+      {/* Thêm component Loading */}
+      <LoadingComponent visible={isLoading} />
     </View>
   );
 }
