@@ -28,6 +28,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="dailycook"/>
+        <data android:scheme="exp+dailycook"/>
       </intent-filter>
     </activity>
   </application>

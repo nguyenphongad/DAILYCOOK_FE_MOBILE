@@ -1,8 +1,31 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ToastAndroid, Platform, Alert } from 'react-native';
+import { useDispatch } from 'react-redux';
+import { router } from 'expo-router';
 import SheetComponent from './SheetComponent';
+import { logoutUser } from '../../redux/thunk/authThunk';
 
-const LogoutConfirmSheet = ({ isOpen, onClose, onConfirm }) => {
+const LogoutConfirmSheet = ({ isOpen, onClose }) => {
+  const dispatch = useDispatch();
+
+  const handleLogout = async () => {
+    try {
+      onClose(); // Đóng sheet trước
+      await dispatch(logoutUser()).unwrap();
+      
+      // Hiển thị toast đăng xuất thành công
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('Đăng xuất thành công!', ToastAndroid.SHORT);
+      }
+      
+      router.replace('/(auth)/Login'); // Chuyển về màn hình login
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Vẫn chuyển về login nếu có lỗi
+      router.replace('/(auth)/Login');
+    }
+  };
+
   return (
     <SheetComponent 
       isOpen={isOpen} 
@@ -24,10 +47,7 @@ const LogoutConfirmSheet = ({ isOpen, onClose, onConfirm }) => {
           
           <TouchableOpacity 
             style={[styles.button, styles.logoutButton]} 
-            onPress={() => {
-              onConfirm();
-              onClose();
-            }}
+            onPress={handleLogout}
           >
             <Text style={styles.logoutButtonText}>Đăng xuất</Text>
           </TouchableOpacity>

@@ -11,6 +11,9 @@ import 'react-native-reanimated';
 import { PortalProvider } from '@tamagui/portal';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from '../redux/store';
 
 // Cấu hình thông báo với các kiểu dữ liệu đầy đủ theo yêu cầu TypeScript
 Notifications.setNotificationHandler({
@@ -99,28 +102,33 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   return (
-    <TamaguiProvider config={tamaguiConfig}>
-      <PortalProvider>
-        <ThemeProvider value={customLightTheme}>
-          <StatusBar style="dark" />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen 
-              name="modal" 
-              options={{ 
-                presentation: 'modal',
-                headerStyle: {
-                  backgroundColor: '#FFFFFF',
-                },
-                headerShown: true,
-                headerTintColor: '#2c3e50',
-              }} 
-            />
-          </Stack>
-        </ThemeProvider>
-      </PortalProvider>
-    </TamaguiProvider>
+    <Provider store={store}>
+      {/* PersistGate không bắt buộc - bạn có thể bỏ nếu không cần persist state */}
+      <PersistGate loading={null} persistor={persistor}>
+        <TamaguiProvider config={tamaguiConfig}>
+          <PortalProvider>
+            <ThemeProvider value={customLightTheme}>
+              <StatusBar style="dark" />
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen 
+                  name="modal" 
+                  options={{ 
+                    presentation: 'modal',
+                    headerStyle: {
+                      backgroundColor: '#FFFFFF',
+                    },
+                    headerShown: true,
+                    headerTintColor: '#2c3e50',
+                  }} 
+                />
+              </Stack>
+            </ThemeProvider>
+          </PortalProvider>
+        </TamaguiProvider>
+      </PersistGate>
+    </Provider>
   );
 }

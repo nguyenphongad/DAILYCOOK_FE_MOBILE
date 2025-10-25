@@ -1,5 +1,6 @@
 {
   "expo": {
+    "owner": "expophong",
     "name": "DailyCook",
     "slug": "DailyCook",
     "version": "1.0.0",
@@ -16,7 +17,9 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       }
     },
     "android": {
@@ -25,8 +28,11 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.expophong.DailyCook",
-      "permissions": ["NOTIFICATIONS", "VIBRATE"]
+      "package": "com.se.dailyCook",
+      "permissions": [
+        "NOTIFICATIONS",
+        "VIBRATE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -40,10 +46,24 @@
         {
           "color": "#35A55E"
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7ec4871b-ea85-4726-9984-2022c398ca43"
+      }
     }
   }
 }
