@@ -1,22 +1,45 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, Animated, ToastAndroid } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Animated, Alert, Linking, ToastAndroid, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
+import { useDispatch, useSelector } from 'react-redux';
+import { supabase } from '../../config/supabase';
+import { loginWithGoogleTokens, getCurrentSession } from '../../redux/thunk/authThunk';
+import { selectAuth, selectError, clearError, setAuthState, setLoading } from '../../redux/slice/authSlice';
 import LoadingComponent from '../../components/loading/LoadingComponent';
 
-const { width, height } = Dimensions.get('window');
-
 export default function LoginScreen() {
-  // Animation cho các phần tử trong login screen
+  const dispatch = useDispatch();
+  const { isAuthenticated, isLoading } = useSelector(selectAuth);
+  const error = useSelector(selectError);
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const bottomSectionAnim = useRef(new Animated.Value(100)).current;
-  
-  // Thêm state cho loading
-  const [isLoading, setIsLoading] = useState(false);
 
+  // Kiểm tra session khi app khởi động
   useEffect(() => {
-    // Chạy animation khi component mount
+    dispatch(getCurrentSession());
+  }, []);
+
+  // Redirect nếu đã đăng nhập
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated]);
+
+  // Hiển thị lỗi
+  useEffect(() => {
+    if (error) {
+      Alert.alert('Lỗi đăng nhập', error, [
+        { text: 'OK', onPress: () => dispatch(clearError()) }
+      ]);
+    }
+  }, [error]);
+
+  // Animations
+  useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -39,48 +62,120 @@ export default function LoginScreen() {
     ]).start();
   }, []);
 
-  const handleGoogleLogin = () => {
-    // Hiển thị loading trước khi đăng nhập
-    setIsLoading(true);
-    
-    // Hiển thị thông báo Toast khi đăng nhập thành công
-    ToastAndroid.showWithGravity(
-      'Đăng nhập thành công',
-      ToastAndroid.SHORT,
-      ToastAndroid.BOTTOM
-    );
-    
-    // Đặt timeout nhỏ để người dùng có thể thấy thông báo trước khi chuyển hướng
-    setTimeout(() => {
-      // Tắt loading
-      setIsLoading(false);
-      
-      // Chuyển hướng đến màn hình chính
-      router.replace('/(tabs)');
-    }, 2000); // Tăng thời gian chờ lên 2 giây để hiển thị loading rõ ràng hơn
+  // Thêm useEffect này để handle deep link callback
+  useEffect(() => {
+    const handleDeepLink = async (event) => {
+      const url = event.url;
+      console.log('Deep link received:', url);
+
+      if (url && url.includes('access_token=')) {
+        try {
+          // Parse tokens từ URL
+          const params = new URLSearchParams(url.split('#')[1]);
+          const access_token = params.get('access_token');
+          const refresh_token = params.get('refresh_token');
+
+          console.log('Parsed tokens:', {
+            access_token: access_token?.substring(0, 50) + '...',
+            refresh_token: refresh_token?.substring(0, 20) + '...'
+          });
+
+          if (access_token) {
+            // Gửi tokens lên backend để xác thực
+            const result = await dispatch(loginWithGoogleTokens({
+              access_token,
+              refresh_token,
+            })).unwrap();
+
+            console.log('Login result:', result);
+
+            // Hiển thị Toast thông báo đăng nhập thành công
+            ToastAndroid.show(
+              `Đăng nhập thành công! Hi ${result.user.fullName || result.user.email} 👋`,
+              ToastAndroid.LONG
+            );
+          }
+        } catch (error) {
+          console.error('Parse token error:', error);
+          dispatch(setLoading(false));
+
+          if (Platform.OS === 'android') {
+            ToastAndroid.show('Không thể xử lý đăng nhập: ' + error, ToastAndroid.SHORT);
+          } else {
+            Alert.alert('Lỗi', 'Không thể xử lý đăng nhập: ' + error);
+          }
+        }
+      }
+    };
+
+    // Lắng nghe URL changes
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    // Kiểm tra initial URL khi app vừa mở
+    Linking.getInitialURL().then((url) => {
+      if (url && url.includes('access_token=')) {
+        console.log('Initial URL:', url);
+        handleDeepLink({ url });
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [dispatch]);
+
+  const handleGoogleLogin = async () => {
+    try {
+      dispatch(setLoading(true));
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: 'dailycook://',
+          skipBrowserRedirect: false,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      // Mở browser
+      if (data?.url) {
+        const supported = await Linking.canOpenURL(data.url);
+        if (supported) {
+          await Linking.openURL(data.url);
+        } else {
+          throw new Error('Không thể mở trình duyệt');
+        }
+      }
+    } catch (error) {
+      dispatch(setLoading(false));
+
+      console.log("loi tu be" + error)
+
+      Alert.alert('Lỗi', error.message || 'Không thể đăng nhập');
+      console.error('Login error:', error);
+    }
   };
 
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Phần hình ảnh phía trên không bị mờ */}
       <View style={styles.topSection}>
         <Image
           source={require('../../assets/images/image_top.jpg')}
           style={styles.backgroundImage}
         />
-        
-        {/* Thêm lớp phủ màu đen đen */}
         <View style={styles.darkOverlay} />
-        
-        <Animated.View 
+
+        <Animated.View
           style={[
             styles.contentContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
           ]}
         >
           <View style={styles.logoContainer}>
@@ -90,22 +185,15 @@ export default function LoginScreen() {
               resizeMode="contain"
             />
           </View>
-
           <Text style={styles.title}>DAILY COOK</Text>
           <Text style={styles.subtitle}>Thực đơn nhà mình</Text>
         </Animated.View>
-
-        {/* Thay thế LinearGradient bằng View có màu nền */}
-        <View style={styles.overlayBottom} />
       </View>
 
-      <Animated.View 
+      <Animated.View
         style={[
           styles.bottomSection,
-          {
-            transform: [{ translateY: bottomSectionAnim }],
-            opacity: fadeAnim
-          }
+          { transform: [{ translateY: bottomSectionAnim }], opacity: fadeAnim }
         ]}
       >
         <View style={styles.loginContainer}>
@@ -117,20 +205,22 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
-            style={styles.googleButton}
+            style={[styles.googleButton, isLoading && styles.buttonDisabled]}
             onPress={handleGoogleLogin}
-            activeOpacity={0.8} // Thêm feedback khi nhấn nút
+            disabled={isLoading}
+            activeOpacity={0.8}
           >
             <Image
               source={require('../../assets/images/google_icon.png')}
               style={styles.googleIcon}
             />
-            <Text style={styles.googleText}>Đăng nhập bằng Google</Text>
+            <Text style={styles.googleText}>
+              {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập bằng Google'}
+            </Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
-      
-      {/* Thêm component Loading */}
+
       <LoadingComponent visible={isLoading} />
     </View>
   );
@@ -205,7 +295,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: '29%', 
+    height: '29%',
     backgroundColor: '#35A55E',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
@@ -268,5 +358,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#333333',
-  }
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
 });
