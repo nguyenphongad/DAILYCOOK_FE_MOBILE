@@ -1,80 +1,70 @@
 import React from 'react';
 import { Link, Tabs } from 'expo-router';
-import { Pressable, Text, Image } from 'react-native';
+import { Pressable, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { FontAwesome } from '@expo/vector-icons';
 
-// Quản lý menu bằng JSON
-const tabMenus = [
+// Thêm interface cho tab menu
+interface TabMenu {
+	name: string;
+	title: string;
+	icon: React.ComponentProps<typeof FontAwesome>['name'];
+}
+
+// Quản lý menu bằng JSON với FontAwesome icons
+const tabMenus: TabMenu[] = [
 	{
 		name: 'index',
-		title: 'Món ăn',
-		// icon: 'cutlery', // Thay đổi từ 'home' sang 'cutlery' (icon dao dĩa)
-		image: require('../../assets/images/icons_menu/iftar.png'), // Hình ảnh đồ ăn
-	},
-	{
-		name: 'shopping',
-		title: 'Mua sắm',
-		// icon: 'shopping-basket', // Thay đổi từ 'shopping-cart' sang 'shopping-basket' (icon giỏ đựng)
-		image: require('../../assets/images/icons_menu/cart.png'), // Hình ảnh giỏ mua sắm
+		title: 'Thực đơn',
+		icon: 'cutlery',
 	},
 	{
 		name: 'about',
 		title: 'Danh Mục',
-		// icon: 'list', // Thay đổi từ 'info-circle' sang 'list' (icon danh sách)
-		image: require('../../assets/images/icons_menu/to-do-list.png'), // Hình ảnh danh sách
+		icon: 'book',
+	},
+	{
+		name: 'recordMeal',
+		title: 'Ghi nhận',
+		icon: 'calendar',
+	},
+	{
+		name: 'shopping',
+		title: 'Mua sắm',
+		icon: 'shopping-cart',
 	},
 	{
 		name: 'account',
 		title: 'Tài khoản',
-		// icon: 'user', // Giữ nguyên 'user' (icon người dùng)
-		image: require('../../assets/images/icons_menu/user.png'), // Hình ảnh người dùng
+		icon: 'user',
 	},
 ];
 
-// Component mới để hiển thị hình ảnh thay vì icon
-function TabBarImage(props: {
-	source: any;
+// Component FontAwesome icon
+function TabBarIcon(props: {
+	name: React.ComponentProps<typeof FontAwesome>['name'];
 	color: string;
 }) {
-	return (
-		<Image 
-			source={props.source} 
-			style={{ 
-				width: 24, 
-				height: 24, 
-				marginBottom: -3,
-				// Không cần thay đổi màu cho hình ảnh
-			}} 
-		/>
-	);
+	return <FontAwesome size={17} style={{ marginBottom: -3 }} {...props} />;
 }
-
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-// function TabBarIcon(props: {
-// 	name: React.ComponentProps<typeof FontAwesome>['name'];
-// 	color: string;
-// }) {
-// 	return <FontAwesome size={24} style={{ marginBottom: -3 }} {...props} />;
-// }
 
 export default function TabLayout() {
 	return (
 		<>
-			{/* Đặt StatusBar style là "dark" để hiển thị chữ đen trên nền trắng */}
 			<StatusBar style="dark" />
 			<Tabs
 				screenOptions={{
-					tabBarActiveTintColor: '#35A55E', // Màu chữ khi active giữ nguyên
-					tabBarInactiveTintColor: '#7f8c8d', // Màu khi không active
+					tabBarActiveTintColor: '#35A55E',
+					tabBarInactiveTintColor: '#7f8c8d',
 					tabBarStyle: { 
-						backgroundColor: '#FFFFFF',  // Màu nền của tab bar
-						borderTopColor: '#e0e0e0',  // Màu viền trên của tab bar
+						backgroundColor: '#FFFFFF',
+						borderTopColor: '#e0e0e0',
 						marginTop: -50, 
 					},
 					headerStyle: {
-						backgroundColor: '#FFFFFF', // Màu nền của header
+						backgroundColor: '#FFFFFF',
 					},
-					headerTintColor: '#2c3e50', // Màu chữ của header
+					headerTintColor: '#2c3e50',
 					headerTitleStyle: {
 						fontWeight: 'bold',
 					},
@@ -86,8 +76,21 @@ export default function TabLayout() {
 						name={tab.name}
 						options={{
 							title: tab.title,
-							tabBarIcon: ({ color }) => (
-								<TabBarImage source={tab.image} color={color} />
+							tabBarLabel: ({ focused }) => (
+								<Text style={{ 
+									fontSize: 12, 
+									color: focused ? '#35A55E' : 'transparent',
+									fontWeight: focused ? '600' : 'normal',
+									marginTop: -2,
+								}}>
+									{focused ? tab.title : ''}
+								</Text>
+							),
+							tabBarIcon: ({ focused }) => (
+								<TabBarIcon 
+									name={tab.icon} 
+									color={focused ? '#35A55E' : '#7f8c8d'} 
+								/>
 							),
 						}}
 					/>
