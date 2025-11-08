@@ -63,8 +63,15 @@ export default function StackLayout() {
         }}
       />
 
+      <Stack.Screen
+        name="mealPlan/PageRenderAI"
+        options={{
+          title: 'Kế hoạch bữa ăn',
+        }}
+      />
 
-      {/* các màn hfinh stack ghi ở day toạ router */}
+
+      {/* các màn hình stack ghi ở đây */}
       <Stack.Screen
         name="ingredients/IngredientDetail"
         options={{
