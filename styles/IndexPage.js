@@ -38,16 +38,37 @@ const styles = StyleSheet.create({
     height: 20,
   },
   
-  // Xóa các style không còn cần thiết vì đã chuyển sang component riêng
-  // waterReminderSheet, waterReminderTitle, waterReminderText,
-  // waterReminderSettingButton, waterReminderSettingButtonText
+  // Cập nhật styles cho date header section
+  dateHeaderSection: {
+    padding: 0, // Giảm padding
+    marginHorizontal: 15,
+    marginBottom: 16,
+    alignItems: 'flex-start', 
+    borderLeftWidth: 4,
+    paddingLeft: 15,
+    borderColor: '#c12e2e',
+  },
+  dayTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#35A55E',
+    marginBottom: 4,
+    textAlign: 'left', // Căn lề trái
+  },
+  dateSubtitle: {
+    fontSize: 16,
+    color: '#666666',
+    fontWeight: '400',
+    textAlign: 'left', // Căn lề trái
+  },
+  
   
   // Thêm style mới cho phần nutrition
   nutritionSection: {
     paddingHorizontal: 15,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: '#333',
     marginBottom: 15,
@@ -259,53 +280,301 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   aiRecommendationCard: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 15,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    position: 'relative',
   },
-  aiHeaderRow: {
+  aiImageContainer: {
+    alignItems: 'center',
+  },
+  aiImage: {
+    width: 150,
+    height: 150,
+    marginBottom: 35,
+  },
+  aiFeaturesContainer: {
+    marginBottom: 16, // Giảm marginBottom vì không cần chỗ cho nút
+  },
+  aiFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+    paddingHorizontal: 8,
+  },
+  aiFeatureBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#35A55E',
+    marginTop: 6,
+    marginRight: 12,
+  },
+  aiFeatureText: {
+    fontSize: 14,
+    color: '#666666',
+    lineHeight: 20,
+    flex: 1,
+    fontWeight: '400',
+  },
+  aiSuggestionButtonExternal: {
+    position: 'absolute',
+    bottom: 60,
+    left: 15,
+    right: 15,
+    flexDirection: 'row',
+    backgroundColor: '#35A55E',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+    zIndex: 1000, // Đảm bảo nút luôn hiển thị trên cùng
+  },
+  aiSuggestionButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    marginRight:20,
+    fontSize:16
+  },
+
+  // Settings sheet styles
+  settingsSheetContent: {
+    padding: 16,
+  },
+  
+  settingsSheetTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333333',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  
+  settingsOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  
+  settingsOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  
+  settingsOptionText: {
+    fontSize: 16,
+    color: '#333333',
+    marginLeft: 12,
+    fontWeight: '500',
+  },
+
+  // Thêm style cho text màu đỏ (xóa thực đơn)
+  settingsOptionTextDanger: {
+    fontSize: 16,
+    color: '#E86F50',
+    marginLeft: 12,
+    fontWeight: '500',
+  },
+  
+  // AI Modal styles
+  aiModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    padding: 20,
+    paddingTop: 50,
+  },
+  
+  aiModalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 400,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  
+  aiModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    backgroundColor: '#35A55E',
+  },
+  
+  aiModalIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#28A745',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  
+  aiModalTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  
+  aiModalCloseButton: {
+    padding: 8,
+  },
+  
+  aiModalBody: {
+    maxHeight: '70%',
+  },
+  
+  aiModalBodyContent: {
+    padding: 16,
+    paddingBottom: 0,
+  },
+  
+  aiLoadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  
+  aiLoadingImage: {
+    width: 80,
+    height: 80,
+    marginBottom: 16,
+  },
+  
+  aiLoadingText: {
+    fontSize: 16,
+    color: '#666666',
+    textAlign: 'center',
+  },
+  
+  aiSuggestionContainer: {
+    // Để trống cho animation
+  },
+  
+  aiAnalysisContainer: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  
+  aiAnalysisTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333333',
+    marginBottom: 12,
+  },
+  
+  aiAnalysisItemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
   },
-  aiIconContainer: {
+  
+  aiAnalysisCheckmarkContainer: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#FFB800',
-    justifyContent: 'center',
+    backgroundColor: '#28A745',
     alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 8,
   },
-  aiHeaderText: {
+  
+  aiAnalysisCheckmark: {
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333333',
-    flex: 1,
+    fontWeight: '700',
   },
-  refreshButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  aiDescription: {
+  
+  aiAnalysisItem: {
     fontSize: 14,
     color: '#666666',
+    flex: 1,
+    fontWeight: '400',
+  },
+  
+  aiIntroText: {
+    fontSize: 14,
+    color: '#333333',
+    marginBottom: 12,
     lineHeight: 20,
   },
+  
+  aiMealSuggestions: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    elevation: 2,
+  },
+  
+  aiMealHeader: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#35A55E',
+    marginBottom: 8,
+  },
+  
+  aiMealItem: {
+    fontSize: 14,
+    color: '#333333',
+    marginBottom: 4,
+    lineHeight: 20,
+  },
+  
+  aiAcceptButton: {
+    backgroundColor: '#35A55E',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  
+  aiAcceptButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+    letterSpacing: 0.5,
+  },
+  
   menuGrid: {
     marginTop: 5,
   },
-  menuRow: {
+  
+  // Thêm styles cho layout dọc
+  menuItemCardVertical: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 15,
-  },
-  menuItemCard: {
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
     overflow: 'hidden',
@@ -314,91 +583,91 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 2,
+    marginBottom: 12,
+    padding: 12,
   },
-  menuItemImage: {
-    width: '100%',
-    height: 100,
+  
+  menuItemImageVertical: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
     resizeMode: 'cover',
   },
-  menuItemContent: {
-    padding: 10,
-  },
-  menuItemName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333333',
-    marginBottom: 5,
-  },
-  menuItemMacros: {
-    flexDirection: 'row',
+  
+  menuItemContentVertical: {
+    flex: 1,
+    marginLeft: 12,
     justifyContent: 'space-between',
   },
-  menuItemMacro: {
-    fontSize: 12,
-    color: '#666666',
+  
+  menuItemInfo: {
+    flex: 1,
   },
-  viewFullMenuButton: {
-    backgroundColor: '#35A55E',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 15,
-    marginBottom: 20,
-  },
-  viewFullMenuText: {
+  
+  menuItemNameVertical: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#333333',
+    marginBottom: 4,
+  },
+  
+  menuItemDescription: {
+    fontSize: 13,
+    color: '#666666',
+    marginBottom: 8,
+    lineHeight: 18,
+  },
+  
+  menuItemActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  
+  viewDetailButton: {
+    backgroundColor: '#F0F8F0',
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#35A55E',
+  },
+  
+  viewDetailButtonText: {
+    fontSize: 12,
+    color: '#35A55E',
+    fontWeight: '500',
+  },
+  
+  acknowledgeButton: {
+    backgroundColor: '#35A55E',
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  
+  acknowledgeButtonText: {
+    fontSize: 12,
     color: '#FFFFFF',
-    marginRight: 8,
+    fontWeight: '500',
   },
   
-  // Cập nhật mealItemContainer để tương thích với thiết kế mới
-  mealItemContainer: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    marginBottom: 20,
-  },
-  
-  // Thêm style cho typeMeal
+  // Cập nhật typeMealContainer cho layout dọc
   typeMealContainer: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: '#D32F2F', // Màu đỏ đậm
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  typeMealText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#FFFFFF', // Chữ màu trắng
+    top: 8,
+    right: 8,
+    backgroundColor: '#D32F2F',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
   },
   
-  // Thay đổi màu chữ cho activeDateText từ xanh sang trắng
-  activeDateText: {
-    color: '#FFFFFF', // Đổi màu chữ thành trắng cho ngày active
+  typeMealText: {
+    fontSize: 10,
     fontWeight: '600',
-  },
-  noMealContainer: {
-    padding: 20,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 10,
-    alignItems: 'center',
-    marginVertical: 15,
-  },
-  noMealText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    color: '#FFFFFF',
   },
 });
 

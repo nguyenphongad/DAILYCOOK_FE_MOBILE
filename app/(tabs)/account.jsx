@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, ScrollView, Image, Text, View, TouchableOpacity } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { StyleSheet, ScrollView, Image, Text, View, TouchableOpacity, FlatList, Animated } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import HeaderComponent from '../../components/header/HeaderComponent';
@@ -101,10 +101,80 @@ const generalItems = [
   },
 ];
 
+// Thêm dữ liệu nutrition goals
+const nutritionGoals = [
+  {
+    id: '1',
+    label: 'Protein',
+    value: 215,
+    maxValue: 250,
+    unit: 'gram',
+    postfix: '+',
+    backgroundColor: '#FFFFFF',
+    iconSource: require('../../assets/images/icons_home/protein.png'),
+    textColor: '#000000',
+    progressColor: '#38B74C',
+  },
+  {
+    id: '2',
+    label: 'Kcal',
+    value: 259,
+    maxValue: 500,
+    unit: 'gram',
+    postfix: '+',
+    backgroundColor: '#FFDBAA',
+    iconSource: require('../../assets/images/icons_home/calories.png'),
+    textColor: '#000000',
+    progressColor: '#FF8C00',
+  },
+  {
+    id: '3',
+    label: 'Nước',
+    value: 1200,
+    maxValue: 2000,
+    unit: 'ml',
+    postfix: '',
+    backgroundColor: '#BAE5D0',
+    iconSource: require('../../assets/images/icons_home/water-bottle.png'),
+    textColor: '#000000',
+    progressColor: '#1E90FF',
+  },
+  {
+    id: '4',
+    label: 'Chất xơ',
+    value: 25,
+    maxValue: 35,
+    unit: 'gr',
+    postfix: '',
+    backgroundColor: '#E6F7FF',
+    iconSource: require('../../assets/images/icons_home/calories.png'),
+    textColor: '#000000',
+    progressColor: '#4169E1',
+  }
+];
+
 export default function AccountScreen() {
   const insets = useSafeAreaInsets();
   const [isLogoutSheetOpen, setIsLogoutSheetOpen] = useState(false);
   const [isAppInfoSheetOpen, setIsAppInfoSheetOpen] = useState(false);
+  
+  // Thêm refs cho animation
+  const progressAnims = useRef(nutritionGoals.map(() => new Animated.Value(0))).current;
+
+  // Chạy animation khi component mount
+  useEffect(() => {
+    const animations = progressAnims.map((anim, index) => {
+      const progressPercentage = Math.min(nutritionGoals[index].value / nutritionGoals[index].maxValue, 1);
+      return Animated.timing(anim, {
+        toValue: progressPercentage,
+        duration: 1000,
+        delay: 300 + index * 200,
+        useNativeDriver: false
+      });
+    });
+
+    Animated.stagger(100, animations).start();
+  }, []);
 
   // Hàm xử lý khi nhấn vào một mục
   const handleItemPress = (item) => {
@@ -179,6 +249,56 @@ export default function AccountScreen() {
             <Text style={styles.profileName}>{userData.name}</Text>
             <Text style={styles.profileEmail}>{userData.email}</Text>
           </View>
+        </View>
+
+        {/* Daily Nutrition Goals Section */}
+        <View style={styles.nutritionSection}>
+          <Text style={styles.nutritionSectionTitle}>Chế độ dinh dưỡng hàng ngày của bạn</Text>
+          
+          <FlatList
+            data={nutritionGoals}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.nutritionList}
+            renderItem={({ item, index }) => (
+              <View style={[styles.nutritionCard, { backgroundColor: item.backgroundColor }]}>
+                <View style={styles.nutritionCardHeader}>
+                  <Text style={[styles.nutritionCardLabel, { color: item.textColor }]}>
+                    {item.label}
+                  </Text>
+                  <Image 
+                    source={item.iconSource}
+                    style={styles.nutritionCardIcon} 
+                  />
+                </View>
+                
+                <View style={styles.nutritionCardContent}>
+                  <Text style={[styles.nutritionCardValue, { color: item.textColor }]}>
+                    {item.value}{item.postfix}
+                  </Text>
+                  <Text style={styles.nutritionCardUnit}>
+                    {item.unit}
+                  </Text>
+                </View>
+                
+                <View style={styles.progressBarContainer}>
+                  <Animated.View 
+                    style={[
+                      styles.progressBarFill, 
+                      { 
+                        backgroundColor: item.progressColor,
+                        width: progressAnims[index].interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0%', '100%']
+                        })
+                      }
+                    ]}
+                  />
+                </View>
+              </View>
+            )}
+          />
         </View>
 
         {/* Nutrition Section */}
@@ -285,6 +405,71 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.8)',
     marginTop: 2,
+  },
+  nutritionSection: {
+    marginTop: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 16,
+    marginHorizontal: 10,
+    elevation: 0.7
+  },
+  nutritionSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+  },
+  nutritionList: {
+    paddingRight: 10,
+  },
+  nutritionCard: {
+    width: 140,
+    padding: 16,
+    borderRadius: 12,
+    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  nutritionCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  nutritionCardLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  nutritionCardIcon: {
+    width: 20,
+    height: 20,
+    resizeMode: 'contain',
+  },
+  nutritionCardContent: {
+    marginBottom: 12,
+  },
+  nutritionCardValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  nutritionCardUnit: {
+    fontSize: 10,
+    color: '#666',
+    marginTop: 2,
+  },
+  progressBarContainer: {
+    height: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 2,
   },
   section: {
     marginTop: 16,
