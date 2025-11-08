@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { logoutUser, getCurrentSession, loginWithGoogleTokens } from '../thunk/authThunk';
+import { logoutUser, getCurrentSession, loginWithGoogleTokens, checkTokenAndGetUser } from '../thunk/authThunk';
 
 const initialState = {
   user: null,
@@ -87,6 +87,25 @@ const authSlice = createSlice({
       })
       .addCase(logoutUser.rejected, (state) => {
         return initialState;
+      });
+
+    // Check Token and Get User
+    builder
+      .addCase(checkTokenAndGetUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(checkTokenAndGetUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = action.payload.isLogin;
+        state.user = action.payload.user;
+        state.error = null;
+      })
+      .addCase(checkTokenAndGetUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.error = action.payload;
       });
   },
 });

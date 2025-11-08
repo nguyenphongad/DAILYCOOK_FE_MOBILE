@@ -8,6 +8,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import styles from '../../styles/IndexPage';
 import WaterReminderSheet from '../../components/sheet/WaterReminderSheet';
 import SheetComponent from '../../components/sheet/SheetComponent';
+import { useDispatch, useSelector } from 'react-redux';
+import { checkTokenAndGetUser } from '../../redux/thunk/authThunk';
 
 // Giả lập dữ liệu
 const userData = {
@@ -187,6 +189,10 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const today = new Date();
   const params = useLocalSearchParams();
+  const dispatch = useDispatch();
+  
+  // Redux selectors để lấy thông tin user
+  const { user, isLoading } = useSelector((state) => state.auth);
   
   const [currentDate, setCurrentDate] = useState({
     dayName: getDayName(today.getDay()),
@@ -227,6 +233,11 @@ export default function HomeScreen() {
       }
     }
   }, [params.acceptedMeals, params.showAISection]); // Thêm dependency array
+
+  // Fetch user info khi component mount
+  useEffect(() => {
+    dispatch(checkTokenAndGetUser());
+  }, [dispatch]);
 
   // Hàm xử lý khi người dùng kéo xuống để refresh
   const onRefresh = useCallback(() => {
@@ -418,12 +429,17 @@ export default function HomeScreen() {
     }, 300);
   };
 
+  // Lấy tên user từ Redux state hoặc fallback
+  const displayName = user?.fullName || userData.name || 'Người dùng';
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
       {/* Header cố định */}
       <HeaderComponent>
-        <Text style={styles.headerText}>Xin chào, {userData.name}</Text>
+        <Text style={styles.headerText}>
+          Xin chào, {isLoading ? 'đang tải...' : displayName}
+        </Text>
         <View style={styles.headerRight}>
           <Image 
             source={weatherIcon}

@@ -7,6 +7,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import LogoutConfirmSheet from '../../components/sheet/LogoutConfirmSheet';
 import AppInfoSheet from '../../components/sheet/AppInfoSheet';
+import { useDispatch, useSelector } from 'react-redux';
+import { checkTokenAndGetUser, logoutUser } from '../../redux/thunk/authThunk';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Thông tin người dùng
 const userData = {
@@ -155,11 +158,21 @@ const nutritionGoals = [
 
 export default function AccountScreen() {
   const insets = useSafeAreaInsets();
+  const dispatch = useDispatch();
+  
+  // Redux selectors
+  const { user, isLoading, error, isAuthenticated } = useSelector((state) => state.auth);
+  
   const [isLogoutSheetOpen, setIsLogoutSheetOpen] = useState(false);
   const [isAppInfoSheetOpen, setIsAppInfoSheetOpen] = useState(false);
 
   // Thêm refs cho animation
   const progressAnims = useRef(nutritionGoals.map(() => new Animated.Value(0))).current;
+
+  // Fetch user info khi component mount
+  useEffect(() => {
+    dispatch(checkTokenAndGetUser());
+  }, [dispatch]);
 
   // Chạy animation khi component mount
   useEffect(() => {
@@ -185,10 +198,17 @@ export default function AccountScreen() {
     }
   };
 
-  // Hàm xử lý đăng xuất
-  const handleLogout = () => {
-    console.log('User logged out');
-    // Implement actual logout logic here
+  // Hàm xử lý đăng xuất - sử dụng Redux thunk
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+      console.log('User logged out successfully');
+      
+      // Navigate to login hoặc index page
+      // router.replace('/(auth)/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   // Component hiển thị một mục trong danh sách
@@ -221,6 +241,13 @@ export default function AccountScreen() {
     </TouchableOpacity>
   );
 
+  // Sử dụng data từ Redux state
+  const displayUser = user || {
+    fullName: isLoading ? 'Đang tải...' : 'Người dùng',
+    email: isLoading ? 'Đang tải...' : 'email@example.com',
+    userImage: null,
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
@@ -230,7 +257,6 @@ export default function AccountScreen() {
         <Text style={styles.headerTitle}>Cá Nhân</Text>
       </HeaderComponent>
 
-      {/* Phần nội dung có thể scroll */}
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={[
@@ -243,19 +269,37 @@ export default function AccountScreen() {
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Image
-              source={{ uri: userData.avatarUrl }}
+              source={
+                displayUser.userImage 
+                  ? { uri: displayUser.userImage }
+                  : require('../../assets/images/google_icon.png') // Fallback image
+              }
               style={styles.avatar}
             />
+            {isLoading && (
+              <View style={styles.loadingOverlay}>
+                <Ionicons name="refresh" size={16} color="#666" />
+              </View>
+            )}
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{userData.name}</Text>
+            <Text style={styles.profileName}>
+              {displayUser.fullName}
+            </Text>
             <View style={styles.emailContainer}>
               <Image 
                 source={require('../../assets/images/google_icon.png')} 
                 style={styles.emailIcon} 
               />
-              <Text style={styles.profileEmail}>{userData.email}</Text>
+              <Text style={styles.profileEmail}>
+                {displayUser.email}
+              </Text>
             </View>
+            {error && (
+              <Text style={styles.errorText}>
+                Lỗi: {error}
+              </Text>
+            )}
           </View>
         </View>
 
@@ -388,6 +432,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     // backgroundColor: '#35A55E',
     // padding: 16,
+    paddingLeft: 10,
     marginHorizontal: 10,
     marginTop: 16,
     borderRadius: 8,
@@ -598,5 +643,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(0, 0, 0, 0.6)',
     marginTop: 8,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 40,
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#E86F50',
+    marginTop: 4,
   },
 });
