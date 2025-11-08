@@ -6,6 +6,7 @@ import HeaderComponent from '../../../components/header/HeaderComponent';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
 import ChangeMealSheet from '../../../components/mealPlan/ChangeMealSheet';
+import MealAcceptedSheet from '../../../components/sheet/MealAcceptedSheet';
 
 // Dữ liệu món ăn theo các bữa - thêm món thay thế
 const mealsByTime = {
@@ -143,6 +144,9 @@ export default function PageRenderAI() {
   const [isChangeMealSheetOpen, setIsChangeMealSheetOpen] = useState(false);
   const [selectedMealForChange, setSelectedMealForChange] = useState(null);
   const [currentMealsData, setCurrentMealsData] = useState(mealsByTime);
+  
+  // Thêm state cho MealAcceptedSheet
+  const [isMealAcceptedSheetOpen, setIsMealAcceptedSheetOpen] = useState(false);
   
   // Animation values
   const aiTextAnim = useRef(new Animated.Value(0)).current;
@@ -345,6 +349,14 @@ export default function PageRenderAI() {
   const handleAcceptMenu = () => {
     console.log('Accept menu');
     
+    // Hiển thị sheet thông báo thành công thay vì navigate trực tiếp
+    setIsMealAcceptedSheetOpen(true);
+  };
+
+  // Xử lý khi đóng sheet thông báo
+  const handleCloseAcceptedSheet = () => {
+    setIsMealAcceptedSheetOpen(false);
+    
     // Truyền dữ liệu menu đã được AI gợi ý về HomeScreen
     const acceptedMeals = {
       breakfast: currentMealsData.breakfast,
@@ -360,6 +372,35 @@ export default function PageRenderAI() {
         showAISection: 'false' // Ẩn AI recommendation section
       }
     });
+  };
+
+  // Xử lý khi ấn nút "Đi chợ"
+  const handleGoShopping = () => {
+    setIsMealAcceptedSheetOpen(false);
+    
+    // Truyền dữ liệu menu về HomeScreen trước để lưu trạng thái
+    const acceptedMeals = {
+      breakfast: currentMealsData.breakfast,
+      lunch: currentMealsData.lunch,
+      dinner: currentMealsData.dinner,
+    };
+    
+    // Delay một chút để đảm bảo sheet đã đóng
+    setTimeout(() => {
+      // Navigate về HomeScreen với dữ liệu món ăn trước
+      router.replace({
+        pathname: '/(tabs)/',
+        params: { 
+          acceptedMeals: JSON.stringify(acceptedMeals),
+          showAISection: 'false'
+        }
+      });
+      
+      // Sau đó chuyển sang tab shopping
+      setTimeout(() => {
+        router.push('/(tabs)/shopping');
+      }, 100);
+    }, 300);
   };
 
   return (
@@ -533,6 +574,13 @@ export default function PageRenderAI() {
           </View>
         </View>
       </Modal>
+      
+      {/* Thêm MealAcceptedSheet */}
+      <MealAcceptedSheet
+        isOpen={isMealAcceptedSheetOpen}
+        onClose={handleCloseAcceptedSheet}
+        onGoShopping={handleGoShopping}
+      />
       
       {/* Thêm ChangeMealSheet */}
       <ChangeMealSheet
