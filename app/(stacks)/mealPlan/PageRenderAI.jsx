@@ -364,14 +364,20 @@ export default function PageRenderAI() {
       dinner: currentMealsData.dinner,
     };
     
-    // Navigate về HomeScreen với dữ liệu món ăn
-    router.push({
-      pathname: '/(tabs)/',
-      params: { 
-        acceptedMeals: JSON.stringify(acceptedMeals),
-        showAISection: 'false' // Ẩn AI recommendation section
-      }
-    });
+    // Sử dụng router.back() để quay về HomeScreen và xóa stack hiện tại
+    // Sau đó truyền dữ liệu qua params
+    router.back();
+    
+    // Delay một chút rồi navigate với dữ liệu mới để đảm bảo đã back về HomeScreen
+    setTimeout(() => {
+      router.replace({
+        pathname: '/(tabs)/',
+        params: { 
+          acceptedMeals: JSON.stringify(acceptedMeals),
+          showAISection: 'false'
+        }
+      });
+    }, 100);
   };
 
   // Xử lý khi ấn nút "Đi chợ"
@@ -385,9 +391,12 @@ export default function PageRenderAI() {
       dinner: currentMealsData.dinner,
     };
     
-    // Delay một chút để đảm bảo sheet đã đóng
+    // Quay về HomeScreen trước (xóa stack PageRenderAI)
+    router.back();
+    
+    // Delay để đảm bảo đã quay về HomeScreen
     setTimeout(() => {
-      // Navigate về HomeScreen với dữ liệu món ăn trước
+      // Replace HomeScreen với dữ liệu mới
       router.replace({
         pathname: '/(tabs)/',
         params: { 
@@ -396,11 +405,11 @@ export default function PageRenderAI() {
         }
       });
       
-      // Sau đó chuyển sang tab shopping
+      // Sau đó push sang tab shopping (không tạo thêm stack cho HomeScreen)
       setTimeout(() => {
         router.push('/(tabs)/shopping');
       }, 100);
-    }, 300);
+    }, 100);
   };
 
   return (

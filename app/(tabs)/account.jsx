@@ -157,7 +157,7 @@ export default function AccountScreen() {
   const insets = useSafeAreaInsets();
   const [isLogoutSheetOpen, setIsLogoutSheetOpen] = useState(false);
   const [isAppInfoSheetOpen, setIsAppInfoSheetOpen] = useState(false);
-  
+
   // Thêm refs cho animation
   const progressAnims = useRef(nutritionGoals.map(() => new Animated.Value(0))).current;
 
@@ -241,20 +241,28 @@ export default function AccountScreen() {
       >
         {/* Profile Section */}
         <View style={styles.profileSection}>
-          <Image
-            source={{ uri: userData.avatarUrl }}
-            style={styles.avatar}
-          />
+          <View style={styles.avatarContainer}>
+            <Image
+              source={{ uri: userData.avatarUrl }}
+              style={styles.avatar}
+            />
+          </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{userData.name}</Text>
-            <Text style={styles.profileEmail}>{userData.email}</Text>
+            <View style={styles.emailContainer}>
+              <Image 
+                source={require('../../assets/images/google_icon.png')} 
+                style={styles.emailIcon} 
+              />
+              <Text style={styles.profileEmail}>{userData.email}</Text>
+            </View>
           </View>
         </View>
 
         {/* Daily Nutrition Goals Section */}
         <View style={styles.nutritionSection}>
           <Text style={styles.nutritionSectionTitle}>Chế độ dinh dưỡng hàng ngày của bạn</Text>
-          
+
           <FlatList
             data={nutritionGoals}
             horizontal
@@ -267,12 +275,12 @@ export default function AccountScreen() {
                   <Text style={[styles.nutritionCardLabel, { color: item.textColor }]}>
                     {item.label}
                   </Text>
-                  <Image 
+                  <Image
                     source={item.iconSource}
-                    style={styles.nutritionCardIcon} 
+                    style={styles.nutritionCardIcon}
                   />
                 </View>
-                
+
                 <View style={styles.nutritionCardContent}>
                   <Text style={[styles.nutritionCardValue, { color: item.textColor }]}>
                     {item.value}{item.postfix}
@@ -281,12 +289,12 @@ export default function AccountScreen() {
                     {item.unit}
                   </Text>
                 </View>
-                
+
                 <View style={styles.progressBarContainer}>
-                  <Animated.View 
+                  <Animated.View
                     style={[
-                      styles.progressBarFill, 
-                      { 
+                      styles.progressBarFill,
+                      {
                         backgroundColor: item.progressColor,
                         width: progressAnims[index].interpolate({
                           inputRange: [0, 1],
@@ -373,23 +381,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 20,
   },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#35A55E',
-    padding: 16,
+    // backgroundColor: '#35A55E',
+    // padding: 16,
     marginHorizontal: 10,
     marginTop: 16,
     borderRadius: 8,
   },
+  avatarContainer: {
+    // width: 60,
+    // height: 60,
+    borderRadius: 40,
+    overflow: 'hidden',
+    padding:2,
+    borderWidth: 2,
+    borderColor: 'red',
+    borderColor: '#f2a7a7',
+    borderStyle: 'dotted',
+  },
   avatar: {
     width: 60,
     height: 60,
-    borderRadius: 30,
+    borderRadius: 40,
     backgroundColor: '#FFFFFF',
-    borderWidth: 2,
     borderColor: '#FFFFFF',
   },
   profileInfo: {
@@ -397,22 +415,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: 'white',
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#35A55E',
+  },
+  emailContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  emailIcon: {
+    width: 14,
+    height: 14,
+    marginRight: 6,
+    resizeMode: 'cover',
   },
   profileEmail: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 2,
+    color: '#a3a1a1',
   },
   nutritionSection: {
     marginTop: 16,
-    backgroundColor: '#ffffff',
+    // backgroundColor: '#ffffff',
     borderRadius: 8,
-    padding: 16,
-    marginHorizontal: 10,
-    elevation: 0.7
+    padding: 10,
+    marginHorizontal: 5,
+    // elevation: 0.5
   },
   nutritionSectionTitle: {
     fontSize: 16,
@@ -428,9 +456,12 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginRight: 12,
+    marginLeft: 5,
+    marginBottom: 5,
+    marginTop: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.4,
     shadowRadius: 4,
     elevation: 3,
   },
@@ -473,23 +504,23 @@ const styles = StyleSheet.create({
   },
   section: {
     marginTop: 16,
-    backgroundColor: '#ffffff',
+    // backgroundColor: '#ffffff',
     borderRadius: 8,
-    paddingTop: 16,
-    paddingBottom: 16,
+    // paddingTop: 16,
+    // paddingBottom: 16,
     paddingLeft: 10,
     paddingRight: 10,
     marginHorizontal: 10,
-    elevation: 0.7
+    // elevation: 0.7
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   sectionContent: {
-    backgroundColor: '#FFFFFF',
+    // backgroundColor: '#FFFFFF',
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -498,10 +529,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 15,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
-    backgroundColor: '#F5f5f5',
+    backgroundColor: '#ffffff',
+    elevation: 0.2,
     borderRadius: 12,
     marginBottom: 10
   },
@@ -545,10 +577,10 @@ const styles = StyleSheet.create({
   logoutButton: {
     backgroundColor: '#E86F50',
     borderRadius: 8,
-    padding: 16,
-    marginHorizontal: 16,
-    marginTop: 24,
-    marginBottom: 16,
+    padding: 13,
+    marginHorizontal: 13,
+    marginTop: 20,
+    marginBottom: 15,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',

@@ -121,6 +121,68 @@ const initialMealVisibility = {
   dinner: true,
 };
 
+// Tạo component riêng cho menu item để tránh lỗi hooks
+const MenuItemCard = React.memo(({ item, onPress, onAcknowledge }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.timing(scaleAnim, {
+      toValue: 0.95,
+      duration: 100,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.timing(scaleAnim, {
+      toValue: 1,
+      duration: 100,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <TouchableOpacity 
+        style={styles.menuItemCardVertical}
+        onPress={() => onPress(item.id)}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+      >
+        <Image source={item.imageUrl} style={styles.menuItemImageVertical} />
+        
+        {/* Hiển thị typeMeal */}
+        <View style={styles.typeMealContainer}>
+          <Text style={styles.typeMealText}>{item.typeMeal}</Text>
+        </View>
+        
+        <View style={styles.menuItemContentVertical}>
+          <View style={styles.menuItemInfo}>
+            <Text style={styles.menuItemNameVertical}>{item.name}</Text>
+            <Text style={styles.menuItemDescription}>{item.description}</Text>
+          </View>
+          
+          <View style={styles.menuItemActions}>
+            <View></View>
+            
+            <TouchableOpacity 
+              style={styles.acknowledgeButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                onAcknowledge(item.id);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.acknowledgeButtonText}>Ghi nhận</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+});
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const today = new Date();
@@ -319,46 +381,14 @@ export default function HomeScreen() {
     chunkedMeals.push(currentMeals.slice(i, i + 2));
   }
   
-  // Render một item món ăn - cập nhật để hiển thị theo chiều dọc
+  // Render một item món ăn - sử dụng component riêng
   const renderMenuItem = (item) => (
-    <View style={styles.menuItemCardVertical}>
-      <Image source={item.imageUrl} style={styles.menuItemImageVertical} />
-      
-      {/* Hiển thị typeMeal */}
-      <View style={styles.typeMealContainer}>
-        <Text style={styles.typeMealText}>{item.typeMeal}</Text>
-      </View>
-      
-      <View style={styles.menuItemContentVertical}>
-        <View style={styles.menuItemInfo}>
-          <Text style={styles.menuItemNameVertical}>{item.name}</Text>
-          <Text style={styles.menuItemDescription}>{item.description}</Text>
-          <View style={styles.menuItemMacros}>
-            <Text style={styles.menuItemMacro}>🔥 {item.calories} kcal</Text>
-            <Text style={styles.menuItemMacro}>🥩 {item.protein}g</Text>
-            <Text style={styles.menuItemMacro}>🍚 {item.carbs}g</Text>
-          </View>
-        </View>
-        
-        <View style={styles.menuItemActions}>
-          <TouchableOpacity 
-            style={styles.viewDetailButton}
-            onPress={() => handleViewMealDetail(item.id)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.viewDetailButtonText}>Chi tiết</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.acknowledgeButton}
-            onPress={() => handleAcknowledgeMeal(item.id)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.acknowledgeButtonText}>Ghi nhận</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+    <MenuItemCard
+      key={item.id}
+      item={item}
+      onPress={handleViewMealDetail}
+      onAcknowledge={handleAcknowledgeMeal}
+    />
   );
 
   // Thêm hàm xử lý ghi nhận món ăn
@@ -373,9 +403,18 @@ export default function HomeScreen() {
     // Đóng sheet trước
     setIsSettingsSheetOpen(false);
     
+    // Nếu đã có dữ liệu menu, reset trạng thái trước khi chuyển trang
+    if (acceptedMealsData) {
+      setAcceptedMealsData(null);
+      setShowAIRecommendationCard(true);
+      setShowAISuggestionButton(true);
+      setShowAIMealSection(false);
+    }
+    
     // Delay một chút để đảm bảo sheet đã đóng hoàn toàn trước khi chuyển trang
     setTimeout(() => {
-      router.push('/(stacks)/mealPlan/PageRenderAI');
+      // Sử dụng replace thay vì push để không tạo thêm stack
+      router.replace('/(stacks)/mealPlan/PageRenderAI');
     }, 300);
   };
 
@@ -647,13 +686,11 @@ export default function HomeScreen() {
           {/* Thêm các tùy chọn khác nếu đã có thực đơn */}
           {acceptedMealsData && (
             <>
-            
-
               <TouchableOpacity 
                 style={styles.settingsOption}
                 onPress={() => {
                   setIsSettingsSheetOpen(false);
-                  // Logic để reset về trạng thái ban đầu
+                  // Logic để reset về trạng thái ban đầu - không cần navigate
                   setAcceptedMealsData(null);
                   setShowAIRecommendationCard(true);
                   setShowAISuggestionButton(true);
