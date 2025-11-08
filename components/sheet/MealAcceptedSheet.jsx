@@ -10,6 +10,7 @@ const MealAcceptedSheet = ({ isOpen, onClose, onGoShopping }) => {
       onClose={onClose}
       snapPoints={[50, 50]}
       position={0}
+      dismissOnSnapToBottom={true} // Cho phép đóng sheet bằng gesture
     >
       <View style={styles.container}>
         {/* Success Icon */}

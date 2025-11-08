@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start', 
     borderLeftWidth: 4,
     paddingLeft: 15,
-    borderColor: '#c12e2e',
+    borderColor: '#64ba82',
   },
   dayTitle: {
     fontSize: 24,
@@ -283,13 +283,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
-    marginHorizontal: 15,
     marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowRadius: 10,
+    // elevation: 1,
     position: 'relative',
   },
   aiImageContainer: {
@@ -340,7 +339,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
-    elevation: 3,
+    // elevation: 3,
     zIndex: 1000, // Đảm bảo nút luôn hiển thị trên cùng
   },
   aiSuggestionButtonText: {
@@ -582,7 +581,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    elevation: 2,
+    elevation: 0.2,
     marginBottom: 12,
     padding: 12,
   },
@@ -590,7 +589,7 @@ const styles = StyleSheet.create({
   menuItemImageVertical: {
     width: 80,
     height: 80,
-    borderRadius: 8,
+    borderRadius: 10,
     resizeMode: 'cover',
   },
   
@@ -648,7 +647,7 @@ const styles = StyleSheet.create({
   },
   
   acknowledgeButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#FFFFFF',
     fontWeight: '500',
   },
@@ -665,7 +664,7 @@ const styles = StyleSheet.create({
   },
   
   typeMealText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '600',
     color: '#FFFFFF',
   },

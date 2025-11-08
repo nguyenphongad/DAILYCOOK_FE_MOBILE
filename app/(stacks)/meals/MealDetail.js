@@ -6,6 +6,7 @@ import {
     TouchableOpacity,
     ScrollView,
     StyleSheet,
+    Animated,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
@@ -14,112 +15,143 @@ export default function MealDetail1() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('ingredient');
 
+    // Animation cho tab indicator
+    const indicatorAnim = React.useRef(new Animated.Value(0)).current;
+
+    // Xử lý chuyển tab với animation
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        
+        // Animation cho indicator
+        Animated.spring(indicatorAnim, {
+            toValue: tab === 'ingredient' ? 0 : 1,
+            useNativeDriver: false,
+            tension: 60,
+            friction: 12,
+        }).start();
+    };
+
     return (
         <View style={styles.container}>
             {/* Ảnh Header */}
             <View style={styles.imageContainer}>
-                <Image source={{ uri: 'https://i.imgur.com/YYR7E5O.jpeg' }} style={styles.image} />
+                <Image source={{ uri: 'https://images.pexels.com/photos/699953/pexels-photo-699953.jpeg' }} style={styles.image} />
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                     <Ionicons name="chevron-back" size={26} color="#fff" />
                 </TouchableOpacity>
             </View>
 
             {/* Nội dung */}
-            <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 100 }}>
+            <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 20 }}>
+
+                <View style={styles.typeMealContainer}>
+                    <Text style={styles.typeMealText}>Bữa chính</Text>
+                </View>
+
                 <Text style={styles.mealName}>THỊT KHO MẮM RUỐC</Text>
+
+                {/* Thông tin thời gian */}
+                <View style={styles.timeContainer}>
+                    <View style={styles.timeItem}>
+                        <Ionicons name="time-outline" size={16} color="#666" />
+                        <Text style={styles.timeValue}>15 phút</Text>
+                    </View>
+
+                    <View style={styles.timeItem}>
+                        <Ionicons name="flame-outline" size={16} color="#666" />
+                        <Text style={styles.timeValue}>30 phút</Text>
+                    </View>
+                </View>
 
                 {/* Thông tin dinh dưỡng */}
                 <View style={styles.nutritionContainer}>
-                    {/* Calories */}
-                    <View style={styles.nutritionItem}>
-                        <View style={[styles.nutritionBar, { backgroundColor: '#D4ED91' }]} />
-                        <View style={styles.nutritionTextContainer}>
-                            <Text style={styles.nutritionValue}>42 kcal</Text>
-                            <Text style={styles.nutritionLabel}>Calories</Text>
+                    {[
+                        { value: '42kcal', label: 'Calories', color: '#8ea846' },
+                        { value: '3.4g', label: 'Protein', color: '#35A55E' },
+                        { value: '12g', label: 'Carbs', color: '#FF9500' },
+                        { value: '1g', label: 'Fat', color: '#FF6B6B' },
+                    ].map((item, index) => (
+                        <View key={index} style={[styles.nutritionItem, index === 0 && { borderLeftWidth: 0 }]}>
+                            <Text style={[styles.nutritionValue, { color: item.color }]}>{item.value}</Text>
+                            <Text style={styles.nutritionLabel}>{item.label}</Text>
                         </View>
-                    </View>
-
-                    {/* Protein */}
-                    <View style={styles.nutritionItem}>
-                        <View style={[styles.nutritionBar, { backgroundColor: '#35A55E' }]} />
-                        <View style={styles.nutritionTextContainer}>
-                            <Text style={styles.nutritionValue}>3.4g</Text>
-                            <Text style={styles.nutritionLabel}>Protein</Text>
-                        </View>
-                    </View>
-
-                    {/* Carbs */}
-                    <View style={styles.nutritionItem}>
-                        <View style={[styles.nutritionBar, { backgroundColor: '#FF9500' }]} />
-                        <View style={styles.nutritionTextContainer}>
-                            <Text style={styles.nutritionValue}>12g</Text>
-                            <Text style={styles.nutritionLabel}>Carbs</Text>
-                        </View>
-                    </View>
-
-                    {/* Fat */}
-                    <View style={styles.nutritionItem}>
-                        <View style={[styles.nutritionBar, { backgroundColor: '#FF6B6B' }]} />
-                        <View style={styles.nutritionTextContainer}>
-                            <Text style={styles.nutritionValue}>1g</Text>
-                            <Text style={styles.nutritionLabel}>Fat</Text>
-                        </View>
-                    </View>
+                    ))}
                 </View>
 
-                {/* Tab chuyển đổi */}
+                {/* Tab chuyển đổi tùy chỉnh với animation */}
                 <View style={styles.tabContainer}>
-                    <TouchableOpacity
-                        style={[styles.tabButton, activeTab === 'ingredient' && styles.activeTab]}
-                        onPress={() => setActiveTab('ingredient')}
-                    >
-                        <Text style={[styles.tabText, activeTab === 'ingredient' && styles.activeText]}>
-                            Nguyên liệu
-                        </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.tabButton, activeTab === 'guide' && styles.activeTab]}
-                        onPress={() => setActiveTab('guide')}
-                    >
-                        <Text style={[styles.tabText, activeTab === 'guide' && styles.activeText]}>
-                            Hướng dẫn
-                        </Text>
-                    </TouchableOpacity>
+                    <View style={styles.tabBackground}>
+                        <TouchableOpacity
+                            style={styles.tabButton}
+                            onPress={() => handleTabChange('ingredient')}
+                        >
+                            <Text style={[styles.tabText, activeTab === 'ingredient' && styles.activeTabText]}>
+                                Nguyên liệu
+                            </Text>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity
+                            style={styles.tabButton}
+                            onPress={() => handleTabChange('guide')}
+                        >
+                            <Text style={[styles.tabText, activeTab === 'guide' && styles.activeTabText]}>
+                                Hướng dẫn
+                            </Text>
+                        </TouchableOpacity>
+                        
+                        {/* Animated indicator */}
+                        <Animated.View
+                            style={[
+                                styles.tabIndicator,
+                                {
+                                    left: indicatorAnim.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: ['2%', '52%'],
+                                    }),
+                                }
+                            ]}
+                        />
+                    </View>
                 </View>
 
-                {/* Nội dung Tab */}
-                {activeTab === 'ingredient' ? (
-                    <View style={styles.ingredientList}>
-                        <View style={styles.ingredientItem}>
-                            <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/1046/1046769.png' }} style={styles.ingredientIcon} />
-                            <Text style={styles.ingredientName}>Thịt lợn</Text>
-                            <Text style={styles.ingredientAmount}>500g</Text>
+                {/* Nội dung Tab với animation fade */}
+                <View style={styles.tabContentContainer}>
+                    {activeTab === 'ingredient' ? (
+                        <View style={styles.ingredientList}>
+                            <View style={styles.ingredientItem}>
+                                <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/1046/1046769.png' }} style={styles.ingredientIcon} />
+                                <Text style={styles.ingredientName}>Thịt lợn</Text>
+                                <Text style={styles.ingredientAmount}>500g</Text>
+                            </View>
+                            <View style={styles.ingredientItem}>
+                                <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/765/765500.png' }} style={styles.ingredientIcon} />
+                                <Text style={styles.ingredientName}>Cải thìa</Text>
+                                <Text style={styles.ingredientAmount}>200g</Text>
+                            </View>
+                            <View style={styles.ingredientItem}>
+                                <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/766/766267.png' }} style={styles.ingredientIcon} />
+                                <Text style={styles.ingredientName}>Nghệ tươi</Text>
+                                <Text style={styles.ingredientAmount}>2 thìa cà phê</Text>
+                            </View>
                         </View>
-                        <View style={styles.ingredientItem}>
-                            <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/765/765500.png' }} style={styles.ingredientIcon} />
-                            <Text style={styles.ingredientName}>Cải thìa</Text>
-                            <Text style={styles.ingredientAmount}>200g</Text>
+                    ) : (
+                        <View style={styles.guideContainer}>
+                            <Text style={styles.stepText}>1. Rửa sạch thịt, cắt miếng vừa ăn.</Text>
+                            <Text style={styles.stepText}>2. Phi thơm mắm ruốc với hành tỏi.</Text>
+                            <Text style={styles.stepText}>3. Cho thịt vào xào cho săn rồi kho đến khi nước sệt lại.</Text>
+                            <Text style={styles.stepText}>1. Rửa sạch thịt, cắt miếng vừa ăn.</Text>
+                            <Text style={styles.stepText}>2. Phi thơm mắm ruốc với hành tỏi.</Text>
+                            <Text style={styles.stepText}>3. Cho thịt vào xào cho săn rồi kho đến khi nước sệt lại.</Text>
+                            <Text style={styles.stepText}>1. Rửa sạch thịt, cắt miếng vừa ăn.</Text>
+                            <Text style={styles.stepText}>2. Phi thơm mắm ruốc với hành tỏi.</Text>
+                            <Text style={styles.stepText}>3. Cho thịt vào xào cho săn rồi kho đến khi nước sệt lại.</Text>
+                            <Text style={styles.stepText}>1. Rửa sạch thịt, cắt miếng vừa ăn.</Text>
+                            <Text style={styles.stepText}>2. Phi thơm mắm ruốc với hành tỏi.</Text>
+                            <Text style={styles.stepText}>3. Cho thịt vào xào cho săn rồi kho đến khi nước sệt lại.</Text>
                         </View>
-                        <View style={styles.ingredientItem}>
-                            <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/766/766267.png' }} style={styles.ingredientIcon} />
-                            <Text style={styles.ingredientName}>Nghệ tươi</Text>
-                            <Text style={styles.ingredientAmount}>2 thìa cà phê</Text>
-                        </View>
-                    </View>
-                ) : (
-                    <View style={styles.guideContainer}>
-                        <Text style={styles.stepText}>1. Rửa sạch thịt, cắt miếng vừa ăn.</Text>
-                        <Text style={styles.stepText}>2. Phi thơm mắm ruốc với hành tỏi.</Text>
-                        <Text style={styles.stepText}>3. Cho thịt vào xào cho săn rồi kho đến khi nước sệt lại.</Text>
-                    </View>
-                )}
+                    )}
+                </View>
             </ScrollView>
-
-            {/* Nút cố định */}
-            <TouchableOpacity style={styles.addButtonFixed}>
-                <Text style={styles.addButtonText}>Thêm vào thực đơn</Text>
-            </TouchableOpacity>
         </View>
     );
 }
@@ -146,13 +178,55 @@ const styles = StyleSheet.create({
     },
     content: {
         padding: 15,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        backgroundColor: '#D4E9E1',
+        marginTop: -20,
+    },
+    typeMealContainer: {
+        alignSelf: 'flex-start',
+        backgroundColor: '#f9eaf1',
+        padding: 5,
+        borderRadius: 5,
+        marginBottom: 15,
+    },
+    typeMealText: {
+        color: '#bf93bd',
+        fontSize: 14,
+        fontWeight: '500',
     },
     mealName: {
-        textAlign: 'center',
-        fontSize: 20,
+        textAlign: 'left',
+        fontSize: 22,
         fontWeight: '700',
         color: '#333',
         marginBottom: 10,
+    },
+
+    /** Thời gian */
+    timeContainer: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start', // Thay đổi từ '' thành 'flex-start'
+        marginBottom: 15,
+        // paddingHorizontal: 20,
+    },
+    timeItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 20, // Thêm khoảng cách giữa 2 item
+        // Xóa flex: 1 và justifyContent: 'center'
+    },
+    timeLabel: {
+        fontSize: 14,
+        color: '#666',
+        marginLeft: 6,
+        marginRight: 4,
+    },
+    timeValue: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#333',
+        marginLeft: 6, // Thêm khoảng cách giữa icon và text
     },
 
     /** Dinh dưỡng */
@@ -161,58 +235,67 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         alignItems: 'center',
         marginTop: 10,
+        paddingHorizontal: 10,
+        backgroundColor: '#fff',
+        borderRadius: 15,
+        padding: 10
     },
     nutritionItem: {
-        flexDirection: 'row',
         alignItems: 'center',
-    },
-    nutritionBar: {
-        width: 6,
-        height: 45,
-        borderRadius: 3,
-        marginVertical: 3,
-    },
-    nutritionTextContainer: {
-        marginLeft: 6,
-        alignItems: 'center',
+        flex: 1,
+        borderLeftWidth: 2,
+        borderLeftColor: '#eee',
     },
     nutritionValue: {
-        fontSize: 16,
+        fontSize: 17,
         fontWeight: '700',
-        color: '#333',
+        marginBottom: 4,
     },
     nutritionLabel: {
         fontSize: 13,
         color: '#555',
+        textAlign: 'center',
     },
-    
-    /** Tab */
+
+    /** Tab tùy chỉnh với animation */
     tabContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
+        marginHorizontal: 40,
+        marginTop: 15,
+        marginBottom: 15,
+    },
+    tabBackground: {
         backgroundColor: 'rgba(53, 165, 94, 0.1)',
         borderRadius: 20,
-        marginHorizontal: 40,
         height: 40,
-        marginBottom: 15,
-        marginTop: 15,
+        position: 'relative',
+        flexDirection: 'row',
     },
     tabButton: {
         flex: 1,
-        paddingVertical: 10,
-        borderRadius: 20,
+        justifyContent: 'center',
         alignItems: 'center',
+        zIndex: 2,
     },
-    activeTab: {
-        backgroundColor: '#35A55E'
+    tabIndicator: {
+        position: 'absolute',
+        width: '46%',
+        height: '90%',
+        backgroundColor: '#35A55E',
+        borderRadius: 18,
+        top: '5%',
+        zIndex: 1,
     },
     tabText: {
         fontSize: 14,
-        color: '#333'
-    },
-    activeText: {
+        color: '#333',
         fontWeight: '500',
-        color: '#fff'
+    },
+    activeTabText: {
+        color: '#FFFFFF',
+        fontWeight: '600',
+    },
+    tabContentContainer: {
+        minHeight: 200,
     },
 
     /** Nguyên liệu */
@@ -227,10 +310,8 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         marginBottom: 10,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
         shadowRadius: 3,
-        elevation: 2,
+        elevation: 0.2,
     },
     ingredientIcon: {
         width: 30,
@@ -252,6 +333,7 @@ const styles = StyleSheet.create({
     /** Hướng dẫn */
     guideContainer: {
         borderRadius: 10,
+        paddingBottom: 50
     },
     stepText: {
         fontSize: 14,
@@ -260,23 +342,5 @@ const styles = StyleSheet.create({
         marginBottom: 6
     },
 
-    /** Nút cố định */
-    addButtonFixed: {
-        position: 'absolute',
-        bottom: 60,
-        left: 20,
-        right: 20,
-        backgroundColor: '#35A55E',
-        paddingVertical: 12,
-        borderRadius: 30,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 4,
-    },
-    addButtonText: {
-        color: '#fff',
-        fontSize: 16,
-    },
+    
 });

@@ -111,3 +111,46 @@ export const logoutUser = createAsyncThunk(
     }
   }
 );
+
+// Thêm thunk mới để check token và lấy thông tin user
+export const checkTokenAndGetUser = createAsyncThunk(
+  'auth/checkTokenAndGetUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const response = await apiService.get(ENDPOINT.CHECK_TOKEN, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      console.log("Check token response:", response);
+
+      if (!response || response.isLogin !== true) {
+        throw new Error(response.message || 'Token invalid');
+      }
+
+      return {
+        user: response.user,
+        isLogin: response.isLogin,
+      };
+    } catch (error) {
+      console.error("Check token error:", error);
+      
+      let errorMessage = 'Failed to check token';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
