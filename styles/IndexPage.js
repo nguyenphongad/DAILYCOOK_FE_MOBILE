@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start', 
     borderLeftWidth: 4,
     paddingLeft: 15,
-    borderColor: '#9b9029',
+    borderColor: '#c12e2e',
   },
   dayTitle: {
     fontSize: 24,
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: '#333',
     marginBottom: 15,
@@ -382,6 +382,14 @@ const styles = StyleSheet.create({
   settingsOptionText: {
     fontSize: 16,
     color: '#333333',
+    marginLeft: 12,
+    fontWeight: '500',
+  },
+
+  // Thêm style cho text màu đỏ (xóa thực đơn)
+  settingsOptionTextDanger: {
+    fontSize: 16,
+    color: '#E86F50',
     marginLeft: 12,
     fontWeight: '500',
   },

@@ -5,8 +5,9 @@ import { Ionicons } from '@expo/vector-icons';
 import HeaderComponent from '../../../components/header/HeaderComponent';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
+import ChangeMealSheet from '../../../components/mealPlan/ChangeMealSheet';
 
-// Dữ liệu món ăn theo các bữa
+// Dữ liệu món ăn theo các bữa - thêm món thay thế
 const mealsByTime = {
   breakfast: [
     {
@@ -76,6 +77,55 @@ const mealsByTime = {
   ]
 };
 
+// Thêm dữ liệu món thay thế cho mỗi món
+const alternativeMealsData = {
+  '1': [ // Thay thế cho Bánh mì trứng thịt
+    {
+      id: '1a',
+      name: 'Bánh mì pate',
+      description: 'Hương vị truyền thống',
+      calories: 300,
+      protein: 15,
+      carbs: 38,
+      typeMeal: 'Món chính',
+      imageUrl: require('../../../assets/images/food1.png'),
+    },
+    {
+      id: '1b',
+      name: 'Bánh mì thịt nướng',
+      description: 'Thơm ngon, bổ dưỡng',
+      calories: 340,
+      protein: 20,
+      carbs: 42,
+      typeMeal: 'Món chính',
+      imageUrl: require('../../../assets/images/food1.png'),
+    },
+  ],
+  '2': [ // Thay thế cho Cháo trứng bắc thảo
+    {
+      id: '2a',
+      name: 'Cháo gà',
+      description: 'Bổ dưỡng, dễ tiêu',
+      calories: 260,
+      protein: 14,
+      carbs: 33,
+      typeMeal: 'Món phụ',
+      imageUrl: require('../../../assets/images/food1.png'),
+    },
+    {
+      id: '2b',
+      name: 'Cháo tôm',
+      description: 'Ngọt thanh, nhẹ nhàng',
+      calories: 240,
+      protein: 13,
+      carbs: 32,
+      typeMeal: 'Món phụ',
+      imageUrl: require('../../../assets/images/food1.png'),
+    },
+  ],
+  // Thêm các món thay thế khác tương tự...
+};
+
 export default function PageRenderAI() {
   const insets = useSafeAreaInsets();
   const aiScrollViewRef = useRef(null);
@@ -87,7 +137,12 @@ export default function PageRenderAI() {
   const [showMealSection, setShowMealSection] = useState(false);
   const [aiAnalysisInfo, setAiAnalysisInfo] = useState([]);
   const [activeMeal, setActiveMeal] = useState('breakfast');
-  const [aiProcessComplete, setAiProcessComplete] = useState(false); // Thêm state để track quá trình AI
+  const [aiProcessComplete, setAiProcessComplete] = useState(false);
+  
+  // Thêm states cho ChangeMealSheet
+  const [isChangeMealSheetOpen, setIsChangeMealSheetOpen] = useState(false);
+  const [selectedMealForChange, setSelectedMealForChange] = useState(null);
+  const [currentMealsData, setCurrentMealsData] = useState(mealsByTime);
   
   // Animation values
   const aiTextAnim = useRef(new Animated.Value(0)).current;
@@ -199,9 +254,45 @@ export default function PageRenderAI() {
     setShowMealSection(true);
   };
 
+  const handleChangeMeal = (mealId) => {
+    const currentMeal = currentMealsData[activeMeal].find(meal => meal.id === mealId);
+    const alternatives = alternativeMealsData[mealId] || [];
+    
+    if (alternatives.length > 0) {
+      setSelectedMealForChange({
+        current: currentMeal,
+        alternatives: alternatives
+      });
+      setIsChangeMealSheetOpen(true);
+    } else {
+      console.log(`No alternatives available for meal: ${mealId}`);
+    }
+  };
+
+  const handleMealChange = (newMeal) => {
+    // Cập nhật món ăn trong danh sách hiện tại
+    setCurrentMealsData(prevData => {
+      const updatedData = { ...prevData };
+      const mealIndex = updatedData[activeMeal].findIndex(
+        meal => meal.id === selectedMealForChange.current.id
+      );
+      
+      if (mealIndex !== -1) {
+        updatedData[activeMeal][mealIndex] = {
+          ...newMeal,
+          id: selectedMealForChange.current.id // Giữ nguyên ID gốc
+        };
+      }
+      
+      return updatedData;
+    });
+    
+    console.log(`Changed meal to: ${newMeal.name}`);
+  };
+
   // Lấy danh sách món ăn hiện tại
-  const currentMeals = mealsByTime[activeMeal] || [];
-  const availableMealTabs = Object.keys(mealsByTime);
+  const currentMeals = currentMealsData[activeMeal] || [];
+  const availableMealTabs = Object.keys(currentMealsData);
 
   // Render một item món ăn
   const renderMenuItem = (item) => (
@@ -251,14 +342,24 @@ export default function PageRenderAI() {
     });
   };
 
-  const handleChangeMeal = (mealId) => {
-    console.log(`Change meal: ${mealId}`);
-  };
-
   const handleAcceptMenu = () => {
     console.log('Accept menu');
-    // Có thể navigate về trang chính hoặc hiển thị thông báo thành công
-    router.back();
+    
+    // Truyền dữ liệu menu đã được AI gợi ý về HomeScreen
+    const acceptedMeals = {
+      breakfast: currentMealsData.breakfast,
+      lunch: currentMealsData.lunch,
+      dinner: currentMealsData.dinner,
+    };
+    
+    // Navigate về HomeScreen với dữ liệu món ăn
+    router.push({
+      pathname: '/(tabs)/',
+      params: { 
+        acceptedMeals: JSON.stringify(acceptedMeals),
+        showAISection: 'false' // Ẩn AI recommendation section
+      }
+    });
   };
 
   return (
@@ -432,6 +533,15 @@ export default function PageRenderAI() {
           </View>
         </View>
       </Modal>
+      
+      {/* Thêm ChangeMealSheet */}
+      <ChangeMealSheet
+        isOpen={isChangeMealSheetOpen}
+        onClose={() => setIsChangeMealSheetOpen(false)}
+        currentMeal={selectedMealForChange?.current}
+        alternativeMeals={selectedMealForChange?.alternatives || []}
+        onMealChange={handleMealChange}
+      />
     </SafeAreaView>
   );
 }
