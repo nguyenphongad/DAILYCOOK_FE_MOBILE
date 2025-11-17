@@ -14,6 +14,7 @@ import { Platform } from 'react-native';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from '../redux/store';
+import { OnboardingChecker } from '../components/OnboardingChecker';
 
 // Cấu hình thông báo với các kiểu dữ liệu đầy đủ theo yêu cầu TypeScript
 Notifications.setNotificationHandler({
@@ -103,16 +104,17 @@ export default function RootLayout() {
 function RootLayoutNav() {
   return (
     <Provider store={store}>
-      {/* PersistGate không bắt buộc - bạn có thể bỏ nếu không cần persist state */}
       <PersistGate loading={null} persistor={persistor}>
         <TamaguiProvider config={tamaguiConfig}>
           <PortalProvider>
             <ThemeProvider value={customLightTheme}>
               <StatusBar style="dark" />
+              <OnboardingChecker />
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="index" options={{ headerShown: false }} />
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="onboarding" options={{ headerShown: false }} />
                 <Stack.Screen 
                   name="modal" 
                   options={{ 

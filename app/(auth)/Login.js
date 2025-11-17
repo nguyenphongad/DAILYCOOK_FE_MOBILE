@@ -7,6 +7,7 @@ import { supabase } from '../../config/supabase';
 import { loginWithGoogleTokens, getCurrentSession } from '../../redux/thunk/authThunk';
 import { selectAuth, selectError, clearError, setAuthState, setLoading } from '../../redux/slice/authSlice';
 import LoadingComponent from '../../components/loading/LoadingComponent';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
   const dispatch = useDispatch();
@@ -22,12 +23,12 @@ export default function LoginScreen() {
     dispatch(getCurrentSession());
   }, []);
 
-  // Redirect nếu đã đăng nhập
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace('/(tabs)');
-    }
-  }, [isAuthenticated]);
+  // Redirect nếu đã đăng nhập - BỎ LOGIC NÀY RA
+  // useEffect(() => {
+  //   if (isAuthenticated) {
+  //     router.replace('/(tabs)');
+  //   }
+  // }, [isAuthenticated]);
 
   // Hiển thị lỗi
   useEffect(() => {
@@ -94,6 +95,13 @@ export default function LoginScreen() {
               `Đăng nhập thành công! Hi ${result.user.fullName || result.user.email} 👋`,
               ToastAndroid.LONG
             );
+
+            // Force reload OnboardingChecker bằng cách trigger re-render
+            // Delay một chút để đảm bảo Redux state đã update
+            setTimeout(() => {
+              // Trigger re-check bằng cách update token trong AsyncStorage
+              AsyncStorage.setItem('forceRecheck', Date.now().toString());
+            }, 100);
           }
         } catch (error) {
           console.error('Parse token error:', error);

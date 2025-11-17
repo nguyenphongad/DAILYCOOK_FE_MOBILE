@@ -7,6 +7,6 @@ export const ENDPOINT = {
     CHECK_TOKEN: `${BASE_ENDPOINT}/auth/check-token`,
 
 
-
-
+    // surveys endpoints
+    CHECK_IS_BOARDING: `${BASE_ENDPOINT}/surveys/onboarding/status`,
 }
