@@ -59,7 +59,7 @@ const mealsByTime = {
       typeMeal: 'Món phụ', // Thêm loại món
       imageUrl: require('../../assets/images/food1.png'),
     },
-     {
+    {
       id: '3',
       name: 'Cháo trứng bắc Hung',
       description: 'Nhẹ nhàng, dễ tiêu hóa',
@@ -145,7 +145,7 @@ const MenuItemCard = React.memo(({ item, onPress, onAcknowledge }) => {
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.menuItemCardVertical}
         onPress={() => onPress(item.id)}
         onPressIn={handlePressIn}
@@ -153,22 +153,22 @@ const MenuItemCard = React.memo(({ item, onPress, onAcknowledge }) => {
         activeOpacity={1}
       >
         <Image source={item.imageUrl} style={styles.menuItemImageVertical} />
-        
+
         {/* Hiển thị typeMeal */}
         <View style={styles.typeMealContainer}>
           <Text style={styles.typeMealText}>{item.typeMeal}</Text>
         </View>
-        
+
         <View style={styles.menuItemContentVertical}>
           <View style={styles.menuItemInfo}>
             <Text style={styles.menuItemNameVertical}>{item.name}</Text>
             <Text style={styles.menuItemDescription}>{item.description}</Text>
           </View>
-          
+
           <View style={styles.menuItemActions}>
             <View></View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.acknowledgeButton}
               onPress={(e) => {
                 e.stopPropagation();
@@ -190,25 +190,25 @@ export default function HomeScreen() {
   const today = new Date();
   const params = useLocalSearchParams();
   const dispatch = useDispatch();
-  
+
   // Redux selectors để lấy thông tin user
   const { user, isLoading } = useSelector((state) => state.auth);
-  
+
   const [currentDate, setCurrentDate] = useState({
     dayName: getDayName(today.getDay()),
     date: today.getDate(),
     month: getMonthName(today.getMonth() + 1)
   });
-  
+
   // Thêm state cho trạng thái hiển thị bữa ăn
   const [mealVisibility, setMealVisibility] = useState(initialMealVisibility);
-  
+
   // Tối ưu state cho bộ lọc bữa ăn - đổi tên để phù hợp với dữ liệu
   const [activeMeal, setActiveMeal] = useState('breakfast');
-  
+
   // Thêm state cho RefreshControl
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // Thêm states cho AI recommendation
   const [showAIMealSection, setShowAIMealSection] = useState(false);
   const [showAISuggestionButton, setShowAISuggestionButton] = useState(true);
@@ -220,9 +220,9 @@ export default function HomeScreen() {
     if (params.acceptedMeals && params.showAISection === 'false') {
       try {
         const mealsData = JSON.parse(params.acceptedMeals);
-        
-        // Chỉ update state nếu dữ liệu thực sự khác
-        if (JSON.stringify(mealsData) !== JSON.stringify(acceptedMealsData)) {
+
+        // Chỉ update state nếu dữ liệu thực sự khác và chưa được set
+        if (!acceptedMealsData && JSON.stringify(mealsData) !== JSON.stringify(acceptedMealsData)) {
           setAcceptedMealsData(mealsData);
           setShowAIRecommendationCard(false);
           setShowAISuggestionButton(false);
@@ -232,22 +232,24 @@ export default function HomeScreen() {
         console.error('Error parsing accepted meals:', error);
       }
     }
-  }, [params.acceptedMeals, params.showAISection]); // Thêm dependency array
+  }, [params.acceptedMeals, params.showAISection]); // Giữ nguyên dependency
 
-  // Fetch user info khi component mount
+  // Fetch user info khi component mount - chỉ gọi 1 lần
   useEffect(() => {
-    dispatch(checkTokenAndGetUser());
-  }, [dispatch]);
+    if (!user && !isLoading) {
+      dispatch(checkTokenAndGetUser());
+    }
+  }, []); // Dependency rỗng để chỉ chạy 1 lần
 
   // Hàm xử lý khi người dùng kéo xuống để refresh
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    
+
     // Mô phỏng tải dữ liệu
     setTimeout(() => {
       // console.log('Refreshing data...');
       // Ví dụ: fetchUserData(), fetchNutritionGoals(), fetchMealData(), v.v.
-      
+
       // Kết thúc refreshing sau 1.5 giây
       setRefreshing(false);
     }, 1500);
@@ -255,18 +257,18 @@ export default function HomeScreen() {
 
   // Thêm state cho việc hiển thị sheet nhắc nhở uống nước
   const [isWaterReminderSheetOpen, setIsWaterReminderSheetOpen] = useState(false);
-  
+
   // Thêm state cho settings sheet
   const [isSettingsSheetOpen, setIsSettingsSheetOpen] = useState(false);
 
   // Thêm state để lưu trữ hình ảnh thời tiết dựa trên thời gian
   const [weatherIcon, setWeatherIcon] = useState(require('../../assets/images/icons_home/sun.png'));
-  
+
   // Xác định biểu tượng thời tiết dựa trên thời gian
   useEffect(() => {
     const updateWeatherIcon = () => {
       const currentHour = new Date().getHours();
-      
+
       if (currentHour >= 6 && currentHour < 16) {
         // Ban ngày: 6h sáng - 16h chiều
         setWeatherIcon(require('../../assets/images/icons_home/sun.png'));
@@ -278,13 +280,13 @@ export default function HomeScreen() {
         setWeatherIcon(require('../../assets/images/icons_home/night.png'));
       }
     };
-    
+
     // Cập nhật biểu tượng ngay khi component mount
     updateWeatherIcon();
-    
+
     // Thiết lập interval để cập nhật biểu tượng mỗi phút
     const intervalId = setInterval(updateWeatherIcon, 60000);
-    
+
     // Cleanup khi component unmount
     return () => clearInterval(intervalId);
   }, []);
@@ -295,7 +297,7 @@ export default function HomeScreen() {
     { type: 'analysis', text: 'Dinh dưỡng mục tiêu: Protein 250g, Kcal 500, Nước 2000ml' },
     { type: 'analysis', text: 'Thực phẩm không thích (4): Hành tây, Nấm, Đậu phụ, Cà tím' },
   ];
-  
+
   // Dữ liệu gợi ý AI
   const aiMealSuggestions = {
     breakfast: [
@@ -312,12 +314,12 @@ export default function HomeScreen() {
       "Canh bí đỏ nấu tôm - 280 calo",
     ],
   };
-  
+
   // Xử lý khi nhấn nút gợi ý AI - cập nhật để chuyển trang
   const handleAISuggestion = () => {
     router.push('/(stacks)/mealPlan/PageRenderAI');
   };
-  
+
   // Thêm hàm xử lý chuyển hướng đến trang dinh dưỡng
   const handleNavigateToNutrition = () => {
     router.push('/dinh-duong');
@@ -338,7 +340,7 @@ export default function HomeScreen() {
         useNativeDriver: true
       })
     ]).start();
-    
+
     // Sử dụng setTimeout với độ trễ ngắn để tránh hiệu ứng "đóng băng" UI
     setTimeout(() => {
       // Điều hướng đến trang chi tiết món ăn
@@ -348,37 +350,48 @@ export default function HomeScreen() {
       });
     }, 50);
   };
-  
-  // Sửa useEffect thứ hai - thêm dependency array đúng
+
+  // Sửa useEffect thứ hai - thêm điều kiện chặt chẽ hơn
   useEffect(() => {
-    // Lấy danh sách các bữa ăn đang hiển thị
-    const availableMeals = acceptedMealsData 
-      ? Object.keys(acceptedMealsData).filter(meal => acceptedMealsData[meal]?.length > 0)
-      : Object.keys(mealVisibility).filter(meal => 
-          mealVisibility[meal] && mealsByTime[meal]?.length > 0
-        );
-    
-    // Nếu không có bữa ăn nào hiển thị thì không cần cập nhật
-    if (availableMeals.length === 0) return;
-    
-    // Nếu bữa ăn đang chọn không còn hiển thị, chuyển sang bữa đầu tiên có sẵn
-    if (!availableMeals.includes(activeMeal)) {
-      setActiveMeal(availableMeals[0]);
+    if (!acceptedMealsData) {
+      // Lấy danh sách các bữa ăn đang hiển thị từ dữ liệu mặc định
+      const availableMeals = Object.keys(mealVisibility).filter(meal =>
+        mealVisibility[meal] && mealsByTime[meal]?.length > 0
+      );
+
+      // Nếu không có bữa ăn nào hiển thị thì không cần cập nhật
+      if (availableMeals.length === 0) return;
+
+      // Nếu bữa ăn đang chọn không còn hiển thị, chuyển sang bữa đầu tiên có sẵn
+      if (!availableMeals.includes(activeMeal)) {
+        setActiveMeal(availableMeals[0]);
+      }
+    } else {
+      // Xử lý cho dữ liệu từ AI
+      const availableMeals = Object.keys(acceptedMealsData).filter(meal =>
+        acceptedMealsData[meal]?.length > 0
+      );
+
+      if (availableMeals.length === 0) return;
+
+      if (!availableMeals.includes(activeMeal)) {
+        setActiveMeal(availableMeals[0]);
+      }
     }
-  }, [mealVisibility, acceptedMealsData, activeMeal]); // Thêm dependency array chính xác
+  }, [mealVisibility, acceptedMealsData]); // Bỏ activeMeal khỏi dependency để tránh loop
 
   // Lấy danh sách món ăn hiện tại dựa trên tab đã chọn và visibility
-  const currentMeals = acceptedMealsData 
+  const currentMeals = acceptedMealsData
     ? (acceptedMealsData[activeMeal] || [])
     : (mealVisibility[activeMeal] ? mealsByTime[activeMeal] || [] : []);
 
   // Lấy danh sách các bữa ăn hiện có dữ liệu và được phép hiển thị
-  const availableMealTabs = acceptedMealsData 
+  const availableMealTabs = acceptedMealsData
     ? Object.keys(acceptedMealsData).filter(meal => acceptedMealsData[meal]?.length > 0)
-    : Object.keys(mealsByTime).filter(meal => 
-        mealsByTime[meal]?.length > 0 && mealVisibility[meal] === true
-      );
-  
+    : Object.keys(mealsByTime).filter(meal =>
+      mealsByTime[meal]?.length > 0 && mealVisibility[meal] === true
+    );
+
   // Xóa hàm handleViewFullMenu vì không cần nữa
   // const handleViewFullMenu = () => { ... }
 
@@ -391,7 +404,7 @@ export default function HomeScreen() {
   for (let i = 0; i < currentMeals.length; i += 2) {
     chunkedMeals.push(currentMeals.slice(i, i + 2));
   }
-  
+
   // Render một item món ăn - sử dụng component riêng
   const renderMenuItem = (item) => (
     <MenuItemCard
@@ -413,7 +426,7 @@ export default function HomeScreen() {
   const handleAISuggestionFromSheet = () => {
     // Đóng sheet trước
     setIsSettingsSheetOpen(false);
-    
+
     // Nếu đã có dữ liệu menu, reset trạng thái trước khi chuyển trang
     if (acceptedMealsData) {
       setAcceptedMealsData(null);
@@ -421,7 +434,7 @@ export default function HomeScreen() {
       setShowAISuggestionButton(true);
       setShowAIMealSection(false);
     }
-    
+
     // Delay một chút để đảm bảo sheet đã đóng hoàn toàn trước khi chuyển trang
     setTimeout(() => {
       // Sử dụng replace thay vì push để không tạo thêm stack
@@ -441,23 +454,23 @@ export default function HomeScreen() {
           Xin chào, {isLoading ? 'đang tải...' : displayName}
         </Text>
         <View style={styles.headerRight}>
-          <Image 
+          <Image
             source={weatherIcon}
-            style={styles.weatherIcon} 
+            style={styles.weatherIcon}
           />
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.waterReminderButton}
             onPress={() => setIsWaterReminderSheetOpen(true)}
           >
-            <Image 
-              source={require('../../assets/images/icons_home/water-bottle.png')} 
-              style={styles.waterReminderIcon} 
+            <Image
+              source={require('../../assets/images/icons_home/water-bottle.png')}
+              style={styles.waterReminderIcon}
             />
           </TouchableOpacity>
         </View>
       </HeaderComponent>
-      
-      <ScrollView 
+
+      <ScrollView
         showsVerticalScrollIndicator={false}
         style={styles.scrollContainer}
         contentContainerStyle={[
@@ -489,28 +502,28 @@ export default function HomeScreen() {
             <Text style={styles.sectionTitle}>
               {acceptedMealsData ? 'Thực đơn hôm nay' : 'Gợi ý thực đơn hôm nay'}
             </Text>
-            
+
             {/* Luôn hiển thị settings button */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.settingsButton}
               onPress={() => setIsSettingsSheetOpen(true)}
             >
               <Ionicons name="options-outline" size={20} color="#35A55E" />
             </TouchableOpacity>
           </View>
-          
+
           {/* AI recommendation card - chỉ hiện khi showAIRecommendationCard = true */}
           {showAIRecommendationCard && (
             <View style={styles.aiRecommendationCard}>
               {/* AI Image */}
               <View style={styles.aiImageContainer}>
-                <Image 
-                  source={require('../../assets/images/flow-chart.png')} 
+                <Image
+                  source={require('../../assets/images/flow-chart.png')}
                   style={styles.aiImage}
                   resizeMode="contain"
                 />
               </View>
-              
+
               {/* AI Features List */}
               <View style={styles.aiFeaturesContainer}>
                 <View style={styles.aiFeatureItem}>
@@ -519,14 +532,14 @@ export default function HomeScreen() {
                     Gợi ý bữa ăn cho bữa sáng bữa trưa và bữa tối
                   </Text>
                 </View>
-                
+
                 <View style={styles.aiFeatureItem}>
                   <View style={styles.aiFeatureBullet} />
                   <Text style={styles.aiFeatureText}>
                     Thiết kế phù hợp với dinh dưỡng theo chế độ ăn
                   </Text>
                 </View>
-                
+
                 <View style={styles.aiFeatureItem}>
                   <View style={styles.aiFeatureBullet} />
                   <Text style={styles.aiFeatureText}>
@@ -536,7 +549,7 @@ export default function HomeScreen() {
               </View>
             </View>
           )}
-          
+
           {/* Hiển thị phần menu khi có dữ liệu từ AI hoặc showAIMealSection = true */}
           {(showAIMealSection || acceptedMealsData) && (
             <>
@@ -549,7 +562,7 @@ export default function HomeScreen() {
                 ]}>
                   {/* Breakfast tab */}
                   {(acceptedMealsData?.breakfast?.length > 0 || (mealVisibility.breakfast === true && mealsByTime.breakfast?.length > 0)) && (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={[
                         styles.mealTypeTab,
                         availableMealTabs.length === 1 && styles.mealTypeTabFull,
@@ -559,12 +572,12 @@ export default function HomeScreen() {
                       ]}
                       onPress={() => setActiveMeal('breakfast')}
                     >
-                      <Ionicons 
-                        name="sunny-outline" 
-                        size={16} 
-                        color={activeMeal === 'breakfast' ? '#FFFFFF' : '#35A55E'} 
+                      <Ionicons
+                        name="sunny-outline"
+                        size={16}
+                        color={activeMeal === 'breakfast' ? '#FFFFFF' : '#35A55E'}
                       />
-                      <Text 
+                      <Text
                         style={[
                           styles.mealTypeText,
                           activeMeal === 'breakfast' && styles.activeMealTypeText
@@ -574,10 +587,10 @@ export default function HomeScreen() {
                       </Text>
                     </TouchableOpacity>
                   )}
-                  
+
                   {/* Lunch tab */}
                   {(acceptedMealsData?.lunch?.length > 0 || (mealVisibility.lunch === true && mealsByTime.lunch?.length > 0)) && (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={[
                         styles.mealTypeTab,
                         availableMealTabs.length === 1 && styles.mealTypeTabFull,
@@ -587,12 +600,12 @@ export default function HomeScreen() {
                       ]}
                       onPress={() => setActiveMeal('lunch')}
                     >
-                      <Ionicons 
-                        name="restaurant-outline" 
-                        size={16} 
-                        color={activeMeal === 'lunch' ? '#FFFFFF' : '#35A55E'} 
+                      <Ionicons
+                        name="restaurant-outline"
+                        size={16}
+                        color={activeMeal === 'lunch' ? '#FFFFFF' : '#35A55E'}
                       />
-                      <Text 
+                      <Text
                         style={[
                           styles.mealTypeText,
                           activeMeal === 'lunch' && styles.activeMealTypeText
@@ -602,10 +615,10 @@ export default function HomeScreen() {
                       </Text>
                     </TouchableOpacity>
                   )}
-                  
+
                   {/* Dinner tab */}
                   {(acceptedMealsData?.dinner?.length > 0 || (mealVisibility.dinner === true && mealsByTime.dinner?.length > 0)) && (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={[
                         styles.mealTypeTab,
                         availableMealTabs.length === 1 && styles.mealTypeTabFull,
@@ -615,12 +628,12 @@ export default function HomeScreen() {
                       ]}
                       onPress={() => setActiveMeal('dinner')}
                     >
-                      <Ionicons 
-                        name="moon-outline" 
-                        size={16} 
-                        color={activeMeal === 'dinner' ? '#FFFFFF' : '#35A55E'} 
+                      <Ionicons
+                        name="moon-outline"
+                        size={16}
+                        color={activeMeal === 'dinner' ? '#FFFFFF' : '#35A55E'}
                       />
-                      <Text 
+                      <Text
                         style={[
                           styles.mealTypeText,
                           activeMeal === 'dinner' && styles.activeMealTypeText
@@ -632,7 +645,7 @@ export default function HomeScreen() {
                   )}
                 </View>
               )}
-              
+
               {/* Grid view cho món ăn */}
               {availableMealTabs.length > 0 && (
                 <View style={styles.menuGrid}>
@@ -643,7 +656,7 @@ export default function HomeScreen() {
                   ))}
                 </View>
               )}
-              
+
               {/* Xóa nút xem chi tiết thực đơn */}
               {/* 
               {availableMealTabs.length > 0 && currentMeals.length > 0 && (
@@ -658,10 +671,10 @@ export default function HomeScreen() {
               */}
             </>
           )}
-          
+
         </View>
       </ScrollView>
-      
+
       {/* AI Suggestion Button - chỉ hiện khi showAISuggestionButton = true */}
       {showAISuggestionButton && (
         <TouchableOpacity
@@ -673,7 +686,7 @@ export default function HomeScreen() {
           <Ionicons name="arrow-forward-circle" size={20} color="#FFFFFF" />
         </TouchableOpacity>
       )}
-      
+
       {/* Settings Sheet - luôn hiển thị, không phụ thuộc vào acceptedMealsData */}
       <SheetComponent
         isOpen={isSettingsSheetOpen}
@@ -685,8 +698,8 @@ export default function HomeScreen() {
           <Text style={styles.settingsSheetTitle}>
             {acceptedMealsData ? 'Cài đặt thực đơn' : 'Cài đặt thực đơn'}
           </Text>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.settingsOption}
             onPress={handleAISuggestionFromSheet}
           >
@@ -702,7 +715,7 @@ export default function HomeScreen() {
           {/* Thêm các tùy chọn khác nếu đã có thực đơn */}
           {acceptedMealsData && (
             <>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.settingsOption}
                 onPress={() => {
                   setIsSettingsSheetOpen(false);
@@ -727,7 +740,7 @@ export default function HomeScreen() {
       </SheetComponent>
 
       {/* Sử dụng component WaterReminderSheet */}
-      <WaterReminderSheet 
+      <WaterReminderSheet
         isOpen={isWaterReminderSheetOpen}
         onClose={() => setIsWaterReminderSheetOpen(false)}
       />

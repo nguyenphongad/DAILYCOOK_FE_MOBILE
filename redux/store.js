@@ -5,17 +5,19 @@ import { combineReducers } from '@reduxjs/toolkit';
 
 // Import reducers
 import authReducer from './slice/authSlice';
+import surveyReducer from './slice/surveySlice';
 
 // Persist config
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['auth'], // Chỉ persist auth slice
+  whitelist: ['auth'], // Chỉ persist auth, bỏ survey để luôn gọi API check onboarding
 };
 
 // Combine reducers
 const rootReducer = combineReducers({
   auth: authReducer,
+  survey: surveyReducer,
 });
 
 // Persisted reducer
