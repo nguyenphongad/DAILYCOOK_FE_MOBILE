@@ -67,5 +67,14 @@ const surveySlice = createSlice({
   },
 });
 
+export const { 
+  setCurrentStep, 
+  nextStep, 
+  prevStep, 
+  resetOnboarding, 
+  clearError,
+  setOnboardingCompleted,
+  resetOnboardingCheck
+} = surveySlice.actions;
 
 export default surveySlice.reducer;
