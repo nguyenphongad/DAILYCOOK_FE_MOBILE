@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'expo-router';
 import { Button, Input, YStack, H2, Paragraph, XStack } from 'tamagui';
@@ -95,7 +95,11 @@ export default function FamilyMemberScreen() {
         </View>
 
         {/* Family Member Inputs */}
-        <View style={styles.membersContainer}>
+        <ScrollView 
+          style={styles.membersContainer}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.membersContentContainer}
+        >
           {memberTypes.map((type) => (
             <View key={type.key} style={styles.memberRow}>
               <View style={styles.memberInfo}>
@@ -146,7 +150,7 @@ export default function FamilyMemberScreen() {
               </View>
             </View>
           ))}
-        </View>
+        </ScrollView>
 
         {/* Total Summary */}
         <View style={styles.summaryContainer}>
@@ -206,6 +210,9 @@ const styles = StyleSheet.create({
   membersContainer: {
     flex: 1,
     paddingVertical: 10,
+  },
+  membersContentContainer: {
+    paddingBottom: 20, // Thêm padding bottom để tạo khoảng trống cuối scroll
   },
   memberRow: {
     flexDirection: 'row',
