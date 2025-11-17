@@ -5,4 +5,4 @@ export const EXPO_CLIENT_ID = '182265024272-do9chd5rkkmgm10nhn204mjts8fvq9ie.app
 
 
 // API Configuration
-export const API_BASE_URL = 'http://192.168.5.156:5000';
+export const API_BASE_URL = 'http://192.168.1.5:5000';
