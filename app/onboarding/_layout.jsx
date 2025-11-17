@@ -13,6 +13,7 @@ export default function OnboardingLayout() {
       <Stack.Screen name="Age" options={{ headerShown: false }} />
       <Stack.Screen name="Height" options={{ headerShown: false }} />
       <Stack.Screen name="Weight" options={{ headerShown: false }} />
+      <Stack.Screen name="SelectDietType" options={{ headerShown: false }} />
     </Stack></>
   );
 }
