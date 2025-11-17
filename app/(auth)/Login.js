@@ -67,44 +67,32 @@ export default function LoginScreen() {
   useEffect(() => {
     const handleDeepLink = async (event) => {
       const url = event.url;
-      console.log('Deep link received:', url);
 
       if (url && url.includes('access_token=')) {
         try {
-          // Parse tokens từ URL
           const params = new URLSearchParams(url.split('#')[1]);
           const access_token = params.get('access_token');
           const refresh_token = params.get('refresh_token');
 
-          console.log('Parsed tokens:', {
-            access_token: access_token?.substring(0, 50) + '...',
-            refresh_token: refresh_token?.substring(0, 20) + '...'
-          });
-
           if (access_token) {
-            // Gửi tokens lên backend để xác thực
             const result = await dispatch(loginWithGoogleTokens({
               access_token,
               refresh_token,
             })).unwrap();
 
-            console.log('Login result:', result);
+            console.log('Login Success:', result);
 
-            // Hiển thị Toast thông báo đăng nhập thành công
             ToastAndroid.show(
               `Đăng nhập thành công! Hi ${result.user.fullName || result.user.email} 👋`,
               ToastAndroid.LONG
             );
 
-            // Force reload OnboardingChecker bằng cách trigger re-render
-            // Delay một chút để đảm bảo Redux state đã update
             setTimeout(() => {
-              // Trigger re-check bằng cách update token trong AsyncStorage
-              AsyncStorage.setItem('forceRecheck', Date.now().toString());
-            }, 100);
+              router.replace('/');
+            }, 500);
           }
         } catch (error) {
-          console.error('Parse token error:', error);
+          console.error('Login Error:', error);
           dispatch(setLoading(false));
 
           if (Platform.OS === 'android') {
@@ -150,7 +138,6 @@ export default function LoginScreen() {
 
       if (error) throw error;
 
-      // Mở browser
       if (data?.url) {
         const supported = await Linking.canOpenURL(data.url);
         if (supported) {
@@ -161,11 +148,8 @@ export default function LoginScreen() {
       }
     } catch (error) {
       dispatch(setLoading(false));
-
-      console.log("loi tu be" + error)
-
       Alert.alert('Lỗi', error.message || 'Không thể đăng nhập');
-      console.error('Login error:', error);
+      console.error('Google Login Error:', error);
     }
   };
 

@@ -8,7 +8,7 @@ import { nextStep } from '../../redux/slice/surveySlice';
 import HeaderComponent from '../../components/header/HeaderComponent';
 import ButtonComponent from '../../components/button/ButtonComponent';
 
-export default function SelectTypeAccountScreen() {
+export default function SelectType() {
   const [selectedType, setSelectedType] = useState('');
   const dispatch = useDispatch();
   const router = useRouter();
@@ -32,7 +32,6 @@ export default function SelectTypeAccountScreen() {
 
   const handleNext = () => {
     if (selectedType) {
-      // TODO: Lưu loại tài khoản được chọn vào Redux hoặc AsyncStorage
       console.log('Selected account type:', selectedType);
       
       dispatch(nextStep());
@@ -41,7 +40,7 @@ export default function SelectTypeAccountScreen() {
       if (selectedType === 'family') {
         router.push('/onboarding/FamilyMember');
       } else {
-        router.push('/onboarding/Gender'); // Cá nhân bắt đầu từ giới tính
+        router.push('/onboarding/Gender');
       }
     }
   };

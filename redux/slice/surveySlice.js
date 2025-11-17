@@ -37,39 +37,35 @@ const surveySlice = createSlice({
     setOnboardingCompleted: (state, action) => {
       state.isOnboardingCompleted = action.payload;
     },
+    // Reset onboarding check flag khi user thay đổi
+    resetOnboardingCheck: (state) => {
+      state.isOnboardingCompleted = null;
+      state.loading = false;
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
       .addCase(checkOnboardingStatus.pending, (state) => {
-        console.log('surveySlice - checkOnboardingStatus pending');
         state.loading = true;
         state.error = null;
       })
       .addCase(checkOnboardingStatus.fulfilled, (state, action) => {
-        console.log('surveySlice - checkOnboardingStatus fulfilled:', action.payload);
+        console.log('Survey Response:', action.payload);
         state.loading = false;
-        // Xử lý đúng structure của API response
         if (action.payload && action.payload.data) {
           state.isOnboardingCompleted = action.payload.data.isOnboardingCompleted;
           state.surveyData = action.payload.data;
-          console.log('surveySlice - Updated isOnboardingCompleted:', state.isOnboardingCompleted);
         }
       })
       .addCase(checkOnboardingStatus.rejected, (state, action) => {
-        console.log('surveySlice - checkOnboardingStatus rejected:', action.payload);
         state.loading = false;
         state.error = action.payload;
+        // Nếu có lỗi 429, set completed = null để không redirect
+        state.isOnboardingCompleted = null;
       });
   },
 });
 
-export const { 
-  setCurrentStep, 
-  nextStep, 
-  prevStep, 
-  resetOnboarding, 
-  clearError,
-  setOnboardingCompleted 
-} = surveySlice.actions;
 
 export default surveySlice.reducer;

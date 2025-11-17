@@ -15,6 +15,7 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from '../redux/store';
 import { OnboardingChecker } from '../components/OnboardingChecker';
+import { checkTokenAndGetUser } from '../redux/thunk/authThunk';
 
 // Cấu hình thông báo với các kiểu dữ liệu đầy đủ theo yêu cầu TypeScript
 Notifications.setNotificationHandler({
@@ -35,7 +36,7 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: 'index', // Đổi về index
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -110,11 +111,18 @@ function RootLayoutNav() {
             <ThemeProvider value={customLightTheme}>
               <StatusBar style="dark" />
               <OnboardingChecker />
-              <Stack screenOptions={{ headerShown: false }}>
+              <Stack 
+                screenOptions={{ 
+                  headerShown: false,
+                  animation: 'slide_from_right'
+                }}
+              >
                 <Stack.Screen name="index" options={{ headerShown: false }} />
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                <Stack.Screen name="(stacks)" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" options={{ headerShown: false }} />
                 <Stack.Screen 
                   name="modal" 
                   options={{ 

@@ -5,6 +5,7 @@ const initialState = {
   user: null,
   session: null,
   isAuthenticated: false,
+  isLogin: null, // Thêm field này
   isLoading: false,
   error: null,
 };
@@ -29,6 +30,7 @@ const authSlice = createSlice({
       state.user = user;
       state.session = session;
       state.isAuthenticated = !!session;
+      state.isLogin = !!session; // Set isLogin
       state.error = null;
     },
     
@@ -47,6 +49,7 @@ const authSlice = createSlice({
       .addCase(loginWithGoogleTokens.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
+        state.isLogin = true; // Set isLogin
         state.user = action.payload.user;
         state.session = { token: action.payload.token };
         state.error = null;
@@ -55,6 +58,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload || 'Đăng nhập thất bại';
         state.isAuthenticated = false;
+        state.isLogin = false; // Set isLogin
         state.user = null;
         state.session = null;
       });
@@ -98,12 +102,14 @@ const authSlice = createSlice({
       .addCase(checkTokenAndGetUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = action.payload.isLogin;
+        state.isLogin = action.payload.isLogin; // Set isLogin
         state.user = action.payload.user;
         state.error = null;
       })
       .addCase(checkTokenAndGetUser.rejected, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = false;
+        state.isLogin = false; // Set isLogin
         state.user = null;
         state.error = action.payload;
       });

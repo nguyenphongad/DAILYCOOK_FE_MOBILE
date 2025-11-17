@@ -1,14 +1,15 @@
 import { useEffect } from 'react';
-import { useRouter } from 'expo-router';
 import { View, ActivityIndicator, Text } from 'react-native';
+import { useRouter } from 'expo-router';
 
-export default function OnboardingIndex() {
+export default function IndexScreen() {
   const router = useRouter();
 
   useEffect(() => {
+    // Fallback sau 3 giây nếu OnboardingChecker không redirect
     const timer = setTimeout(() => {
-      router.replace('/onboarding/SelectType');
-    }, 200);
+      router.replace('/(auth)/Login');
+    }, 3000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -22,7 +23,7 @@ export default function OnboardingIndex() {
     }}>
       <ActivityIndicator size="large" color="#35A55E" />
       <Text style={{ marginTop: 20, color: '#666', textAlign: 'center' }}>
-        Đang khởi tạo onboarding...
+        Đang kiểm tra trạng thái đăng nhập...
       </Text>
     </View>
   );

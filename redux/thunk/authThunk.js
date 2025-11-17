@@ -9,31 +9,19 @@ export const loginWithGoogleTokens = createAsyncThunk(
   'auth/loginWithGoogleTokens',
   async ({ access_token, refresh_token }, { rejectWithValue }) => {
     try {
-      console.log("Sending tokens to backend...");
-
-      // Gửi tokens lên backend
       const response = await apiService.post(ENDPOINT.LOGIN_GOOGLE, {
         access_token,
         refresh_token,
       });
 
-      console.log("Response from backend:", response);
+      console.log('Login Response:', response);
 
-      // Kiểm tra response hợp lệ
-      if (!response) {
-        throw new Error('Không nhận được phản hồi từ server');
-      }
-
-      // Kiểm tra response có status success và có token không
-      if (response.status === false || !response.token) {
+      if (!response || response.status === false || !response.token) {
         throw new Error(response.message || 'Đăng nhập thất bại');
       }
 
-      // Lưu token và user data
       await AsyncStorage.setItem('authToken', response.token);
       await AsyncStorage.setItem('userData', JSON.stringify(response.user));
-
-      console.log("Login successful, user:", response.user.email);
 
       return {
         user: response.user,
@@ -41,20 +29,15 @@ export const loginWithGoogleTokens = createAsyncThunk(
         isNewUser: response.isNewUser || false,
       };
     } catch (error) {
-      console.error("Error from backend thunk:", error);
+      console.error('Login Error:', error);
       
-      // Xử lý error message chi tiết
       let errorMessage = 'Đăng nhập thất bại';
       
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
-      } else if (error.response?.data) {
-        errorMessage = JSON.stringify(error.response.data);
       } else if (error.message) {
         errorMessage = error.message;
       }
-
-      console.error("Error message:", errorMessage);
       
       return rejectWithValue(errorMessage);
     }
@@ -129,7 +112,7 @@ export const checkTokenAndGetUser = createAsyncThunk(
         },
       });
 
-      console.log("Check token response:", response);
+      console.log('Token Check Response:', response);
 
       if (!response || response.isLogin !== true) {
         throw new Error(response.message || 'Token invalid');
@@ -140,7 +123,7 @@ export const checkTokenAndGetUser = createAsyncThunk(
         isLogin: response.isLogin,
       };
     } catch (error) {
-      console.error("Check token error:", error);
+      console.error('Token Check Error:', error);
       
       let errorMessage = 'Failed to check token';
       
