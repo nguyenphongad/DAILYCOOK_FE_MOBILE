@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { getDietTypes } from '../thunk/MealThunk';
+import { getDietTypes } from '../thunk/mealThunk';
 
 const initialState = {
   dietTypes: [],

@@ -16,7 +16,7 @@ import { useRouter } from 'expo-router';
 import { H2, Paragraph } from 'tamagui';
 import { nextStep, prevStep, setDietaryPreferences } from '../../redux/slice/surveySlice';
 import { saveOnboardingData } from '../../redux/thunk/surveyThunk';
-import { getDietTypes } from '../../redux/thunk/MealThunk';
+import { getDietTypes } from '../../redux/thunk/mealThunk';
 import SheetComponent from '../../components/sheet/SheetComponent';
 import HeaderComponent from '../../components/header/HeaderComponent';
 import ButtonComponent from '../../components/button/ButtonComponent';
@@ -72,8 +72,15 @@ export default function SelectDietTypeScreen() {
     const handleNext = async () => {
         if (selectedDiet) {
             try {
-                // Lưu dietary preferences vào Redux
-                const dietaryPreferences = { DietType_id: selectedDiet };
+                // Tìm diet object để lấy keyword
+                const selectedDietObject = sortedDietTypes.find(diet => diet._id === selectedDiet);
+                if (!selectedDietObject) {
+                    alert('Không tìm thấy thông tin chế độ ăn đã chọn');
+                    return;
+                }
+
+                // Lưu dietary preferences với keyword thay vì _id
+                const dietaryPreferences = { DietType_id: selectedDietObject.keyword };
                 dispatch(setDietaryPreferences(dietaryPreferences));
                 
                 // Chuẩn bị dữ liệu để gửi API
@@ -95,6 +102,7 @@ export default function SelectDietTypeScreen() {
                 }
                 
                 console.log('Saving onboarding data:', dataToSave);
+                console.log('Selected diet keyword:', selectedDietObject.keyword);
                 
                 // Gọi API lưu dữ liệu
                 const result = await dispatch(saveOnboardingData(dataToSave)).unwrap();
