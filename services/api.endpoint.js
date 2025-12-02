@@ -14,4 +14,8 @@ export const ENDPOINT = {
 
     //meal
     GET_LIST_DIETTYPE   : `${BASE_ENDPOINT}/meals/diet-types`,
+    
+    // dietary preferences
+    GET_DIETARY_PREFERENCES: (userId) => `${BASE_ENDPOINT}/surveys/users/${userId}/dietary-preferences`,
+    UPDATE_DIETARY_PREFERENCES: (userId) => `${BASE_ENDPOINT}/surveys/users/${userId}/dietary-preferences`,
 }
