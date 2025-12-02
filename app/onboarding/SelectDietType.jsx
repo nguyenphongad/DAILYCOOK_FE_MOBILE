@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     View,
     Text,
@@ -6,7 +6,8 @@ import {
     TouchableOpacity,
     ScrollView,
     Image,
-    SafeAreaView
+    SafeAreaView,
+    Linking
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,8 +16,8 @@ import { useRouter } from 'expo-router';
 import { H2, Paragraph } from 'tamagui';
 import { nextStep, prevStep, setDietaryPreferences } from '../../redux/slice/surveySlice';
 import { saveOnboardingData } from '../../redux/thunk/surveyThunk';
+import { getDietTypes } from '../../redux/thunk/MealThunk';
 import SheetComponent from '../../components/sheet/SheetComponent';
-import dietTypes from '../../data/dietTypes';
 import HeaderComponent from '../../components/header/HeaderComponent';
 import ButtonComponent from '../../components/button/ButtonComponent';
 
@@ -29,6 +30,21 @@ export default function SelectDietTypeScreen() {
     
     // Lấy dữ liệu từ Redux
     const { onboardingData, saveLoading, saveError } = useSelector(state => state.survey);
+    const { dietTypes, loading: dietTypesLoading, error: dietTypesError } = useSelector(state => state.meal);
+
+    // Lấy danh sách chế độ ăn khi component mount
+    useEffect(() => {
+        if (dietTypes.length === 0) {
+            dispatch(getDietTypes());
+        }
+    }, [dispatch, dietTypes.length]);
+
+    // Hiển thị lỗi nếu có
+    useEffect(() => {
+        if (dietTypesError) {
+            alert('Có lỗi xảy ra khi tải danh sách chế độ ăn: ' + dietTypesError);
+        }
+    }, [dietTypesError]);
 
     // Mở sheet chi tiết cho chế độ ăn được chọn
     const openDietDetail = (diet) => {
@@ -48,7 +64,7 @@ export default function SelectDietTypeScreen() {
     // Chọn chế độ ăn từ sheet chi tiết
     const selectDietFromDetail = () => {
         if (currentDietDetail) {
-            setSelectedDiet(currentDietDetail.id);
+            setSelectedDiet(currentDietDetail._id);
             setIsDetailSheetOpen(false);
         }
     };
@@ -104,6 +120,34 @@ export default function SelectDietTypeScreen() {
         router.back();
     };
 
+    // Tạo một mảng đã sắp xếp để hiển thị
+    const sortedDietTypes = useMemo(() => {
+        if (!Array.isArray(dietTypes)) return [];
+        
+        // Sắp xếp từ dưới lên trên (reverse)
+        return [...dietTypes].reverse();
+        
+        // Hoặc sắp xếp theo tiêu chí khác
+        // return [...dietTypes].sort((a, b) => {
+        //     if (a.createdAt && b.createdAt) {
+        //         return new Date(b.createdAt) - new Date(a.createdAt);
+        //     }
+        //     return b._id.localeCompare(a._id);
+        // });
+    }, [dietTypes]);
+
+    // Hiển thị loading khi đang tải dữ liệu hoặc khi dietTypes không phải là array
+    if (dietTypesLoading || !Array.isArray(dietTypes)) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <HeaderComponent />
+                <View style={[styles.content, { justifyContent: 'center', alignItems: 'center' }]}>
+                    <Text style={styles.loadingText}>Đang tải danh sách chế độ ăn...</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar style="dark" />
@@ -120,26 +164,26 @@ export default function SelectDietTypeScreen() {
 
                 {/* Danh sách chế độ ăn */}
                 <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-                    {dietTypes.map(diet => (
+                    {sortedDietTypes.map(diet => (
                         <TouchableOpacity
-                            key={diet.id}
+                            key={diet._id}
                             style={[
                                 styles.dietCard,
-                                selectedDiet === diet.id && styles.selectedDietCard
+                                selectedDiet === diet._id && styles.selectedDietCard
                             ]}
-                            onPress={() => selectDiet(diet.id)}
+                            onPress={() => selectDiet(diet._id)}
                             activeOpacity={0.7}
                         >
                             {/* Thông tin chế độ ăn */}
                             <View style={styles.dietCardLeft}>
                                 <Text style={[
                                     styles.dietTitle,
-                                    selectedDiet === diet.id && styles.selectedDietTitle
+                                    selectedDiet === diet._id && styles.selectedDietTitle
                                 ]}>
-                                    {diet.name}
+                                    {diet.title}
                                 </Text>
                                 <Text style={styles.dietDescription}>
-                                    {diet.shortDescription}
+                                    {diet.description}
                                 </Text>
 
                                 {/* Nút xem chi tiết */}
@@ -155,14 +199,20 @@ export default function SelectDietTypeScreen() {
 
                             {/* Hình ảnh chế độ ăn */}
                             <View style={styles.dietCardRight}>
-                                <Image
-                                    source={diet.image}
-                                    style={styles.dietImage}
-                                    resizeMode="cover"
-                                />
+                                {diet.dietTypeImage ? (
+                                    <Image
+                                        source={{ uri: diet.dietTypeImage }}
+                                        style={styles.dietImage}
+                                        resizeMode="cover"
+                                    />
+                                ) : (
+                                    <View style={[styles.dietImage, { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' }]}>
+                                        <Text style={{ color: '#999' }}>Không có ảnh</Text>
+                                    </View>
+                                )}
 
                                 {/* Hiển thị dấu tích nếu đã chọn */}
-                                {selectedDiet === diet.id && (
+                                {selectedDiet === diet._id && (
                                     <View style={styles.checkmarkContainer}>
                                         <Ionicons name="checkmark-circle" size={28} color="#35A55E" />
                                     </View>
@@ -184,7 +234,7 @@ export default function SelectDietTypeScreen() {
                     />
 
                     <Paragraph textAlign="center" color="$gray8" fontSize="$3" marginTop="$2">
-                        Bước 2/3 (Gia đình) hoặc Bước 6/6 (Cá nhân)
+                        {onboardingData.type === 'family' ? 'Bước 2/3 (Gia đình)' : 'Bước 6/6 (Cá nhân)'}
                     </Paragraph>
                 </View>
             </View>
@@ -200,7 +250,7 @@ export default function SelectDietTypeScreen() {
                     <View style={styles.detailSheet}>
                         {/* Header của sheet */}
                         <View style={styles.sheetHeader}>
-                            <Text style={styles.sheetTitle}>{currentDietDetail.name}</Text>
+                            <Text style={styles.sheetTitle}>{currentDietDetail.title}</Text>
                             <TouchableOpacity
                                 onPress={() => setIsDetailSheetOpen(false)}
                             >
@@ -209,88 +259,106 @@ export default function SelectDietTypeScreen() {
                         </View>
 
                         {/* Phần nội dung chi tiết */}
-                        <ScrollView style={styles.sheetContent}>
+                        <ScrollView 
+                            style={styles.sheetContent}
+                            contentContainerStyle={styles.sheetScrollContent}
+                        >
                             {/* Hình ảnh minh họa */}
-                            <Image
-                                source={currentDietDetail.image}
-                                style={styles.sheetImage}
-                                resizeMode="cover"
-                            />
+                            {currentDietDetail.dietTypeImage ? (
+                                <Image
+                                    source={{ uri: currentDietDetail.dietTypeImage }}
+                                    style={styles.sheetImage}
+                                    resizeMode="cover"
+                                />
+                            ) : (
+                                <View style={[styles.sheetImage, { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' }]}>
+                                    <Text style={{ color: '#999' }}>Không có ảnh</Text>
+                                </View>
+                            )}
 
-                            {/* Phần mô tả */}
+                            {/* Phần mô tả chi tiết */}
                             <View style={styles.sheetDescriptionContainer}>
                                 <Text style={styles.sheetDescription}>
-                                    {currentDietDetail.description}
+                                    {currentDietDetail.descriptionDetail}
                                 </Text>
                             </View>
 
-                            {/* Thông tin dinh dưỡng */}
-                            <View style={styles.nutritionContainer}>
-                                <Text style={styles.sectionTitle}>Thông tin dinh dưỡng</Text>
-                                <View style={styles.macroCircleContainer}>
-                                    {currentDietDetail.nutrition.macros.map((macro, index) => (
-                                        <View key={index} style={styles.macroCircle}>
-                                            <Text style={styles.macroPercentage}>{macro.percentage}%</Text>
-                                            <Text style={styles.macroName}>{macro.name}</Text>
+                            {/* Thông tin dinh dưỡng - Hiển thị nếu có dữ liệu */}
+                            {currentDietDetail.nutrition && (
+                                <View style={styles.nutritionContainer}>
+                                    <Text style={styles.sectionTitle}>Thông tin dinh dưỡng</Text>
+                                    
+                                    {/* Macros display in cards */}
+                                    <View style={styles.macroCardContainer}>
+                                        {/* Calories */}
+                                        <View style={styles.macroCard}>
+                                            <View style={[styles.macroIcon, { backgroundColor: '#FF6B6B' }]}>
+                                                <Ionicons name="flame" size={20} color="white" />
+                                            </View>
+                                            <Text style={styles.macroValue}>{currentDietDetail.nutrition.calories}</Text>
+                                            <Text style={styles.macroLabel}>Calo</Text>
                                         </View>
-                                    ))}
-                                </View>
-                                <Text style={styles.caloriesText}>
-                                    {currentDietDetail.nutrition.calories} kcal/ngày
-                                </Text>
-                            </View>
-
-                            {/* Thực phẩm được khuyến khích */}
-                            <View style={styles.foodSection}>
-                                <Text style={styles.sectionTitle}>Thực phẩm khuyến khích</Text>
-                                <View style={styles.foodContainer}>
-                                    {currentDietDetail.recommendedFoods.map((food, index) => (
-                                        <View key={index} style={styles.foodItem}>
-                                            <Ionicons name="checkmark-circle" size={16} color="#35A55E" />
-                                            <Text style={styles.foodText}>{food}</Text>
+                                        
+                                        {/* Protein */}
+                                        <View style={styles.macroCard}>
+                                            <View style={[styles.macroIcon, { backgroundColor: '#4ECDC4' }]}>
+                                                <Ionicons name="fitness" size={20} color="white" />
+                                            </View>
+                                            <Text style={styles.macroValue}>{currentDietDetail.nutrition.protein}g</Text>
+                                            <Text style={styles.macroLabel}>Protein</Text>
                                         </View>
-                                    ))}
-                                </View>
-                            </View>
-
-                            {/* Thực phẩm nên hạn chế */}
-                            <View style={styles.foodSection}>
-                                <Text style={styles.sectionTitle}>Thực phẩm hạn chế</Text>
-                                <View style={styles.foodContainer}>
-                                    {currentDietDetail.restrictedFoods.map((food, index) => (
-                                        <View key={index} style={styles.foodItem}>
-                                            <Ionicons name="close-circle" size={16} color="#FF6B6B" />
-                                            <Text style={styles.foodText}>{food}</Text>
+                                        
+                                        {/* Carbs */}
+                                        <View style={styles.macroCard}>
+                                            <View style={[styles.macroIcon, { backgroundColor: '#45B7D1' }]}>
+                                                <Ionicons name="leaf" size={20} color="white" />
+                                            </View>
+                                            <Text style={styles.macroValue}>{currentDietDetail.nutrition.carbs}g</Text>
+                                            <Text style={styles.macroLabel}>Carbs</Text>
                                         </View>
-                                    ))}
-                                </View>
-                            </View>
-
-                            {/* Lợi ích của chế độ ăn */}
-                            <View style={styles.benefitsSection}>
-                                <Text style={styles.sectionTitle}>Lợi ích</Text>
-                                <View style={styles.benefitsContainer}>
-                                    {currentDietDetail.benefits.map((benefit, index) => (
-                                        <View key={index} style={styles.benefitItem}>
-                                            <Ionicons name="star" size={16} color="#FFD700" />
-                                            <Text style={styles.benefitText}>{benefit}</Text>
+                                        
+                                        {/* Fat */}
+                                        <View style={styles.macroCard}>
+                                            <View style={[styles.macroIcon, { backgroundColor: '#96CEB4' }]}>
+                                                <Ionicons name="water" size={20} color="white" />
+                                            </View>
+                                            <Text style={styles.macroValue}>{currentDietDetail.nutrition.fat}g</Text>
+                                            <Text style={styles.macroLabel}>Chất béo</Text>
                                         </View>
-                                    ))}
+                                    </View>
+                                    
+                                    {/* Nguồn khuyến nghị */}
+                                    {currentDietDetail.researchSource && (
+                                        <View style={styles.sourceContainer}>
+                                            <Text style={styles.sourceTitle}>Nguồn khuyến nghị:</Text>
+                                            <TouchableOpacity 
+                                                onPress={() => Linking.openURL(currentDietDetail.researchSource)}
+                                                style={styles.sourceLink}
+                                            >
+                                                <Text style={styles.sourceLinkText}>
+                                                    {currentDietDetail.researchSource}
+                                                </Text>
+                                                <Ionicons name="open-outline" size={16} color="#35A55E" style={{ marginLeft: 5 }} />
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
                                 </View>
-                            </View>
+                            )}
                         </ScrollView>
 
-                        {/* Nút chọn chế độ ăn */}
-                        <TouchableOpacity
-                            style={[styles.selectButton, selectedDiet === currentDietDetail.id && styles.selectedButton]}
-                            onPress={selectDietFromDetail}
-                        >
-                            <Text style={styles.selectButtonText}>
-                                {selectedDiet === currentDietDetail.id
-                                    ? "Đã chọn chế độ ăn này"
-                                    : "Chọn chế độ ăn này"}
-                            </Text>
-                        </TouchableOpacity>
+                        {/* Nút chọn chế độ ăn - Fixed position */}
+                        <View style={styles.selectButtonContainer}>
+                            <TouchableOpacity
+                                style={[styles.selectButton, selectedDiet === currentDietDetail._id && styles.selectedButton]}
+                                onPress={selectDietFromDetail}
+                            >
+                                <Text style={styles.selectButtonText}>
+                                    {selectedDiet === currentDietDetail._id
+                                        ? "Đã chọn chế độ ăn này"
+                                        : "Chọn chế độ ăn này"}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 )}
             </SheetComponent>
@@ -399,6 +467,7 @@ const styles = StyleSheet.create({
     },
     detailSheet: {
         flex: 1,
+        position: 'relative',
     },
     sheetHeader: {
         flexDirection: 'row',
@@ -416,6 +485,10 @@ const styles = StyleSheet.create({
     },
     sheetContent: {
         flex: 1,
+        paddingBottom: 100, // Thêm padding để tránh nút đè lên content
+    },
+    sheetScrollContent: {
+        paddingBottom: 20, // Padding cho scroll content
     },
     sheetImage: {
         width: '100%',
@@ -435,75 +508,94 @@ const styles = StyleSheet.create({
     nutritionContainer: {
         marginBottom: 24,
     },
-    macroCircleContainer: {
+    macroCardContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginBottom: 16,
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        marginBottom: 20,
     },
-    macroCircle: {
-        width: 70,
-        height: 70,
-        borderRadius: 35,
-        backgroundColor: '#F0F7F4',
+    macroCard: {
+        width: '48%',
+        backgroundColor: '#F8F9FA',
+        borderRadius: 12,
+        padding: 16,
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    macroIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
+        marginBottom: 8,
     },
-    macroPercentage: {
+    macroValue: {
         fontSize: 18,
-        fontWeight: '700',
-        color: '#35A55E',
+        fontWeight: 'bold',
+        color: '#2C3E50',
+        marginBottom: 4,
     },
-    macroName: {
+    macroLabel: {
         fontSize: 12,
-        color: '#666666',
-    },
-    caloriesText: {
-        fontSize: 14,
         color: '#666666',
         textAlign: 'center',
     },
-    foodSection: {
-        marginBottom: 24,
+    
+    // Styles cho nguồn khuyến nghị
+    sourceContainer: {
+        backgroundColor: '#F0F7F4',
+        borderRadius: 8,
+        padding: 12,
+        marginTop: 10,
     },
-    foodContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
+    sourceTitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#2C3E50',
+        marginBottom: 6,
     },
-    foodItem: {
+    sourceLink: {
         flexDirection: 'row',
         alignItems: 'center',
-        width: '50%',
-        marginBottom: 8,
     },
-    foodText: {
-        fontSize: 14,
-        color: '#333333',
-        marginLeft: 8,
-    },
-    benefitsSection: {
-        marginBottom: 24,
-    },
-    benefitsContainer: {
-        flexDirection: 'column',
-    },
-    benefitItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    benefitText: {
-        fontSize: 14,
-        color: '#333333',
-        marginLeft: 8,
+    sourceLinkText: {
+        fontSize: 13,
+        color: '#35A55E',
+        textDecorationLine: 'underline',
         flex: 1,
+    },
+    
+    loadingText: {
+        fontSize: 16,
+        color: '#666',
+        textAlign: 'center',
+    },
+
+    // Container cho nút select - fixed position
+    selectButtonContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: 'white',
+        paddingHorizontal: 20,
+        paddingTop: 10,
+        paddingBottom: 50,
+        borderTopWidth: 1,
+        borderTopColor: '#EEEEEE',
     },
     selectButton: {
         backgroundColor: '#35A55E',
-        borderRadius: 10,
-        paddingVertical: 14,
+        borderRadius: 12,
+        paddingVertical: 16,
         alignItems: 'center',
-        marginTop: 10,
-        marginBottom: 40,
+        width: '100%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     selectedButton: {
         backgroundColor: '#2D9150',
