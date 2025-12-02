@@ -10,10 +10,11 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
 import { H2, Paragraph } from 'tamagui';
-import { nextStep, prevStep } from '../../redux/slice/surveySlice';
+import { nextStep, prevStep, setDietaryPreferences } from '../../redux/slice/surveySlice';
+import { saveOnboardingData } from '../../redux/thunk/surveyThunk';
 import SheetComponent from '../../components/sheet/SheetComponent';
 import dietTypes from '../../data/dietTypes';
 import HeaderComponent from '../../components/header/HeaderComponent';
@@ -25,6 +26,9 @@ export default function SelectDietTypeScreen() {
     const [currentDietDetail, setCurrentDietDetail] = useState(null);
     const dispatch = useDispatch();
     const router = useRouter();
+    
+    // Lấy dữ liệu từ Redux
+    const { onboardingData, saveLoading, saveError } = useSelector(state => state.survey);
 
     // Mở sheet chi tiết cho chế độ ăn được chọn
     const openDietDetail = (diet) => {
@@ -49,10 +53,49 @@ export default function SelectDietTypeScreen() {
         }
     };
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (selectedDiet) {
-            dispatch(nextStep());
-            router.push('/onboarding/Questions');
+            try {
+                // Lưu dietary preferences vào Redux
+                const dietaryPreferences = { DietType_id: selectedDiet };
+                dispatch(setDietaryPreferences(dietaryPreferences));
+                
+                // Chuẩn bị dữ liệu để gửi API
+                const dataToSave = {
+                    type: onboardingData.type,
+                    data: {}
+                };
+                
+                if (onboardingData.type === 'family') {
+                    dataToSave.data = {
+                        familyInfo: onboardingData.familyInfo,
+                        dietaryPreferences: dietaryPreferences
+                    };
+                } else {
+                    dataToSave.data = {
+                        personalInfo: onboardingData.personalInfo,
+                        dietaryPreferences: dietaryPreferences
+                    };
+                }
+                
+                console.log('Saving onboarding data:', dataToSave);
+                
+                // Gọi API lưu dữ liệu
+                const result = await dispatch(saveOnboardingData(dataToSave)).unwrap();
+                
+                if (result.data?.isOnboardingCompleted) {
+                    // Onboarding hoàn thành, redirect về home
+                    router.replace('/(tabs)');
+                } else {
+                    // Tiếp tục với Questions nếu chưa hoàn thành
+                    dispatch(nextStep());
+                    router.push('/onboarding/Questions');
+                }
+            } catch (error) {
+                console.error('Error saving onboarding data:', error);
+                // Hiển thị lỗi cho user
+                alert('Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.');
+            }
         }
     };
 
@@ -135,12 +178,13 @@ export default function SelectDietTypeScreen() {
                         enableBack={true}
                         onBack={handleBack}
                         onNext={handleNext}
-                        disableNext={!selectedDiet}
+                        disableNext={!selectedDiet || saveLoading}
                         nextColor="#35A55E"
+                        nextText={saveLoading ? "Đang lưu..." : "Tiếp theo"}
                     />
 
                     <Paragraph textAlign="center" color="$gray8" fontSize="$3" marginTop="$2">
-                        Bước 1.5/5
+                        Bước 2/3 (Gia đình) hoặc Bước 6/6 (Cá nhân)
                     </Paragraph>
                 </View>
             </View>

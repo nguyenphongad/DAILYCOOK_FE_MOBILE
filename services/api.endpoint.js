@@ -9,4 +9,6 @@ export const ENDPOINT = {
 
     // surveys endpoints
     CHECK_IS_BOARDING: `${BASE_ENDPOINT}/surveys/onboarding/status`,
+
+    SAVE_ONBOARDING_DATA: `${BASE_ENDPOINT}/surveys/onboarding/save`,
 }

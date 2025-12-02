@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import { useRouter } from 'expo-router';
 import { Button, Input, YStack, H2, Paragraph, XStack } from 'tamagui';
 import { Ionicons } from '@expo/vector-icons';
-import { nextStep } from '../../redux/slice/surveySlice';
+import { nextStep, setFamilyInfo } from '../../redux/slice/surveySlice';
 import HeaderComponent from '../../components/header/HeaderComponent';
 import ButtonComponent from '../../components/button/ButtonComponent';
 
@@ -68,11 +68,19 @@ export default function FamilyMemberScreen() {
     }, 0);
 
     if (totalMembers > 0) {
-      // TODO: Lưu dữ liệu gia đình vào Redux hoặc AsyncStorage
-      console.log('Family data:', familyData);
+      // Lưu dữ liệu gia đình vào Redux
+      const familyInfo = {
+        children: parseInt(familyData.children) || 0,
+        teenagers: parseInt(familyData.teenagers) || 0,
+        adults: parseInt(familyData.adults) || 0,
+        elderly: parseInt(familyData.elderly) || 0
+      };
+      
+      console.log('Family data:', familyInfo);
+      dispatch(setFamilyInfo(familyInfo));
       
       dispatch(nextStep());
-      router.push('/onboarding/Gender'); // Bỏ qua thông tin cá nhân cho gia đình
+      router.push('/onboarding/SelectDietType'); // Bỏ qua thông tin cá nhân cho gia đình
     }
   };
 

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, Dimensions, Image } f
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'expo-router';
 import { H2, Paragraph } from 'tamagui';
-import { nextStep, prevStep } from '../../redux/slice/surveySlice';
+import { nextStep, prevStep, setPersonalInfo } from '../../redux/slice/surveySlice';
 import HeaderComponent from '../../components/header/HeaderComponent';
 import ButtonComponent from '../../components/button/ButtonComponent';
 
@@ -53,6 +53,9 @@ export default function HeightScreen() {
 
   const handleNext = () => {
     if (selectedHeight && selectedHeight > 0) {
+      // Lưu height vào Redux
+      dispatch(setPersonalInfo({ height: selectedHeight }));
+      
       dispatch(nextStep());
       router.push({
         pathname: '/onboarding/Weight',
