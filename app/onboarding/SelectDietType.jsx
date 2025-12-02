@@ -9,7 +9,10 @@ import {
     SafeAreaView,
     Linking,
     Animated,
-    RefreshControl
+    RefreshControl,
+    ToastAndroid,
+    Platform,
+    Alert
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -153,7 +156,11 @@ export default function SelectDietTypeScreen() {
     // Hiển thị lỗi nếu có
     useEffect(() => {
         if (dietTypesError) {
-            alert('Có lỗi xảy ra khi tải danh sách chế độ ăn: ' + dietTypesError);
+            if (Platform.OS === 'android') {
+                ToastAndroid.show('Có lỗi xảy ra khi tải danh sách chế độ ăn: ' + dietTypesError, ToastAndroid.LONG);
+            } else {
+                Alert.alert('Lỗi', 'Có lỗi xảy ra khi tải danh sách chế độ ăn: ' + dietTypesError);
+            }
         }
     }, [dietTypesError]);
 
@@ -186,7 +193,11 @@ export default function SelectDietTypeScreen() {
                 // Tìm diet object để lấy keyword
                 const selectedDietObject = sortedDietTypes.find(diet => diet._id === selectedDiet);
                 if (!selectedDietObject) {
-                    alert('Không tìm thấy thông tin chế độ ăn đã chọn');
+                    if (Platform.OS === 'android') {
+                        ToastAndroid.show('Không tìm thấy thông tin chế độ ăn đã chọn', ToastAndroid.SHORT);
+                    } else {
+                        Alert.alert('Lỗi', 'Không tìm thấy thông tin chế độ ăn đã chọn');
+                    }
                     return;
                 }
 
@@ -229,7 +240,11 @@ export default function SelectDietTypeScreen() {
             } catch (error) {
                 console.error('Error saving onboarding data:', error);
                 // Hiển thị lỗi cho user
-                alert('Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.');
+                if (Platform.OS === 'android') {
+                    ToastAndroid.show('Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.', ToastAndroid.LONG);
+                } else {
+                    Alert.alert('Lỗi', 'Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.');
+                }
             }
         }
     };

@@ -1,5 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { checkOnboardingStatus, saveOnboardingData } from '../thunk/surveyThunk';
+import { 
+  checkOnboardingStatus, 
+  saveOnboardingData, 
+  getDietaryPreferences, 
+  updateDietaryPreferences 
+} from '../thunk/surveyThunk';
 
 const initialState = {
   isOnboardingCompleted: null,
@@ -29,6 +34,12 @@ const initialState = {
   },
   saveLoading: false,
   saveError: null,
+  // Thêm state cho dietary preferences
+  currentDietaryPreferences: null,
+  dietaryPreferencesLoading: false,
+  dietaryPreferencesError: null,
+  updateDietaryPreferencesLoading: false,
+  updateDietaryPreferencesError: null,
 };
 
 const surveySlice = createSlice({
@@ -93,6 +104,16 @@ const surveySlice = createSlice({
     clearSaveError: (state) => {
       state.saveError = null;
     },
+    // Thêm actions cho dietary preferences
+    clearDietaryPreferencesError: (state) => {
+      state.dietaryPreferencesError = null;
+      state.updateDietaryPreferencesError = null;
+    },
+    resetDietaryPreferences: (state) => {
+      state.currentDietaryPreferences = null;
+      state.dietaryPreferencesError = null;
+      state.updateDietaryPreferencesError = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -129,6 +150,37 @@ const surveySlice = createSlice({
       .addCase(saveOnboardingData.rejected, (state, action) => {
         state.saveLoading = false;
         state.saveError = action.payload;
+      })
+      // Cases cho getDietaryPreferences
+      .addCase(getDietaryPreferences.pending, (state) => {
+        state.dietaryPreferencesLoading = true;
+        state.dietaryPreferencesError = null;
+      })
+      .addCase(getDietaryPreferences.fulfilled, (state, action) => {
+        state.dietaryPreferencesLoading = false;
+        if (action.payload && action.payload.data && action.payload.data.dietaryPreferences) {
+          state.currentDietaryPreferences = action.payload.data.dietaryPreferences;
+        }
+      })
+      .addCase(getDietaryPreferences.rejected, (state, action) => {
+        state.dietaryPreferencesLoading = false;
+        state.dietaryPreferencesError = action.payload;
+      })
+      
+      // Cases cho updateDietaryPreferences
+      .addCase(updateDietaryPreferences.pending, (state) => {
+        state.updateDietaryPreferencesLoading = true;
+        state.updateDietaryPreferencesError = null;
+      })
+      .addCase(updateDietaryPreferences.fulfilled, (state, action) => {
+        state.updateDietaryPreferencesLoading = false;
+        if (action.payload && action.payload.data && action.payload.data.dietaryPreferences) {
+          state.currentDietaryPreferences = action.payload.data.dietaryPreferences;
+        }
+      })
+      .addCase(updateDietaryPreferences.rejected, (state, action) => {
+        state.updateDietaryPreferencesLoading = false;
+        state.updateDietaryPreferencesError = action.payload;
       });
   },
 });
@@ -146,7 +198,9 @@ export const {
   setFamilyInfo,
   setDietaryPreferences,
   resetOnboardingData,
-  clearSaveError
+  clearSaveError,
+  clearDietaryPreferencesError,
+  resetDietaryPreferences
 } = surveySlice.actions;
 
 export default surveySlice.reducer;

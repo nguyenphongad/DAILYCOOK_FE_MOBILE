@@ -40,3 +40,43 @@ export const saveOnboardingData = createAsyncThunk(
     }
   }
 );
+
+// Lấy thông tin dietary preferences của user
+export const getDietaryPreferences = createAsyncThunk(
+  'survey/getDietaryPreferences',
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await apiService.get(ENDPOINT.GET_DIETARY_PREFERENCES(userId));
+      
+      console.log('API Response - Get Dietary Preferences:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('Get dietary preferences error:', error);
+      return rejectWithValue(
+        error.response?.data?.message || 'Không thể lấy thông tin chế độ ăn'
+      );
+    }
+  }
+);
+
+// Cập nhật dietary preferences của user
+export const updateDietaryPreferences = createAsyncThunk(
+  'survey/updateDietaryPreferences',
+  async ({ userId, dietTypeId }, { rejectWithValue }) => {
+    try {
+      const response = await apiService.put(ENDPOINT.UPDATE_DIETARY_PREFERENCES(userId), {
+        DietType_id: dietTypeId
+      });
+      
+      console.log('API Response - Update Dietary Preferences:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('Update dietary preferences error:', error);
+      return rejectWithValue(
+        error.response?.data?.message || 'Không thể cập nhật chế độ ăn'
+      );
+    }
+  }
+);
