@@ -70,13 +70,17 @@ export const getCurrentSession = createAsyncThunk(
 // Logout user - Không gọi API, chỉ clear local
 export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, dispatch }) => {
     try {
       // Đăng xuất khỏi Supabase
       await supabase.auth.signOut();
       
       // Xóa tất cả dữ liệu trong AsyncStorage
       await AsyncStorage.clear();
+      
+      // Reset onboarding check
+      const { resetOnboardingCheck } = await import('../slice/surveySlice');
+      dispatch(resetOnboardingCheck());
       
       console.log('User logged out successfully');
       return null;
@@ -86,6 +90,9 @@ export const logoutUser = createAsyncThunk(
       // Ngay cả khi có lỗi, vẫn xóa dữ liệu local
       try {
         await AsyncStorage.clear();
+        // Reset onboarding check even on error
+        const { resetOnboardingCheck } = await import('../slice/surveySlice');
+        dispatch(resetOnboardingCheck());
       } catch (clearError) {
         console.error('Clear storage error:', clearError);
       }

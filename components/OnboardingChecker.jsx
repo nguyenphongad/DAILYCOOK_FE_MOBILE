@@ -15,6 +15,7 @@ export function OnboardingChecker() {
   
   const [hasChecked, setHasChecked] = useState(false);
   const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   // Bước 1: Check token và user khi app khởi động - CHỈ 1 LẦN
   useEffect(() => {
@@ -32,7 +33,18 @@ export function OnboardingChecker() {
     }
   }, [hasChecked, user, isLoading, dispatch]);
 
-  // Bước 2: Check onboarding khi có user - CHỈ 1 LẦN
+  // Reset onboarding check khi user thay đổi
+  useEffect(() => {
+    const userId = user?._id || user?.user_id;
+    
+    if (userId && userId !== currentUserId) {
+      console.log('User changed from', currentUserId, 'to', userId, '- Reset onboarding check');
+      setCurrentUserId(userId);
+      setHasCheckedOnboarding(false);
+    }
+  }, [user, currentUserId]);
+
+  // Bước 2: Check onboarding khi có user - CHỈ 1 LẦN cho mỗi user
   useEffect(() => {
     if (user && !hasCheckedOnboarding && !loading) {
       const userId = user._id || user.user_id;
@@ -54,12 +66,26 @@ export function OnboardingChecker() {
     const inTabs = segments[0] === '(tabs)';
     const isNotFound = segments[0] === '+not-found';
 
+    console.log('OnboardingChecker - Redirect logic:', {
+      hasChecked,
+      loading,
+      isLoading,
+      user: !!user,
+      isAuthenticated,
+      isOnboardingCompleted,
+      currentPath,
+      inAuth,
+      inOnboarding,
+      inTabs
+    });
+
     // Skip redirect nếu đang ở not-found
     if (isNotFound) return;
 
     // Không có user -> Login
     if (!user || !isAuthenticated) {
       if (!inAuth) {
+        console.log('Redirecting to login - no user');
         router.replace('/(auth)/Login');
       }
       return;
@@ -68,6 +94,7 @@ export function OnboardingChecker() {
     // Chưa complete onboarding -> Onboarding
     if (isOnboardingCompleted === false) {
       if (!inOnboarding) {
+        console.log('Redirecting to onboarding - not completed');
         router.replace('/onboarding');
       }
       return;
@@ -76,6 +103,7 @@ export function OnboardingChecker() {
     // Đã complete onboarding -> Home
     if (isOnboardingCompleted === true) {
       if (!inTabs) {
+        console.log('Redirecting to home - completed');
         router.replace('/(tabs)');
       }
       return;

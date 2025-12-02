@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
     View,
     Text,
@@ -7,7 +7,9 @@ import {
     ScrollView,
     Image,
     SafeAreaView,
-    Linking
+    Linking,
+    Animated,
+    RefreshControl
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,10 +23,119 @@ import SheetComponent from '../../components/sheet/SheetComponent';
 import HeaderComponent from '../../components/header/HeaderComponent';
 import ButtonComponent from '../../components/button/ButtonComponent';
 
+// Skeleton Loading Component
+const SkeletonDietCard = () => {
+    const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        const shimmerAnimation = Animated.loop(
+            Animated.sequence([
+                Animated.timing(shimmerAnim, {
+                    toValue: 1,
+                    duration: 1000,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(shimmerAnim, {
+                    toValue: 0,
+                    duration: 1000,
+                    useNativeDriver: true,
+                }),
+            ])
+        );
+        shimmerAnimation.start();
+
+        return () => shimmerAnimation.stop();
+    }, [shimmerAnim]);
+
+    const translateX = shimmerAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-300, 300],
+    });
+
+    return (
+        <View style={styles.skeletonCard}>
+            <View style={styles.skeletonCardLeft}>
+                {/* Skeleton Title */}
+                <View style={styles.skeletonTitle}>
+                    <Animated.View
+                        style={[
+                            styles.shimmerOverlay,
+                            {
+                                transform: [{ translateX }],
+                            },
+                        ]}
+                    />
+                </View>
+                
+                {/* Skeleton Description */}
+                <View style={styles.skeletonDescription}>
+                    <Animated.View
+                        style={[
+                            styles.shimmerOverlay,
+                            {
+                                transform: [{ translateX }],
+                            },
+                        ]}
+                    />
+                </View>
+                
+                <View style={[styles.skeletonDescription, { width: '60%', marginTop: 4 }]}>
+                    <Animated.View
+                        style={[
+                            styles.shimmerOverlay,
+                            {
+                                transform: [{ translateX }],
+                            },
+                        ]}
+                    />
+                </View>
+
+                {/* Skeleton Detail Button */}
+                <View style={styles.skeletonDetailButton}>
+                    <Animated.View
+                        style={[
+                            styles.shimmerOverlay,
+                            {
+                                transform: [{ translateX }],
+                            },
+                        ]}
+                    />
+                </View>
+            </View>
+
+            {/* Skeleton Image */}
+            <View style={styles.skeletonCardRight}>
+                <View style={styles.skeletonImage}>
+                    <Animated.View
+                        style={[
+                            styles.shimmerOverlay,
+                            {
+                                transform: [{ translateX }],
+                            },
+                        ]}
+                    />
+                </View>
+            </View>
+        </View>
+    );
+};
+
+// Loading Skeleton Container
+const DietTypesLoadingSkeleton = () => {
+    return (
+        <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+            {Array.from({ length: 6 }, (_, index) => (
+                <SkeletonDietCard key={index} />
+            ))}
+        </ScrollView>
+    );
+};
+
 export default function SelectDietTypeScreen() {
     const [selectedDiet, setSelectedDiet] = useState(null);
     const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
     const [currentDietDetail, setCurrentDietDetail] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
     const dispatch = useDispatch();
     const router = useRouter();
     
@@ -144,13 +255,74 @@ export default function SelectDietTypeScreen() {
         // });
     }, [dietTypes]);
 
-    // Hiển thị loading khi đang tải dữ liệu hoặc khi dietTypes không phải là array
-    if (dietTypesLoading || !Array.isArray(dietTypes)) {
+    // Hàm xử lý pull to refresh
+    const onRefresh = async () => {
+        setRefreshing(true);
+        try {
+            // Reset meal state để force reload
+            const { resetMealState } = await import('../../redux/slice/mealSlice');
+            dispatch(resetMealState());
+            
+            // Gọi lại API
+            await dispatch(getDietTypes());
+        } catch (error) {
+            console.error('Refresh error:', error);
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
+    // Hiển thị loading skeleton khi đang tải dữ liệu, refreshing, hoặc khi dietTypes không phải là array
+    if (dietTypesLoading || refreshing || !Array.isArray(dietTypes)) {
         return (
             <SafeAreaView style={styles.container}>
+                <StatusBar style="dark" />
                 <HeaderComponent />
-                <View style={[styles.content, { justifyContent: 'center', alignItems: 'center' }]}>
-                    <Text style={styles.loadingText}>Đang tải danh sách chế độ ăn...</Text>
+
+                <View style={styles.content}>
+                    {/* Header */}
+                    <View style={styles.header}>
+                        <H2 style={styles.title}>Chế độ ăn</H2>
+                        <Paragraph style={styles.subtitle}>
+                            Chúng tôi đề xuất các chế độ ăn dưới đây, hãy chọn phù hợp nhất với sở thích của bạn
+                        </Paragraph>
+                    </View>
+
+                    {/* Loading Skeleton với RefreshControl */}
+                    <ScrollView 
+                        style={styles.scrollContainer} 
+                        showsVerticalScrollIndicator={false}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                colors={['#35A55E']} // Android
+                                tintColor={'#35A55E'} // iOS
+                                title="Đang tải..." // iOS
+                                titleColor={'#35A55E'} // iOS
+                            />
+                        }
+                    >
+                        {Array.from({ length: 6 }, (_, index) => (
+                            <SkeletonDietCard key={index} />
+                        ))}
+                    </ScrollView>
+
+                    {/* Button Component với trạng thái disabled */}
+                    <View style={styles.bottomContainer}>
+                        <ButtonComponent
+                            enableBack={true}
+                            onBack={handleBack}
+                            onNext={() => {}}
+                            disableNext={true}
+                            nextColor="#CCCCCC"
+                            nextText={refreshing ? "Đang làm mới..." : "Đang tải..."}
+                        />
+
+                        <Paragraph textAlign="center" color="$gray8" fontSize="$3" marginTop="$2">
+                            {onboardingData.type === 'family' ? 'Bước 2/3 (Gia đình)' : 'Bước 6/6 (Cá nhân)'}
+                        </Paragraph>
+                    </View>
                 </View>
             </SafeAreaView>
         );
@@ -170,8 +342,21 @@ export default function SelectDietTypeScreen() {
                     </Paragraph>
                 </View>
 
-                {/* Danh sách chế độ ăn */}
-                <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+                {/* Danh sách chế độ ăn với RefreshControl */}
+                <ScrollView 
+                    style={styles.scrollContainer} 
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={['#35A55E']} // Android
+                            tintColor={'#35A55E'} // iOS
+                            title="Kéo để làm mới" // iOS
+                            titleColor={'#35A55E'} // iOS
+                        />
+                    }
+                >
                     {sortedDietTypes.map(diet => (
                         <TouchableOpacity
                             key={diet._id}
@@ -236,9 +421,9 @@ export default function SelectDietTypeScreen() {
                         enableBack={true}
                         onBack={handleBack}
                         onNext={handleNext}
-                        disableNext={!selectedDiet || saveLoading}
+                        disableNext={!selectedDiet || saveLoading || refreshing}
                         nextColor="#35A55E"
-                        nextText={saveLoading ? "Đang lưu..." : "Tiếp theo"}
+                        nextText={saveLoading ? "Đang lưu..." : refreshing ? "Đang làm mới..." : "Tiếp theo"}
                     />
 
                     <Paragraph textAlign="center" color="$gray8" fontSize="$3" marginTop="$2">
@@ -612,5 +797,69 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '600',
+    },
+
+    // Skeleton Loading Styles
+    skeletonCard: {
+        flexDirection: 'row',
+        backgroundColor: '#F8F9FA',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        borderWidth: 2,
+        borderColor: 'transparent',
+    },
+    skeletonCardLeft: {
+        flex: 3,
+        paddingRight: 12,
+    },
+    skeletonTitle: {
+        height: 20,
+        backgroundColor: '#E1E9EE',
+        borderRadius: 4,
+        marginBottom: 12,
+        width: '70%',
+        overflow: 'hidden',
+        position: 'relative',
+    },
+    skeletonDescription: {
+        height: 16,
+        backgroundColor: '#E1E9EE',
+        borderRadius: 4,
+        marginBottom: 8,
+        width: '90%',
+        overflow: 'hidden',
+        position: 'relative',
+    },
+    skeletonDetailButton: {
+        height: 14,
+        backgroundColor: '#E1E9EE',
+        borderRadius: 4,
+        marginTop: 8,
+        width: '50%',
+        overflow: 'hidden',
+        position: 'relative',
+    },
+    skeletonCardRight: {
+        flex: 2,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    skeletonImage: {
+        width: 80,
+        height: 80,
+        backgroundColor: '#E1E9EE',
+        borderRadius: 8,
+        overflow: 'hidden',
+        position: 'relative',
+    },
+    shimmerOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(255, 255, 255, 0.6)',
+        width: 100,
     },
 });

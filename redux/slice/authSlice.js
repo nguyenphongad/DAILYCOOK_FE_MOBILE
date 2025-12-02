@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { logoutUser, getCurrentSession, loginWithGoogleTokens, checkTokenAndGetUser } from '../thunk/authThunk';
+import { resetOnboardingCheck } from './surveySlice';
 
 const initialState = {
   user: null,
@@ -87,7 +88,14 @@ const authSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(logoutUser.fulfilled, (state) => {
-        return initialState;
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.isLoading = false;
+        state.error = null;
+        
+        // Dispatch action to reset onboarding check
+        // Note: This needs to be handled differently since we can't dispatch from reducer
       })
       .addCase(logoutUser.rejected, (state) => {
         return initialState;
