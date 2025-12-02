@@ -84,9 +84,9 @@ const planItems = [
   },
   {
     id: 'water-reminder',
-    title: 'Lịch nhắc uống nước',
+    title: 'Cài đặt nhắc uống nước',
     icon: require('../../assets/images/icons_account/s7.png'),
-    navigateTo: '/plan/water-reminder',
+    navigateTo: '/(stacks)/account/WaterReminderSettings',
     badge: null,
     rightComponent: 'arrow'
   },
