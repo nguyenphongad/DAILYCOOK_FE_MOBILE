@@ -20,15 +20,23 @@ export const checkOnboardingStatus = createAsyncThunk(
   }
 );
 
-export const completeOnboarding = createAsyncThunk(
-  'survey/completeOnboarding',
-  async (onboardingData, { rejectWithValue }) => {
+export const saveOnboardingData = createAsyncThunk(
+  'survey/saveOnboardingData',
+  async ({ type, data }, { rejectWithValue }) => {
     try {
-      // Tạm thời chỉ return success, sau này sẽ implement API call thực
-      console.log('Completing onboarding with data:', onboardingData);
-      return { success: true };
+      const response = await apiService.post(ENDPOINT.SAVE_ONBOARDING_DATA, {
+        type,
+        data
+      });
+      
+      console.log('API Response - Save Onboarding:', response);
+      
+      return response;
     } catch (error) {
-      return rejectWithValue(error.message);
+      console.error('Save onboarding data error:', error);
+      return rejectWithValue(
+        error.response?.data?.message || 'Không thể lưu dữ liệu onboarding'
+      );
     }
   }
 );

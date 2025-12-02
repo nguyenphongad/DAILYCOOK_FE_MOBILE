@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import { useRouter } from 'expo-router';
 import { Button, YStack, H2, Paragraph } from 'tamagui';
 import { Ionicons } from '@expo/vector-icons';
-import { nextStep } from '../../redux/slice/surveySlice';
+import { nextStep, setOnboardingType } from '../../redux/slice/surveySlice';
 import HeaderComponent from '../../components/header/HeaderComponent';
 import ButtonComponent from '../../components/button/ButtonComponent';
 
@@ -34,6 +34,8 @@ export default function SelectType() {
     if (selectedType) {
       console.log('Selected account type:', selectedType);
       
+      // Lưu type vào Redux
+      dispatch(setOnboardingType(selectedType));
       dispatch(nextStep());
       
       // Redirect dựa trên loại tài khoản

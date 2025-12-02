@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { H2, Paragraph } from 'tamagui';
-import { prevStep, resetOnboarding } from '../../redux/slice/surveySlice';
+import { prevStep, setPersonalInfo } from '../../redux/slice/surveySlice';
 import HeaderComponent from '../../components/header/HeaderComponent';
 import ButtonComponent from '../../components/button/ButtonComponent';
 
@@ -55,7 +55,12 @@ export default function WeightScreen() {
 
   const handleNext = () => {
     if (selectedWeight && selectedWeight > 0) {
-      dispatch(resetOnboarding());
+      // Lưu weight vào Redux
+      dispatch(setPersonalInfo({ weight: selectedWeight }));
+      
+      console.log('Weight saved:', selectedWeight);
+      
+      // Chuyển đến SelectDietType cho personal flow
       router.push('/onboarding/SelectDietType');
     }
   };

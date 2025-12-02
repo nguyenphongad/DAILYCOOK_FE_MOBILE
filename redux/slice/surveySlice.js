@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { checkOnboardingStatus } from '../thunk/surveyThunk';
+import { checkOnboardingStatus, saveOnboardingData } from '../thunk/surveyThunk';
 
 const initialState = {
   isOnboardingCompleted: null,
@@ -7,7 +7,28 @@ const initialState = {
   loading: false,
   error: null,
   currentStep: 1,
-  maxStep: 5, // SelectTypeAccount, height, weight, age, gender
+  maxStep: 5,
+  // Thêm state để lưu dữ liệu onboarding
+  onboardingData: {
+    type: null, // 'personal' hoặc 'family'
+    personalInfo: {
+      gender: null,
+      age: null,
+      height: null,
+      weight: null
+    },
+    familyInfo: {
+      children: 0,
+      teenagers: 0,
+      adults: 0,
+      elderly: 0
+    },
+    dietaryPreferences: {
+      DietType_id: null
+    }
+  },
+  saveLoading: false,
+  saveError: null,
 };
 
 const surveySlice = createSlice({
@@ -43,6 +64,35 @@ const surveySlice = createSlice({
       state.loading = false;
       state.error = null;
     },
+    // Thêm actions để lưu dữ liệu onboarding
+    setOnboardingType: (state, action) => {
+      state.onboardingData.type = action.payload;
+    },
+    setPersonalInfo: (state, action) => {
+      state.onboardingData.personalInfo = {
+        ...state.onboardingData.personalInfo,
+        ...action.payload
+      };
+    },
+    setFamilyInfo: (state, action) => {
+      state.onboardingData.familyInfo = {
+        ...state.onboardingData.familyInfo,
+        ...action.payload
+      };
+    },
+    setDietaryPreferences: (state, action) => {
+      state.onboardingData.dietaryPreferences = {
+        ...state.onboardingData.dietaryPreferences,
+        ...action.payload
+      };
+    },
+    resetOnboardingData: (state) => {
+      state.onboardingData = initialState.onboardingData;
+      state.saveError = null;
+    },
+    clearSaveError: (state) => {
+      state.saveError = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -63,6 +113,22 @@ const surveySlice = createSlice({
         state.error = action.payload;
         // Nếu có lỗi 429, set completed = null để không redirect
         state.isOnboardingCompleted = null;
+      })
+      // Thêm cases cho saveOnboardingData
+      .addCase(saveOnboardingData.pending, (state) => {
+        state.saveLoading = true;
+        state.saveError = null;
+      })
+      .addCase(saveOnboardingData.fulfilled, (state, action) => {
+        state.saveLoading = false;
+        if (action.payload && action.payload.data) {
+          state.isOnboardingCompleted = action.payload.data.isOnboardingCompleted;
+          state.surveyData = action.payload.data;
+        }
+      })
+      .addCase(saveOnboardingData.rejected, (state, action) => {
+        state.saveLoading = false;
+        state.saveError = action.payload;
       });
   },
 });
@@ -74,7 +140,13 @@ export const {
   resetOnboarding, 
   clearError,
   setOnboardingCompleted,
-  resetOnboardingCheck
+  resetOnboardingCheck,
+  setOnboardingType,
+  setPersonalInfo,
+  setFamilyInfo,
+  setDietaryPreferences,
+  resetOnboardingData,
+  clearSaveError
 } = surveySlice.actions;
 
 export default surveySlice.reducer;
