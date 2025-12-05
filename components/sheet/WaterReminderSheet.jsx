@@ -161,7 +161,7 @@ const WaterReminderSheet = ({ isOpen, onClose }) => {
     
     // Thêm setTimeout để tránh animation bị giật
     setTimeout(() => {
-      router.push('/plan/water-reminder');
+      router.push('/(stacks)/account/WaterReminderSettings');
     }, 100);
   };
   

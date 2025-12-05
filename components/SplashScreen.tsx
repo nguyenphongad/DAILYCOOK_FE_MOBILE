@@ -5,10 +5,10 @@ import { router } from 'expo-router';
 
 export default function SplashScreen() {
   useEffect(() => {
-    // Đơn giản chỉ đợi 2 giây rồi chuyển đến màn hình login
+    // Giảm thời gian xuống 2 giây
     const timer = setTimeout(() => {
-      router.replace('/(auth)/Login');
-    }, 2000);
+      router.push('/(auth)/Login'); // Chuyển đến index để OnboardingChecker xử lý
+    }, 10000);
     
     return () => clearTimeout(timer);
   }, []);
@@ -19,52 +19,54 @@ export default function SplashScreen() {
       <View style={styles.contentWrapper}>
         <View style={styles.logoContainer}>
           <Image 
-            source={require('../assets/images/logo.png')} 
+            source={require('../assets/images/logo_new2.png')} 
             style={styles.logo}
             resizeMode="contain"
           />
         </View>
         
-        <Text style={styles.title}>DAILY COOK</Text>
-        <Text style={styles.subtitle}>Thực đơn nhà mình</Text>
+        {/* <Text style={styles.title}>DAILY COOK</Text> */}
+        {/* <Text style={styles.subtitle}>Thực đơn nhà mình</Text> */}
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ 
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#35A55E',
+    backgroundColor: '#11bc5e',  
   },
   contentWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoContainer: {
-    width: 130,
-    height: 130,
-    backgroundColor: '#FFFFFF',
+    // width: 130,
+    // height: 130,
+    // backgroundColor: '#11bc5e',
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 40,
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 270,
+    height: 270,
+    // borderRadius: 200,
+    backgroundColor: '#11bc5e',
   },
   title: {
     fontSize: 38,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#000',
     letterSpacing: 2,
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 20,
-    color: '#FFFFFF',
+    color: '#000',
   }
 });

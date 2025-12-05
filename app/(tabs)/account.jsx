@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, ScrollView, Image, Text, View, TouchableOpacity, FlatList, Animated } from 'react-native';
+import { ScrollView, Image, Text, View, TouchableOpacity, FlatList, Animated } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import HeaderComponent from '../../components/header/HeaderComponent';
@@ -10,6 +10,7 @@ import AppInfoSheet from '../../components/sheet/AppInfoSheet';
 import { useDispatch, useSelector } from 'react-redux';
 import { checkTokenAndGetUser, logoutUser } from '../../redux/thunk/authThunk';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { styles } from '../../styles/AccoutPage';
 
 // Thông tin người dùng
 const userData = {
@@ -53,15 +54,15 @@ const nutritionItems = [
     badgeColor: '#E86F50',
     rightComponent: 'arrow'
   },
-  {
-    id: 'cooking-skills',
-    title: 'Kĩ năng nấu ăn',
-    icon: require('../../assets/images/icons_account/s5.png'),
-    navigateTo: '/nutrition/cooking-skills',
-    badge: null,
-    rightComponent: 'text',
-    rightText: 'Cơ bản'
-  },
+  // {
+  //   id: 'cooking-skills',
+  //   title: 'Kĩ năng nấu ăn',
+  //   icon: require('../../assets/images/icons_account/s5.png'),
+  //   navigateTo: '/nutrition/cooking-skills',
+  //   badge: null,
+  //   rightComponent: 'text',
+  //   rightText: 'Cơ bản'
+  // },
 ];
 
 // Danh sách các mục trong phần Kế Hoạch
@@ -76,7 +77,7 @@ const planItems = [
   },
   {
     id: 'meal-history',
-    title: 'Lịch sử chế độ ăn uống',
+    title: 'Lịch sử thực đơn',
     icon: require('../../assets/images/icons_account/s6.png'),
     navigateTo: '/plan/meal-history',
     badge: null,
@@ -131,18 +132,6 @@ const nutritionGoals = [
     progressColor: '#FF8C00',
   },
   {
-    id: '3',
-    label: 'Nước',
-    value: 1200,
-    maxValue: 2000,
-    unit: 'ml',
-    postfix: '',
-    backgroundColor: '#BAE5D0',
-    iconSource: require('../../assets/images/icons_home/water-bottle.png'),
-    textColor: '#000000',
-    progressColor: '#1E90FF',
-  },
-  {
     id: '4',
     label: 'Chất xơ',
     value: 25,
@@ -153,16 +142,28 @@ const nutritionGoals = [
     iconSource: require('../../assets/images/icons_home/calories.png'),
     textColor: '#000000',
     progressColor: '#4169E1',
+  },
+  {
+    id: '5',
+    label: 'Carb',
+    value: 180,
+    maxValue: 300,
+    unit: 'gr',
+    postfix: '',
+    backgroundColor: '#FFE4E1',
+    iconSource: require('../../assets/images/icons_home/lipid.png'),
+    textColor: '#000000',
+    progressColor: '#FF69B4',
   }
 ];
 
 export default function AccountScreen() {
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
-  
+
   // Redux selectors
   const { user, isLoading, error, isAuthenticated } = useSelector((state) => state.auth);
-  
+
   const [isLogoutSheetOpen, setIsLogoutSheetOpen] = useState(false);
   const [isAppInfoSheetOpen, setIsAppInfoSheetOpen] = useState(false);
 
@@ -203,7 +204,7 @@ export default function AccountScreen() {
     try {
       await dispatch(logoutUser()).unwrap();
       console.log('User logged out successfully');
-      
+
       // Navigate to login hoặc index page
       // router.replace('/(auth)/login');
     } catch (error) {
@@ -270,7 +271,7 @@ export default function AccountScreen() {
           <View style={styles.avatarContainer}>
             <Image
               source={
-                displayUser.userImage 
+                displayUser.userImage
                   ? { uri: displayUser.userImage }
                   : require('../../assets/images/google_icon.png') // Fallback image
               }
@@ -287,9 +288,9 @@ export default function AccountScreen() {
               {displayUser.fullName}
             </Text>
             <View style={styles.emailContainer}>
-              <Image 
-                source={require('../../assets/images/google_icon.png')} 
-                style={styles.emailIcon} 
+              <Image
+                source={require('../../assets/images/google_icon.png')}
+                style={styles.emailIcon}
               />
               <Text style={styles.profileEmail}>
                 {displayUser.email}
@@ -307,14 +308,9 @@ export default function AccountScreen() {
         <View style={styles.nutritionSection}>
           <Text style={styles.nutritionSectionTitle}>Chế độ dinh dưỡng hàng ngày của bạn</Text>
 
-          <FlatList
-            data={nutritionGoals}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.nutritionList}
-            renderItem={({ item, index }) => (
-              <View style={[styles.nutritionCard, { backgroundColor: item.backgroundColor }]}>
+          <View style={styles.nutritionGrid}>
+            {nutritionGoals.map((item, index) => (
+              <View key={item.id} style={[styles.nutritionCard, { backgroundColor: item.backgroundColor }]}>
                 <View style={styles.nutritionCardHeader}>
                   <Text style={[styles.nutritionCardLabel, { color: item.textColor }]}>
                     {item.label}
@@ -327,11 +323,12 @@ export default function AccountScreen() {
 
                 <View style={styles.nutritionCardContent}>
                   <Text style={[styles.nutritionCardValue, { color: item.textColor }]}>
-                    {item.value}{item.postfix}
+                    {item.value}
+                    <Text style={styles.nutritionCardUnit}>
+                      {item.unit}
+                    </Text>
                   </Text>
-                  <Text style={styles.nutritionCardUnit}>
-                    {item.unit}
-                  </Text>
+
                 </View>
 
                 <View style={styles.progressBarContainer}>
@@ -349,8 +346,8 @@ export default function AccountScreen() {
                   />
                 </View>
               </View>
-            )}
-          />
+            ))}
+          </View>
         </View>
 
         {/* Nutrition Section */}
@@ -405,259 +402,3 @@ export default function AccountScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F7F1E5',
-    paddingTop: -40
-  },
-  header: {
-    justifyContent: 'left',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 19,
-    fontWeight: '600',
-    color: 'white',
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    // backgroundColor: '#35A55E',
-    // padding: 16,
-    paddingLeft: 10,
-    marginHorizontal: 10,
-    marginTop: 16,
-    borderRadius: 8,
-  },
-  avatarContainer: {
-    // width: 60,
-    // height: 60,
-    borderRadius: 40,
-    overflow: 'hidden',
-    padding:2,
-    borderWidth: 2,
-    borderColor: 'red',
-    borderColor: '#f2a7a7',
-    borderStyle: 'dotted',
-  },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 40,
-    backgroundColor: '#FFFFFF',
-    borderColor: '#FFFFFF',
-  },
-  profileInfo: {
-    marginLeft: 16,
-    flex: 1,
-  },
-  profileName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#35A55E',
-  },
-  emailContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  emailIcon: {
-    width: 14,
-    height: 14,
-    marginRight: 6,
-    resizeMode: 'cover',
-  },
-  profileEmail: {
-    fontSize: 14,
-    color: '#a3a1a1',
-  },
-  nutritionSection: {
-    marginTop: 16,
-    // backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 10,
-    marginHorizontal: 5,
-    // elevation: 0.5
-  },
-  nutritionSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
-  },
-  nutritionList: {
-    paddingRight: 10,
-  },
-  nutritionCard: {
-    width: 140,
-    padding: 16,
-    borderRadius: 12,
-    marginRight: 12,
-    marginLeft: 5,
-    marginBottom: 5,
-    marginTop: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  nutritionCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  nutritionCardLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  nutritionCardIcon: {
-    width: 20,
-    height: 20,
-    resizeMode: 'contain',
-  },
-  nutritionCardContent: {
-    marginBottom: 12,
-  },
-  nutritionCardValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  nutritionCardUnit: {
-    fontSize: 10,
-    color: '#666',
-    marginTop: 2,
-  },
-  progressBarContainer: {
-    height: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  section: {
-    marginTop: 16,
-    // backgroundColor: '#ffffff',
-    borderRadius: 8,
-    // paddingTop: 16,
-    // paddingBottom: 16,
-    paddingLeft: 10,
-    paddingRight: 10,
-    marginHorizontal: 10,
-    // elevation: 0.7
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 10,
-  },
-  sectionContent: {
-    // backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  listItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 15,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    backgroundColor: '#ffffff',
-    elevation: 0.2,
-    borderRadius: 12,
-    marginBottom: 10
-  },
-  listItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  listItemIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 12,
-    resizeMode: 'contain',
-  },
-  listItemText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  listItemRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  badge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#E86F50',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  rightText: {
-    fontSize: 14,
-    color: '#666',
-    marginRight: 8,
-  },
-  logoutButton: {
-    backgroundColor: '#E86F50',
-    borderRadius: 8,
-    padding: 13,
-    marginHorizontal: 13,
-    marginTop: 20,
-    marginBottom: 15,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoutIcon: {
-    marginRight: 8,
-  },
-  logoutText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  versionText: {
-    textAlign: 'center',
-    fontSize: 12,
-    color: 'rgba(0, 0, 0, 0.6)',
-    marginTop: 8,
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 40,
-  },
-  errorText: {
-    fontSize: 12,
-    color: '#E86F50',
-    marginTop: 4,
-  },
-});

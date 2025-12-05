@@ -48,12 +48,6 @@ const PersonalInfo = () => {
             label: 'Cân nặng mục tiêu',
             isEditable: true,
         },
-        activityLevel: {
-            value: 'Trung bình',
-            label: 'Mức độ hoạt động',
-            options: ['Nhẹ', 'Trung bình', 'Nặng', 'Rất nặng'],
-            isEditable: true,
-        },
     });
 
     // Handler functions
