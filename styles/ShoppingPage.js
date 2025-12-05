@@ -16,7 +16,7 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   headerText: {
-    fontSize: 19,
+    fontSize: 16,
     fontWeight: '600',
     color: 'white',
   },
@@ -46,7 +46,7 @@ export const styles = StyleSheet.create({
     marginBottom: 4,
   },
   summaryText: {
-    fontSize: 14,
+    fontSize: 11,
     color: '#333',
   },
   markAllButton: {
@@ -80,12 +80,12 @@ export const styles = StyleSheet.create({
     marginLeft: 8,
   },
   menuItemBadgeText: {
-    fontSize: 10,
+    fontSize: 7,
     color: '#35A55E',
     fontWeight: '500',
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '600',
     color: '#333',
     marginBottom: 10,
@@ -117,7 +117,7 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   listItemText: {
-    fontSize: 16,
+    fontSize: 13,
     color: '#333',
     marginLeft: 12,
   },
@@ -151,7 +151,7 @@ export const styles = StyleSheet.create({
     minHeight: 250,
   },
   sheetTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '600',
     color: '#333',
     marginBottom: 40,
@@ -171,7 +171,7 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    fontSize: 16,
+    fontSize: 13,
     backgroundColor: '#fff',
     minHeight: 50,
   },

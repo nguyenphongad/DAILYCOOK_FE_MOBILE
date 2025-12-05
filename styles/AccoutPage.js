@@ -11,7 +11,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 19,
+    fontSize: 16,
     fontWeight: '600',
     color: 'white',
   },
@@ -26,7 +26,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingLeft: 10,
     marginHorizontal: 10,
-    marginTop: 16,
+    marginTop: 10,
     borderRadius: 8,
   },
   avatarContainer: {
@@ -50,7 +50,7 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   profileName: {
-    fontSize: 22,
+    fontSize: 19,
     fontWeight: '700',
     color: '#35A55E',
   },
@@ -66,17 +66,17 @@ export const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   profileEmail: {
-    fontSize: 14,
+    fontSize: 11,
     color: '#a3a1a1',
   },
   nutritionSection: {
-    marginTop: 16,
+    marginTop: 10,
     borderRadius: 8,
     padding: 10,
     marginHorizontal: 5,
   },
   nutritionSectionTitle: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '600',
     color: '#333',
     marginBottom: 16,
@@ -88,11 +88,11 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    paddingHorizontal: 5,
+    paddingHorizontal: 3,
   },
   nutritionCard: {
     width: '48%',
-    padding: 16,
+    padding: 10,
     borderRadius: 12,
     marginBottom: 12,
     shadowColor: '#000',
@@ -108,7 +108,7 @@ export const styles = StyleSheet.create({
     marginBottom: 8,
   },
   nutritionCardLabel: {
-    fontSize: 12,
+    fontSize: 9,
     fontWeight: '500',
   },
   nutritionCardIcon: {
@@ -120,17 +120,17 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
   },
   nutritionCardValue: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: 'bold',
-    paddingRight: 10,
+    textAlign: 'right',
   },
   nutritionCardUnit: {
-    fontSize: 10,
+    fontSize: 7,
     color: '#666',
     marginTop: 2,
   },
   progressBarContainer: {
-    height: 4,
+    height: 6,
     backgroundColor: 'rgba(0, 0, 0, 0.1)',
     borderRadius: 2,
     overflow: 'hidden',
@@ -140,14 +140,14 @@ export const styles = StyleSheet.create({
     borderRadius: 2,
   },
   section: {
-    marginTop: 16,
+    marginTop: 14,
     borderRadius: 8,
     paddingLeft: 10,
     paddingRight: 10,
     marginHorizontal: 10,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '600',
     color: '#333',
     marginBottom: 10,
@@ -180,7 +180,7 @@ export const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   listItemText: {
-    fontSize: 16,
+    fontSize: 13,
     color: '#333',
   },
   listItemRight: {
@@ -198,11 +198,11 @@ export const styles = StyleSheet.create({
   },
   badgeText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 9,
     fontWeight: 'bold',
   },
   rightText: {
-    fontSize: 14,
+    fontSize: 11,
     color: '#666',
     marginRight: 8,
   },
@@ -221,13 +221,13 @@ export const styles = StyleSheet.create({
     marginRight: 8,
   },
   logoutText: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
   versionText: {
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: 9,
     color: 'rgba(0, 0, 0, 0.6)',
     marginTop: 8,
   },
@@ -243,7 +243,7 @@ export const styles = StyleSheet.create({
     borderRadius: 40,
   },
   errorText: {
-    fontSize: 12,
+    fontSize: 9,
     color: '#E86F50',
     marginTop: 4,
   },

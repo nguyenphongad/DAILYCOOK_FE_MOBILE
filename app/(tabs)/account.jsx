@@ -108,18 +108,6 @@ const generalItems = [
 // Thêm dữ liệu nutrition goals
 const nutritionGoals = [
   {
-    id: '1',
-    label: 'Protein',
-    value: 215,
-    maxValue: 250,
-    unit: 'gram',
-    postfix: '+',
-    backgroundColor: '#FFFFFF',
-    iconSource: require('../../assets/images/icons_home/protein.png'),
-    textColor: '#000000',
-    progressColor: '#38B74C',
-  },
-  {
     id: '2',
     label: 'Kcal',
     value: 259,
@@ -130,6 +118,18 @@ const nutritionGoals = [
     iconSource: require('../../assets/images/icons_home/calories.png'),
     textColor: '#000000',
     progressColor: '#FF8C00',
+  },
+  {
+    id: '1',
+    label: 'Protein',
+    value: 215,
+    maxValue: 250,
+    unit: 'gram',
+    postfix: '+',
+    backgroundColor: '#FFFFFF',
+    iconSource: require('../../assets/images/icons_home/protein.png'),
+    textColor: '#000000',
+    progressColor: '#38B74C',
   },
   {
     id: '4',
@@ -315,21 +315,22 @@ export default function AccountScreen() {
                   <Text style={[styles.nutritionCardLabel, { color: item.textColor }]}>
                     {item.label}
                   </Text>
-                  <Image
+                  {/* <Image
                     source={item.iconSource}
                     style={styles.nutritionCardIcon}
-                  />
-                </View>
+                  /> */}
 
-                <View style={styles.nutritionCardContent}>
-                  <Text style={[styles.nutritionCardValue, { color: item.textColor }]}>
-                    {item.value}
-                    <Text style={styles.nutritionCardUnit}>
-                      {item.unit}
+                  <View style={styles.nutritionCardContent}>
+                    <Text style={[styles.nutritionCardValue, { color: item.textColor }]}>
+                      {item.value}
+                      <Text style={styles.nutritionCardUnit}>
+                        {item.unit}
+                      </Text>
                     </Text>
-                  </Text>
 
+                  </View>
                 </View>
+
 
                 <View style={styles.progressBarContainer}>
                   <Animated.View
