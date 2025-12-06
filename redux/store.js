@@ -7,6 +7,7 @@ import { combineReducers } from '@reduxjs/toolkit';
 import authReducer from './slice/authSlice';
 import surveyReducer from './slice/surveySlice';
 import mealReducer from './slice/mealSlice';
+import mealPlanReducer from './slice/mealPlanSlice';
 
 // Persist config
 const persistConfig = {
@@ -20,6 +21,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   survey: surveyReducer,
   meal: mealReducer,
+  mealPlan: mealPlanReducer,
 });
 
 // Persisted reducer

@@ -11,6 +11,7 @@ import SheetComponent from '../../components/sheet/SheetComponent';
 import { useDispatch, useSelector } from 'react-redux';
 import { checkTokenAndGetUser } from '../../redux/thunk/authThunk';
 import { getNutritionGoals } from '../../redux/thunk/surveyThunk';
+import { getMealPlanFromDatabase } from '../../redux/thunk/mealPlanThunk';
 import LoadingComponent from '../../components/loading/LoadingComponent';
 
 // Giả lập dữ liệu
@@ -196,7 +197,13 @@ export default function HomeScreen() {
   // Redux selectors để lấy thông tin user
   const { user, isLoading } = useSelector((state) => state.auth);
   const { nutritionGoals, nutritionGoalsLoading } = useSelector((state) => state.survey);
-  
+  // Redux selectors - thêm mealPlan state
+  const { 
+    databaseMealPlan, 
+    getMealPlanFromDatabaseLoading, 
+    hasSavedMealPlan 
+  } = useSelector((state) => state.mealPlan);
+
   // Thêm state để track việc đã check nutrition goals
   const [hasCheckedNutritionGoals, setHasCheckedNutritionGoals] = useState(false);
   const [isCheckingNutritionGoals, setIsCheckingNutritionGoals] = useState(false);
@@ -297,18 +304,89 @@ export default function HomeScreen() {
   }, [user, hasCheckedNutritionGoals, isCheckingNutritionGoals, dispatch]);
 
   // Hàm xử lý khi người dùng kéo xuống để refresh
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
 
-    // Mô phỏng tải dữ liệu
-    setTimeout(() => {
-      // console.log('Refreshing data...');
-      // Ví dụ: fetchUserData(), fetchNutritionGoals(), fetchMealData(), v.v.
+    try {
+      const today = new Date();
+      const dateString = today.toISOString().split('T')[0];
+      
+      console.log('HomeScreen - Refreshing meal plan for:', dateString);
+      
+      // Gọi API lấy meal plan từ database
+      const result = await dispatch(getMealPlanFromDatabase(dateString)).unwrap();
+      
+      // Check nếu có data
+      const hasData = result?.data?.mealPlan && 
+                     Array.isArray(result.data.mealPlan) && 
+                     result.data.mealPlan.length > 0;
+      
+      if (hasData) {
+        console.log('HomeScreen - Refresh: Found saved meal plan');
+        
+        // Transform data
+        const transformed = {
+          breakfast: [],
+          lunch: [],
+          dinner: []
+        };
 
-      // Kết thúc refreshing sau 1.5 giây
+        result.data.mealPlan.forEach(mealTime => {
+          const servingTime = mealTime.servingTime;
+          
+          transformed[servingTime] = mealTime.meals.map(meal => {
+            const mealDetail = meal.mealDetail;
+            const recipe = mealDetail.recipeDetail;
+            
+            return {
+              id: mealDetail._id,
+              name: mealDetail.nameMeal,
+              description: mealDetail.description,
+              calories: recipe?.nutrition?.calories || 0,
+              protein: recipe?.nutrition?.protein || 0,
+              carbs: recipe?.nutrition?.carbs || 0,
+              fat: recipe?.nutrition?.fat || 0,
+              typeMeal: mealDetail.mealCategory?.title || 'Món chính',
+              imageUrl: mealDetail.mealImage 
+                ? { uri: mealDetail.mealImage }
+                : require('../../assets/images/food1.png'),
+            };
+          });
+        });
+        
+        // Update UI
+        setAcceptedMealsData(transformed);
+        setShowAIRecommendationCard(false);
+        setShowAISuggestionButton(false);
+        setShowAIMealSection(true);
+      } else {
+        console.log('HomeScreen - Refresh: No saved meal plan found');
+        
+        // Reset về trạng thái ban đầu nếu không có data
+        setAcceptedMealsData(null);
+        setShowAIRecommendationCard(true);
+        setShowAISuggestionButton(true);
+        setShowAIMealSection(false);
+      }
+      
+      // Refresh thêm user info và nutrition goals
+      await Promise.all([
+        dispatch(checkTokenAndGetUser()),
+        dispatch(getNutritionGoals())
+      ]);
+      
+    } catch (error) {
+      console.error('HomeScreen - Refresh error:', error);
+      
+      // Nếu có lỗi, reset về trạng thái mặc định
+      setAcceptedMealsData(null);
+      setShowAIRecommendationCard(true);
+      setShowAISuggestionButton(true);
+      setShowAIMealSection(false);
+    } finally {
       setRefreshing(false);
-    }, 1500);
-  }, []);
+    }
+  }, [dispatch]);
 
   // Thêm state cho việc hiển thị sheet nhắc nhở uống nước
   const [isWaterReminderSheetOpen, setIsWaterReminderSheetOpen] = useState(false);
@@ -500,12 +578,81 @@ export default function HomeScreen() {
   // Lấy tên user từ Redux state hoặc fallback
   const displayName = user?.fullName || userData.name || 'Người dùng';
 
+  // Load meal plan từ database khi component mount
+  useEffect(() => {
+    const loadSavedMealPlan = async () => {
+      try {
+        const today = new Date();
+        const dateString = today.toISOString().split('T')[0];
+        
+        console.log('HomeScreen - Loading saved meal plan for:', dateString);
+        
+        const result = await dispatch(getMealPlanFromDatabase(dateString)).unwrap();
+        
+        // Check nếu có data
+        const hasData = result?.data?.mealPlan && 
+                       Array.isArray(result.data.mealPlan) && 
+                       result.data.mealPlan.length > 0;
+        
+        if (hasData) {
+          console.log('HomeScreen - Found saved meal plan');
+          
+          // Transform data giống như PageRenderAI
+          const transformed = {
+            breakfast: [],
+            lunch: [],
+            dinner: []
+          };
+
+          result.data.mealPlan.forEach(mealTime => {
+            const servingTime = mealTime.servingTime;
+            
+            transformed[servingTime] = mealTime.meals.map(meal => {
+              const mealDetail = meal.mealDetail;
+              const recipe = mealDetail.recipeDetail;
+              
+              return {
+                id: mealDetail._id,
+                name: mealDetail.nameMeal,
+                description: mealDetail.description,
+                calories: recipe?.nutrition?.calories || 0,
+                protein: recipe?.nutrition?.protein || 0,
+                carbs: recipe?.nutrition?.carbs || 0,
+                fat: recipe?.nutrition?.fat || 0,
+                typeMeal: mealDetail.mealCategory?.title || 'Món chính',
+                imageUrl: mealDetail.mealImage 
+                  ? { uri: mealDetail.mealImage }
+                  : require('../../assets/images/food1.png'),
+              };
+            });
+          });
+          
+          // Set meal data và ẩn AI recommendation
+          setAcceptedMealsData(transformed);
+          setShowAIRecommendationCard(false);
+          setShowAISuggestionButton(false);
+          setShowAIMealSection(true);
+        } else {
+          console.log('HomeScreen - No saved meal plan found');
+        }
+        
+      } catch (error) {
+        console.error('HomeScreen - Error loading saved meal plan:', error);
+      }
+    };
+    
+    // Chỉ load nếu chưa có acceptedMealsData từ params
+    if (!params.acceptedMeals) {
+      loadSavedMealPlan();
+    }
+  }, [dispatch, params.acceptedMeals]);
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
       
-      {/* Loading Component khi đang check nutrition goals */}
-      <LoadingComponent visible={isCheckingNutritionGoals} />
+      {/* Loading Component khi đang load saved meal plan */}
+      <LoadingComponent visible={getMealPlanFromDatabaseLoading} />
       
       {/* Header cố định */}
       <HeaderComponent>
