@@ -645,12 +645,21 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingVertical: 6,
     paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#35A55E',
   },
-  
+  acknowledgeButtonDisabled: {
+    backgroundColor: '#E0E0E0',
+    borderColor: '#E0E0E0',
+    opacity: 0.6,
+  },
   acknowledgeButtonText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#FFFFFF',
     fontWeight: '500',
+  },
+  acknowledgeButtonTextDisabled: {
+    color: '#999999',
   },
   
   // Cập nhật typeMealContainer cho layout dọc

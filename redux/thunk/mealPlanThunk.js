@@ -199,3 +199,72 @@ export const getMealPlanFromDatabase = createAsyncThunk(
     }
   }
 );
+
+// Toggle meal eaten status
+export const toggleMealEaten = createAsyncThunk(
+  'mealPlan/toggleEaten',
+  async ({ date, servingTime, mealId, action }, { rejectWithValue }) => {
+    try {
+      const requestData = {
+        date,
+        servingTime,
+        mealId,
+        action // 'eaten' hoặc 'uneaten'
+      };
+      
+      console.log('=== TOGGLE MEAL EATEN REQUEST ===');
+      console.log('Request data:', requestData);
+      console.log('=================================');
+      
+      const response = await apiService.post(ENDPOINT.TOGGLE_MEAL_EATEN, requestData);
+      
+      console.log('API Response - Toggle Meal Eaten:', response);
+      
+      return { ...response, mealId, action };
+    } catch (error) {
+      console.error('=== TOGGLE MEAL EATEN ERROR ===');
+      console.error('Error type:', error.constructor?.name);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response?.data);
+      console.error('================================');
+      
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Không thể ghi nhận món ăn'
+      );
+    }
+  }
+);
+
+// Get meal history
+export const getMealHistory = createAsyncThunk(
+  'mealPlan/getMealHistory',
+  async (date, { rejectWithValue }) => {
+    try {
+      // Format date to YYYY-MM-DD nếu là Date object
+      let dateString = date;
+      if (date instanceof Date) {
+        dateString = date.toISOString().split('T')[0];
+      }
+      
+      console.log('=== GET MEAL HISTORY REQUEST ===');
+      console.log('Date:', dateString);
+      console.log('=================================');
+      
+      const response = await apiService.get(ENDPOINT.GET_MEAL_HISTORY(dateString));
+      
+      console.log('API Response - Get Meal History:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('=== GET MEAL HISTORY ERROR ===');
+      console.error('Error type:', error.constructor?.name);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response?.data);
+      console.error('================================');
+      
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Không thể lấy lịch sử ăn uống'
+      );
+    }
+  }
+);

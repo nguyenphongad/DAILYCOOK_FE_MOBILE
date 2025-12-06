@@ -18,7 +18,7 @@ import { styles } from '../../styles/AccoutPage';
 const nutritionItems = [
   {
     id: 'personal-info',
-    title: 'Thông tin cá nhân',
+    title: 'Thông tin thể trạng',
     icon: require('../../assets/images/icons_account/s1.png'),
     navigateTo: '/(stacks)/account/PersonalInfo',
     badge: null,
@@ -40,14 +40,14 @@ const nutritionItems = [
     badge: null,
     rightComponent: 'arrow'
   },
-  {
-    id: 'diet',
-    title: 'Chế độ ăn',
-    icon: require('../../assets/images/icons_account/s3.png'),
-    navigateTo: '/account/DietType',
-    badge: null,
-    rightComponent: 'arrow'
-  },
+  // {
+  //   id: 'diet',
+  //   title: 'Chế độ ăn',
+  //   icon: require('../../assets/images/icons_account/s3.png'),
+  //   navigateTo: '/account/DietType',
+  //   badge: null,
+  //   rightComponent: 'arrow'
+  // },
   {
     id: 'disliked-food',
     title: 'Thực phẩm không thích',
