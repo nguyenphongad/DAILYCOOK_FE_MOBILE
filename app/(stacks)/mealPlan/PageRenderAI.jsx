@@ -1,5 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, ScrollView, Image, TouchableOpacity, Animated, StyleSheet, Dimensions, Platform, ToastAndroid, Alert } from 'react-native';
+import { 
+  Text, 
+  View, 
+  ScrollView, 
+  Image, 
+  TouchableOpacity, 
+  Animated, 
+  StyleSheet, 
+  Dimensions, 
+  Platform, 
+  ToastAndroid, 
+  Alert,
+  ActivityIndicator // Thêm ActivityIndicator vào đây
+} from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import HeaderComponent from '../../../components/header/HeaderComponent';
@@ -12,7 +25,6 @@ import { generateAIMealPlan, getMealPlanFromCache, getSimilarMeals, replaceMeal,
 import { clearSimilarMeals } from '../../../redux/slice/mealPlanSlice';
 import SheetComponent from '../../../components/sheet/SheetComponent';
 import ChangeMealModal from '../../../components/mealPlan/ChangeMealModal';
-import { ActivityIndicator } from 'react-native-web';
 
 export default function PageRenderAI() {
   const insets = useSafeAreaInsets();
