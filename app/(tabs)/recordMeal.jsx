@@ -160,7 +160,6 @@ export default function RecordMeal() {
             </HeaderComponent>
 
             {/* Calendar Section */}
-            {/* Calendar Section */}
             <View style={styles.calendarContainer}>
                 {/* <View style={styles.calendarHeader}>
                         <Text style={styles.sectionTitle}>Ghi nhận</Text>
@@ -276,8 +275,6 @@ export default function RecordMeal() {
 
             <ScrollView style={styles.scrollContent}>
                 <View style={styles.mealSection}>
-
-
                     {sampleMeals.map((meal) => (
                         <View key={meal.id} style={styles.mealCard}>
                             <View style={styles.mealTimeLabel}>
@@ -602,5 +599,4 @@ const styles = StyleSheet.create({
         height: 70,
         borderRadius: 8,
     },
-
 });
