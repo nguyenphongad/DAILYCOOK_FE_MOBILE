@@ -1,0 +1,39 @@
+{
+  "menuIngredients": [
+    {
+      "id": "menu_1",
+      "text": "Thịt ba chỉ (500g)",
+      "fromMenu": true,
+      "menuName": "Thịt kho tàu",
+      "addedDate": "2024-01-15"
+    },
+    {
+      "id": "menu_2", 
+      "text": "Trứng gà (6 quả)",
+      "fromMenu": true,
+      "menuName": "Thịt kho tàu",
+      "addedDate": "2024-01-15"
+    },
+    {
+      "id": "menu_3",
+      "text": "Nước mắm (1 chai)",
+      "fromMenu": true,
+      "menuName": "Canh chua cá",
+      "addedDate": "2024-01-15"
+    },
+    {
+      "id": "menu_4",
+      "text": "Cà chua (3 quả)",
+      "fromMenu": true,
+      "menuName": "Canh chua cá",
+      "addedDate": "2024-01-15"
+    },
+    {
+      "id": "menu_5",
+      "text": "Đậu bắp (200g)",
+      "fromMenu": true,
+      "menuName": "Canh chua cá",
+      "addedDate": "2024-01-15"
+    }
+  ]
+}

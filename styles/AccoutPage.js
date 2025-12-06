@@ -1,0 +1,250 @@
+import { StyleSheet } from 'react-native';
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F7F1E5',
+    paddingTop: -40
+  },
+  header: {
+    justifyContent: 'left',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  profileSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 10,
+    marginHorizontal: 10,
+    marginTop: 10,
+    borderRadius: 8,
+  },
+  avatarContainer: {
+    borderRadius: 40,
+    overflow: 'hidden',
+    padding:2,
+    borderWidth: 2,
+    borderColor: 'red',
+    borderColor: '#f2a7a7',
+    borderStyle: 'dotted',
+  },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 40,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#FFFFFF',
+  },
+  profileInfo: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 19,
+    fontWeight: '700',
+    color: '#35A55E',
+  },
+  emailContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  emailIcon: {
+    width: 14,
+    height: 14,
+    marginRight: 6,
+    resizeMode: 'cover',
+  },
+  profileEmail: {
+    fontSize: 11,
+    color: '#a3a1a1',
+  },
+  nutritionSection: {
+    marginTop: 10,
+    borderRadius: 8,
+    padding: 10,
+    marginHorizontal: 5,
+  },
+  nutritionSectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+  },
+  nutritionList: {
+    paddingRight: 10,
+  },
+  nutritionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 3,
+  },
+  nutritionCard: {
+    width: '48%',
+    padding: 10,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  nutritionCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  nutritionCardLabel: {
+    fontSize: 9,
+    fontWeight: '500',
+  },
+  nutritionCardIcon: {
+    width: 30,
+    height: 30,
+    resizeMode: 'contain',
+  },
+  nutritionCardContent: {
+    marginBottom: 12,
+  },
+  nutritionCardValue: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    textAlign: 'right',
+  },
+  nutritionCardUnit: {
+    fontSize: 7,
+    color: '#666',
+    marginTop: 2,
+  },
+  progressBarContainer: {
+    height: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  section: {
+    marginTop: 14,
+    borderRadius: 8,
+    paddingLeft: 10,
+    paddingRight: 10,
+    marginHorizontal: 10,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+  },
+  sectionContent: {
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  listItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 15,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+    backgroundColor: '#ffffff',
+    elevation: 0.2,
+    borderRadius: 12,
+    marginBottom: 10
+  },
+  listItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  listItemIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 12,
+    resizeMode: 'contain',
+  },
+  listItemText: {
+    fontSize: 13,
+    color: '#333',
+  },
+  listItemRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  badge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#E86F50',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: 'bold',
+  },
+  rightText: {
+    fontSize: 11,
+    color: '#666',
+    marginRight: 8,
+  },
+  logoutButton: {
+    backgroundColor: '#E86F50',
+    borderRadius: 8,
+    padding: 13,
+    marginHorizontal: 13,
+    marginTop: 20,
+    marginBottom: 15,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoutIcon: {
+    marginRight: 8,
+  },
+  logoutText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  versionText: {
+    textAlign: 'center',
+    fontSize: 9,
+    color: 'rgba(0, 0, 0, 0.6)',
+    marginTop: 8,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 40,
+  },
+  errorText: {
+    fontSize: 9,
+    color: '#E86F50',
+    marginTop: 4,
+  },
+});

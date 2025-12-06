@@ -286,7 +286,6 @@ export default function WaterReminderSettings() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar style="dark" />
 
             {/* Header */}
             <HeaderComponent>
