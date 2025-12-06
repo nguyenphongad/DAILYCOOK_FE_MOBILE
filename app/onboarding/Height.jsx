@@ -52,15 +52,12 @@ export default function HeightScreen() {
   };
 
   const handleNext = () => {
-    if (selectedHeight && selectedHeight > 0) {
-      // Lưu height vào Redux
+    if (selectedHeight > 0) {
       dispatch(setPersonalInfo({ height: selectedHeight }));
+      console.log('Height selected:', selectedHeight);
       
       dispatch(nextStep());
-      router.push({
-        pathname: '/onboarding/Weight',
-        params: { height: selectedHeight }
-      });
+      router.push('/onboarding/Weight');
     }
   };
 

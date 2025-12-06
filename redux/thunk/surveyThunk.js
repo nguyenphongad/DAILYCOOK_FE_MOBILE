@@ -80,3 +80,41 @@ export const updateDietaryPreferences = createAsyncThunk(
     }
   }
 );
+
+// Tính toán mục tiêu dinh dưỡng
+export const calculateNutritionGoals = createAsyncThunk(
+  'survey/calculateNutritionGoals',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiService.post(ENDPOINT.CALCULATE_NUTRITION_GOALS);
+      
+      console.log('API Response - Calculate Nutrition Goals:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('Calculate nutrition goals error:', error);
+      return rejectWithValue(
+        error.response?.data?.message || 'Không thể tính toán mục tiêu dinh dưỡng'
+      );
+    }
+  }
+);
+
+// Lấy mục tiêu dinh dưỡng đã lưu
+export const getNutritionGoals = createAsyncThunk(
+  'survey/getNutritionGoals',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiService.get(ENDPOINT.GET_NUTRITION_GOALS);
+      
+      console.log('API Response - Get Nutrition Goals:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('Get nutrition goals error:', error);
+      return rejectWithValue(
+        error.response?.data?.message || 'Không thể lấy mục tiêu dinh dưỡng'
+      );
+    }
+  }
+);

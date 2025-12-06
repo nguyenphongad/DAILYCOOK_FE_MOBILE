@@ -87,6 +87,8 @@ export default function LoginScreen() {
               ToastAndroid.LONG
             );
 
+            // Thay đổi từ router.replace('/(tabs)') thành router.replace('/')
+            // để OnboardingChecker có thể xử lý logic redirect đúng
             setTimeout(() => {
               router.replace('/');
             }, 500);

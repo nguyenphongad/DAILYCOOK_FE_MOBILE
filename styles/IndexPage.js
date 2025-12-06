@@ -7,6 +7,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
+    marginTop: -80,
   },
   contentContainer: {
     paddingBottom: 20, // Thêm padding dưới để tránh bị cắt nội dung

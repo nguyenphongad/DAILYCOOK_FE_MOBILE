@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ScrollView, Image, Text, View, TouchableOpacity, FlatList, Animated } from 'react-native';
+import { ScrollView, Image, Text, View, TouchableOpacity, FlatList, Animated, RefreshControl } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import HeaderComponent from '../../components/header/HeaderComponent';
@@ -9,15 +9,10 @@ import LogoutConfirmSheet from '../../components/sheet/LogoutConfirmSheet';
 import AppInfoSheet from '../../components/sheet/AppInfoSheet';
 import { useDispatch, useSelector } from 'react-redux';
 import { checkTokenAndGetUser, logoutUser } from '../../redux/thunk/authThunk';
+import { getNutritionGoals } from '../../redux/thunk/surveyThunk';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { styles } from '../../styles/AccoutPage';
 
-// Thông tin người dùng
-const userData = {
-  name: 'Tran Thi Huyen Tran',
-  email: 'tranthihuyentran@gmail.com',
-  avatarUrl: 'https://maunaildep.com/wp-content/uploads/2025/04/gai-xinh-2k11-1.jpg',
-};
 
 // Danh sách các mục trong phần Dinh Dưỡng
 const nutritionItems = [
@@ -113,90 +108,136 @@ const generalItems = [
   },
 ];
 
-// Thêm dữ liệu nutrition goals
-const nutritionGoals = [
-  {
-    id: '2',
-    label: 'Kcal',
-    value: 259,
-    maxValue: 500,
-    unit: 'gram',
-    postfix: '+',
-    backgroundColor: '#FFDBAA',
-    iconSource: require('../../assets/images/icons_home/calories.png'),
-    textColor: '#000000',
-    progressColor: '#FF8C00',
-  },
-  {
-    id: '1',
-    label: 'Protein',
-    value: 215,
-    maxValue: 250,
-    unit: 'gram',
-    postfix: '+',
-    backgroundColor: '#FFFFFF',
-    iconSource: require('../../assets/images/icons_home/protein.png'),
-    textColor: '#000000',
-    progressColor: '#38B74C',
-  },
-  {
-    id: '4',
-    label: 'Chất xơ',
-    value: 25,
-    maxValue: 35,
-    unit: 'gr',
-    postfix: '',
-    backgroundColor: '#E6F7FF',
-    iconSource: require('../../assets/images/icons_home/calories.png'),
-    textColor: '#000000',
-    progressColor: '#4169E1',
-  },
-  {
-    id: '5',
-    label: 'Carb',
-    value: 180,
-    maxValue: 300,
-    unit: 'gr',
-    postfix: '',
-    backgroundColor: '#FFE4E1',
-    iconSource: require('../../assets/images/icons_home/lipid.png'),
-    textColor: '#000000',
-    progressColor: '#FF69B4',
-  }
-];
-
 export default function AccountScreen() {
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
 
   // Redux selectors
   const { user, isLoading, error, isAuthenticated } = useSelector((state) => state.auth);
+  const { nutritionGoals: nutritionGoalsData, nutritionGoalsLoading } = useSelector((state) => state.survey);
 
   const [isLogoutSheetOpen, setIsLogoutSheetOpen] = useState(false);
   const [isAppInfoSheetOpen, setIsAppInfoSheetOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Thêm refs cho animation
-  const progressAnims = useRef(nutritionGoals.map(() => new Animated.Value(0))).current;
+  // Khởi tạo refs cho animation - fix: khởi tạo với 4 phần tử
+  const progressAnims = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0)
+  ]).current;
 
-  // Fetch user info khi component mount
+  // Fetch user info và nutrition goals khi component mount
   useEffect(() => {
     dispatch(checkTokenAndGetUser());
+    dispatch(getNutritionGoals());
   }, [dispatch]);
 
-  // Chạy animation khi component mount
-  useEffect(() => {
-    const animations = progressAnims.map((anim, index) => {
-      const progressPercentage = Math.min(nutritionGoals[index].value / nutritionGoals[index].maxValue, 1);
-      return Animated.timing(anim, {
-        toValue: progressPercentage,
-        duration: 1000,
-        delay: 300 + index * 200,
-        useNativeDriver: false
-      });
-    });
+  // Tạo nutritionGoals từ API data hoặc fallback
+  const nutritionGoals = nutritionGoalsData?.hasGoals ? [
+    {
+      id: '1',
+      label: 'Kcal',
+      value: nutritionGoalsData.nutritionGoals.caloriesPerDay,
+      maxValue: nutritionGoalsData.nutritionGoals.caloriesPerDay,
+      unit: 'kcal',
+      backgroundColor: '#FFDBAA',
+      progressColor: '#FF8C00',
+    },
+    {
+      id: '2',
+      label: 'Protein',
+      value: Math.round(nutritionGoalsData.nutritionGoals.caloriesPerDay * (nutritionGoalsData.nutritionGoals.proteinPercentage / 100) / 4),
+      maxValue: Math.round(nutritionGoalsData.nutritionGoals.caloriesPerDay * (nutritionGoalsData.nutritionGoals.proteinPercentage / 100) / 4),
+      unit: 'g',
+      percentage: nutritionGoalsData.nutritionGoals.proteinPercentage,
+      backgroundColor: '#FFFFFF',
+      progressColor: '#38B74C',
+    },
+    {
+      id: '3',
+      label: 'Carbs',
+      value: Math.round(nutritionGoalsData.nutritionGoals.caloriesPerDay * (nutritionGoalsData.nutritionGoals.carbPercentage / 100) / 4),
+      maxValue: Math.round(nutritionGoalsData.nutritionGoals.caloriesPerDay * (nutritionGoalsData.nutritionGoals.carbPercentage / 100) / 4),
+      unit: 'g',
+      percentage: nutritionGoalsData.nutritionGoals.carbPercentage,
+      backgroundColor: '#E6F7FF',
+      progressColor: '#4169E1',
+    },
+    {
+      id: '4',
+      label: 'Chất béo',
+      value: Math.round(nutritionGoalsData.nutritionGoals.caloriesPerDay * (nutritionGoalsData.nutritionGoals.fatPercentage / 100) / 9),
+      maxValue: Math.round(nutritionGoalsData.nutritionGoals.caloriesPerDay * (nutritionGoalsData.nutritionGoals.fatPercentage / 100) / 9),
+      unit: 'g',
+      percentage: nutritionGoalsData.nutritionGoals.fatPercentage,
+      backgroundColor: '#FFE4E1',
+      progressColor: '#FF69B4',
+    }
+  ] : [
+    {
+      id: '1',
+      label: 'Kcal',
+      value: 0,
+      maxValue: 2000,
+      unit: 'kcal',
+      backgroundColor: '#FFDBAA',
+      progressColor: '#FF8C00',
+    },
+    {
+      id: '2',
+      label: 'Protein',
+      value: 0,
+      maxValue: 150,
+      unit: 'g',
+      backgroundColor: '#FFFFFF',
+      progressColor: '#38B74C',
+    },
+    {
+      id: '3',
+      label: 'Carbs',
+      value: 0,
+      maxValue: 250,
+      unit: 'g',
+      backgroundColor: '#E6F7FF',
+      progressColor: '#4169E1',
+    },
+    {
+      id: '4',
+      label: 'Chất béo',
+      value: 0,
+      maxValue: 70,
+      unit: 'g',
+      backgroundColor: '#FFE4E1',
+      progressColor: '#FF69B4',
+    }
+  ];
 
-    Animated.stagger(100, animations).start();
-  }, []);
+  // Chạy animation khi nutritionGoals thay đổi
+  useEffect(() => {
+    if (nutritionGoals && nutritionGoals.length > 0) {
+      const animations = progressAnims.map((anim, index) => {
+        const goal = nutritionGoals[index];
+        if (!goal) return null;
+        
+        const progressPercentage = goal.maxValue > 0 
+          ? Math.min(goal.value / goal.maxValue, 1) 
+          : 0;
+          
+        return Animated.timing(anim, {
+          toValue: progressPercentage,
+          duration: 1000,
+          delay: 300 + index * 200,
+          useNativeDriver: false
+        });
+      }).filter(Boolean); // Lọc bỏ null
+
+      if (animations.length > 0) {
+        Animated.stagger(100, animations).start();
+      }
+    }
+  }, [nutritionGoals, nutritionGoalsData]); // Thêm dependency
 
   // Hàm xử lý khi nhấn vào một mục
   const handleItemPress = (item) => {
@@ -217,6 +258,22 @@ export default function AccountScreen() {
       // router.replace('/(auth)/login');
     } catch (error) {
       console.error('Logout failed:', error);
+    }
+  };
+
+  // Hàm xử lý refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Reload cả user info và nutrition goals
+      await Promise.all([
+        dispatch(checkTokenAndGetUser()),
+        dispatch(getNutritionGoals())
+      ]);
+    } catch (error) {
+      console.error('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -273,6 +330,16 @@ export default function AccountScreen() {
           { paddingTop: insets.top + 50 }
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#35A55E']} // Android
+            tintColor={'#35A55E'} // iOS
+            title="Kéo để làm mới" // iOS
+            titleColor={'#35A55E'} // iOS
+          />
+        }
       >
         {/* Profile Section */}
         <View style={styles.profileSection}>
@@ -314,49 +381,71 @@ export default function AccountScreen() {
 
         {/* Daily Nutrition Goals Section */}
         <View style={styles.nutritionSection}>
-          <Text style={styles.nutritionSectionTitle}>Chế độ dinh dưỡng hàng ngày của bạn</Text>
+          <Text style={styles.nutritionSectionTitle}>
+            {nutritionGoalsLoading || refreshing
+              ? 'Đang tải mục tiêu dinh dưỡng...' 
+              : nutritionGoalsData?.hasGoals 
+                ? 'Chế độ dinh dưỡng hàng ngày của bạn' 
+                : 'Chưa có mục tiêu dinh dưỡng'}
+          </Text>
 
-          <View style={styles.nutritionGrid}>
-            {nutritionGoals.map((item, index) => (
-              <View key={item.id} style={[styles.nutritionCard, { backgroundColor: item.backgroundColor }]}>
-                <View style={styles.nutritionCardHeader}>
-                  <Text style={[styles.nutritionCardLabel, { color: item.textColor }]}>
-                    {item.label}
-                  </Text>
-                  {/* <Image
-                    source={item.iconSource}
-                    style={styles.nutritionCardIcon}
-                  /> */}
-
-                  <View style={styles.nutritionCardContent}>
-                    <Text style={[styles.nutritionCardValue, { color: item.textColor }]}>
-                      {item.value}
-                      <Text style={styles.nutritionCardUnit}>
-                        {item.unit}
-                      </Text>
-                    </Text>
-
+          {nutritionGoalsLoading || refreshing ? (
+            <View style={styles.nutritionGrid}>
+              {[1, 2, 3, 4].map((_, index) => (
+                <View 
+                  key={index} 
+                  style={[
+                    styles.nutritionCard, 
+                    { backgroundColor: '#E0E0E0' }
+                  ]}
+                >
+                  <View style={styles.nutritionCardHeader}>
+                    <Text style={styles.nutritionCardLabel}>Đang tải...</Text>
+                  </View>
+                  <View style={styles.progressBarContainer}>
+                    <View style={styles.progressBarFill} />
                   </View>
                 </View>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.nutritionGrid}>
+              {nutritionGoals.map((item, index) => (
+                <View key={item.id} style={[styles.nutritionCard, { backgroundColor: item.backgroundColor }]}>
+                  <View style={styles.nutritionCardHeader}>
+                    <Text style={[styles.nutritionCardLabel, { color: item.textColor || '#000' }]}>
+                      {item.label}
+                      {/* {item.percentage && ` (${item.percentage}%)`} */}
+                    </Text>
 
+                    <View style={styles.nutritionCardContent}>
+                      <Text style={[styles.nutritionCardValue, { color: item.textColor || '#000' }]}>
+                        {Math.round(item.value)}
+                        <Text style={styles.nutritionCardUnit}>
+                          {item.unit}
+                        </Text>
+                      </Text>
+                    </View>
+                  </View>
 
-                <View style={styles.progressBarContainer}>
-                  <Animated.View
-                    style={[
-                      styles.progressBarFill,
-                      {
-                        backgroundColor: item.progressColor,
-                        width: progressAnims[index].interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['0%', '100%']
-                        })
-                      }
-                    ]}
-                  />
+                  <View style={styles.progressBarContainer}>
+                    <Animated.View
+                      style={[
+                        styles.progressBarFill,
+                        {
+                          backgroundColor: item.progressColor,
+                          width: progressAnims[index]?.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0%', '100%']
+                          }) || '100%'
+                        }
+                      ]}
+                    />
+                  </View>
                 </View>
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Nutrition Section */}
