@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, ScrollView, Image, TouchableOpacity, Animated, Modal, StyleSheet, Dimensions } from 'react-native';
+import { Text, View, ScrollView, Image, TouchableOpacity, Animated, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import HeaderComponent from '../../../components/header/HeaderComponent';
@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
 import ChangeMealSheet from '../../../components/mealPlan/ChangeMealSheet';
 import MealAcceptedSheet from '../../../components/sheet/MealAcceptedSheet';
+import { styles } from '../../../styles/home/RenderAIPage';
 
 // Dữ liệu món ăn theo các bữa - thêm món thay thế
 const mealsByTime = {
@@ -132,13 +133,8 @@ export default function PageRenderAI() {
   const aiScrollViewRef = useRef(null);
   
   // States cho AI
-  const [showAIModal, setShowAIModal] = useState(true);
-  const [aiSuggestions, setAiSuggestions] = useState([]);
-  const [loadingAI, setLoadingAI] = useState(false);
   const [showMealSection, setShowMealSection] = useState(false);
-  const [aiAnalysisInfo, setAiAnalysisInfo] = useState([]);
   const [activeMeal, setActiveMeal] = useState('breakfast');
-  const [aiProcessComplete, setAiProcessComplete] = useState(false);
   
   // Thêm states cho ChangeMealSheet
   const [isChangeMealSheetOpen, setIsChangeMealSheetOpen] = useState(false);
@@ -148,115 +144,270 @@ export default function PageRenderAI() {
   // Thêm state cho MealAcceptedSheet
   const [isMealAcceptedSheetOpen, setIsMealAcceptedSheetOpen] = useState(false);
   
-  // Animation values
-  const aiTextAnim = useRef(new Animated.Value(0)).current;
-  
-  // Dữ liệu phân tích của AI
-  const analysisData = [
-    { type: 'analysis', text: 'Thành viên: 1 người' },
-    { type: 'analysis', text: 'Dinh dưỡng mục tiêu: Protein 250g, Kcal 500, Nước 2000ml' },
-    { type: 'analysis', text: 'Thực phẩm không thích (4): Hành tây, Nấm, Đậu phụ, Cà tím' },
-  ];
-  
-  // Dữ liệu gợi ý AI
-  const aiMealSuggestions = {
-    breakfast: ["Bánh mì trứng thịt - 320 calo", "Cháo trứng bắc thảo - 250 calo"],
-    lunch: ["Cơm gà xối mỡ - 450 calo", "Bún bò Huế - 420 calo"],
-    dinner: ["Cá hồi áp chảo - 380 calo", "Canh bí đỏ nấu tôm - 280 calo"],
+  // States cho chatbox - simplified
+  const [chatMessages, setChatMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [showViewMenuButton, setShowViewMenuButton] = useState(false);
+
+  // Animation values - simplified
+  const messageAnim = useRef(new Animated.Value(0)).current;
+  const typingDotsAnim = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0)
+  ]).current;
+
+  // Hàm lấy ngày hiện tại
+  const getCurrentDate = () => {
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
-  // Tự động chạy AI khi component mount
+  // Hàm lấy thời gian hiện tại
+  const getCurrentTime = () => {
+    const now = new Date();
+    return now.toLocaleTimeString('vi-VN', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
+  // Tự động bắt đầu chat khi component mount
   useEffect(() => {
-    startAIProcess();
+    startChatSequence();
   }, []);
 
-  const startAIProcess = () => {
-    setLoadingAI(true);
-    setAiSuggestions([]);
-    setAiAnalysisInfo([]);
-    setAiProcessComplete(false); // Reset trạng thái
-    
-    // Reset animation
-    aiTextAnim.setValue(0);
-    
-    // Giả lập quá trình AI đang xử lý
+  const startChatSequence = () => {
+    // Reset chat
+    setChatMessages([]);
+    setIsTyping(false);
+    setShowViewMenuButton(false);
+
+    // Gửi tin nhắn đầu tiên từ user
+    const currentDate = getCurrentDate();
+    const userMessage = {
+      id: 'user-message-' + Date.now(), // Đảm bảo ID unique
+      type: 'user',
+      text: `Gợi ý thực đơn ngày ${currentDate} cho bữa sáng, trưa, tối phù hợp với dinh dưỡng`,
+      time: getCurrentTime(),
+    };
+
+    // Animation cho tin nhắn user
+    messageAnim.setValue(0);
     setTimeout(() => {
-      setLoadingAI(false);
+      setChatMessages([userMessage]);
       
-      // Animate text appearance
-      Animated.timing(aiTextAnim, {
+      Animated.spring(messageAnim, {
         toValue: 1,
-        duration: 1000,
         useNativeDriver: true,
+        tension: 120,
+        friction: 6,
       }).start();
       
-      // Hiển thị thông tin phân tích trước
-      let analysisDelay = 300;
-      analysisData.forEach((info, index) => {
-        setTimeout(() => {
-          setAiAnalysisInfo(prev => {
-            const newInfo = [...prev, info];
-            setTimeout(() => {
-              aiScrollViewRef.current?.scrollToEnd({ animated: true });
-            }, 100);
-            return newInfo;
-          });
-        }, analysisDelay * (index + 1));
-      });
-      
-      // Sau khi hiển thị thông tin phân tích, hiển thị các món ăn gợi ý
+      // Scroll to end
       setTimeout(() => {
-        const suggestions = [];
-        
-        // Add breakfast suggestions
-        suggestions.push({ type: 'header', text: 'Bữa sáng' });
-        aiMealSuggestions.breakfast.forEach(meal => {
-          suggestions.push({ type: 'meal', text: meal });
-        });
-        
-        // Add lunch suggestions
-        suggestions.push({ type: 'header', text: 'Bữa trưa' });
-        aiMealSuggestions.lunch.forEach(meal => {
-          suggestions.push({ type: 'meal', text: meal });
-        });
-        
-        // Add dinner suggestions
-        suggestions.push({ type: 'header', text: 'Bữa tối' });
-        aiMealSuggestions.dinner.forEach(meal => {
-          suggestions.push({ type: 'meal', text: meal });
-        });
-        
-        // Hiển thị từng dòng với hiệu ứng delay
-        let mealDelay = 300;
-        suggestions.forEach((suggestion, index) => {
-          setTimeout(() => {
-            setAiSuggestions(prev => {
-              const newSuggestions = [...prev, suggestion];
-              setTimeout(() => {
-                aiScrollViewRef.current?.scrollToEnd({ animated: true });
-              }, 100);
-              
-              // Khi hiển thị xong suggestion cuối cùng thì enable nút
-              if (index === suggestions.length - 1) {
-                setTimeout(() => {
-                  setAiProcessComplete(true);
-                }, 500);
-              }
-              
-              return newSuggestions;
-            });
-          }, mealDelay * (index + 1));
-        });
-      }, analysisData.length * analysisDelay + 500);
+        aiScrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
       
-    }, 2000);
+      // Hiển thị typing indicator sau 1 giây
+      setTimeout(() => {
+        setIsTyping(true);
+        
+        // Sau 5 giây, hiển thị phản hồi AI luôn (không typing từng chữ)
+        setTimeout(() => {
+          setIsTyping(false);
+          showAIResponse();
+        }, 5000);
+      }, 1000);
+    }, 500);
   };
-  
-  // Đóng modal AI và hiện thực đơn
-  const closeAIModal = () => {
-    setShowAIModal(false);
-    setShowMealSection(true);
+
+  const showAIResponse = () => {
+    const aiMessage = {
+      id: 'ai-response-' + Date.now(), // Đảm bảo ID unique
+      type: 'ai',
+      text: 'Dựa trên mục tiêu dinh dưỡng và sở thích của bạn, tôi gợi ý thực đơn như sau:',
+      time: getCurrentTime(),
+      mealSuggestions: {
+        breakfast: ['Bánh mì trứng thịt - 320 kcal', 'Cháo trứng bắc thảo - 250 kcal'],
+        lunch: ['Cơm gà xối mỡ - 450 kcal', 'Bún bò Huế - 420 kcal'],
+        dinner: ['Cá hồi áp chảo - 380 kcal', 'Canh bí đỏ nấu tôm - 280 kcal']
+      }
+    };
+
+    // Thêm AI message
+    setChatMessages(prev => [...prev, aiMessage]);
+    
+    // Scroll to end sau khi thêm message
+    setTimeout(() => {
+      aiScrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 200);
+    
+    // Scroll lại sau khi meal suggestions render xong
+    setTimeout(() => {
+      aiScrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 800);
+    
+    // Hiển thị nút xem thực đơn sau 1 giây
+    setTimeout(() => {
+      setShowViewMenuButton(true);
+      
+      // Scroll cuối cùng khi nút xuất hiện
+      setTimeout(() => {
+        aiScrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 200);
+    }, 1000);
   };
+
+  // Component hiển thị tin nhắn - simplified
+  const ChatMessage = React.memo(({ message, isFirst = false }) => {
+    const isUser = message.type === 'user';
+    
+    // Auto scroll khi component render xong (đặc biệt cho AI message với meal suggestions)
+    useEffect(() => {
+      if (!isUser && message.mealSuggestions) {
+        setTimeout(() => {
+          aiScrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    }, [message.mealSuggestions]);
+    
+    return (
+      <Animated.View 
+        style={[
+          styles.chatMessage, 
+          isUser ? styles.userMessage : styles.aiMessage,
+          isFirst && isUser ?{
+            opacity: messageAnim,
+            transform: [{
+              translateY: messageAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [30, 0],
+              })
+            }] 
+          }:{}
+        ]}
+      >
+        <View style={styles.messageWrapper}>
+          {!isUser && (
+            <View style={styles.aiAvatar}>
+              <Ionicons name="sparkles" size={16} color="#FFFFFF" />
+            </View>
+          )}
+          
+          <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.aiBubble]}>
+            <Text style={[styles.messageText, isUser ? styles.userMessageText : styles.aiMessageText]}>
+              {message.text}
+            </Text>
+            
+            {/* Hiển thị gợi ý món ăn nếu có */}
+            {message.mealSuggestions && (
+              <View style={{ marginTop: 8 }}>
+                {Object.entries(message.mealSuggestions).map(([mealTime, meals]) => (
+                  <View key={`suggestion-${mealTime}-${message.id}`} style={styles.mealSuggestionCard}>
+                    <Text style={styles.mealTimeTitle}>
+                      {mealTime === 'breakfast' ? '🌅 Bữa sáng' : 
+                       mealTime === 'lunch' ? '☀️ Bữa trưa' : '🌙 Bữa tối'}
+                    </Text>
+                    {meals.map((meal, index) => (
+                      <Text key={`meal-${mealTime}-${index}-${message.id}`} style={styles.mealItem}>• {meal}</Text>
+                    ))}
+                  </View>
+                ))}
+              </View>
+            )}
+            
+            <Text style={[styles.messageTime, isUser ? styles.userMessageTime : null]}>
+              {message.time}
+            </Text>
+          </View>
+        </View>
+      </Animated.View>
+    );
+  });
+
+  // Component hiển thị typing indicator - simplified
+  const TypingIndicator = React.memo(() => {
+    useEffect(() => {
+      let animationLoop = null;
+      
+      if (isTyping) {
+        const startAnimation = () => {
+          const animations = typingDotsAnim.map((dot, index) => 
+            Animated.sequence([
+              Animated.delay(index * 200),
+              Animated.timing(dot, {
+                toValue: 1,
+                duration: 400,
+                useNativeDriver: true,
+              }),
+              Animated.timing(dot, {
+                toValue: 0,
+                duration: 400,
+                useNativeDriver: true,
+              })
+            ])
+          );
+
+          animationLoop = Animated.loop(Animated.parallel(animations));
+          animationLoop.start();
+        };
+
+        startAnimation();
+      }
+      
+      return () => {
+        if (animationLoop) {
+          animationLoop.stop();
+        }
+        typingDotsAnim.forEach(dot => {
+          dot.stopAnimation();
+          dot.setValue(0);
+        });
+      };
+    }, [isTyping]);
+
+    if (!isTyping) return null;
+
+    return (
+      <View key="typing-indicator" style={styles.chatMessage}>
+        <View style={styles.aiMessage}>
+          <View style={styles.messageWrapper}>
+            <View style={styles.aiAvatar}>
+              <Ionicons name="sparkles" size={16} color="#FFFFFF" />
+            </View>
+            
+            <View style={[styles.messageBubble, styles.aiBubble]}>
+              <View style={styles.typingIndicator}>
+                <View style={styles.typingDots}>
+                  {typingDotsAnim.map((anim, index) => (
+                    <Animated.View 
+                      key={`typing-dot-${index}`} // Unique key cho mỗi dot
+                      style={[
+                        styles.typingDot, 
+                        { 
+                          opacity: anim,
+                          transform: [{
+                            scale: anim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0.8, 1.2],
+                            })
+                          }]
+                        }
+                      ]} 
+                    />
+                  ))}
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  });
 
   const handleChangeMeal = (mealId) => {
     const currentMeal = currentMealsData[activeMeal].find(meal => meal.id === mealId);
@@ -412,6 +563,11 @@ export default function PageRenderAI() {
     }, 100);
   };
 
+  // Đóng chat và hiện thực đơn
+  const closeAIModal = () => {
+    setShowMealSection(true);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
@@ -421,7 +577,9 @@ export default function PageRenderAI() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.headerText}>Tạo kế hoạch thực đơn</Text>
+        <Text style={styles.headerText}>
+          {showMealSection ? 'Thực đơn AI gợi ý' : 'AI Assistant'}
+        </Text>
         <View />
       </HeaderComponent>
       
@@ -434,7 +592,41 @@ export default function PageRenderAI() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {showMealSection && (
+        {!showMealSection ? (
+          /* Chat Interface */
+          <View style={styles.chatContainer}>
+            <ScrollView 
+              ref={aiScrollViewRef}
+              style={styles.aiChatContainer}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingVertical: 16 }}
+            >
+              {chatMessages.map((message, index) => (
+                <ChatMessage 
+                  key={`chat-message-${message.id}-${index}`} // Unique key combination
+                  message={message} 
+                  isFirst={index === 0}
+                />
+              ))}
+              
+              {isTyping && <TypingIndicator />}
+            </ScrollView>
+            
+            {/* Nút xem thực đơn */}
+            {showViewMenuButton && (
+              <View style={styles.chatFooter}>
+                <TouchableOpacity 
+                  style={styles.viewMenuButtonSmall}
+                  onPress={closeAIModal}
+                >
+                  <Ionicons name="restaurant" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                  <Text style={styles.viewMenuButtonSmallText}>Xem thực đơn</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        ) : (
+          /* Menu Section */
           <View style={styles.menuSection}>
             {/* Menu selector tabs */}
             <View style={styles.mealTypeTabs}>
@@ -487,103 +679,6 @@ export default function PageRenderAI() {
         </TouchableOpacity>
       )}
       
-      {/* Modal gợi ý AI */}
-      <Modal
-        visible={showAIModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => {}} // Prevent closing by back button
-      >
-        <View style={styles.aiModalOverlay}>
-          <View style={styles.aiModalContent}>
-            <View style={styles.aiModalHeader}>
-              <View style={styles.aiModalIconContainer}>
-                <Ionicons name="sparkles" size={24} color="#FFFFFF" />
-              </View>
-              <Text style={styles.aiModalTitle}>Gợi ý từ AI</Text>
-              {/* Xóa nút close */}
-            </View>
-            
-            <ScrollView 
-              ref={aiScrollViewRef}
-              style={styles.aiModalBody}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.aiModalBodyContent}
-            >
-              {loadingAI ? (
-                <View style={styles.aiLoadingContainer}>
-                  <Image 
-                    source={require('../../../assets/images/ai-assistant.gif')} 
-                    style={styles.aiLoadingImage}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.aiLoadingText}>AI đang phân tích dữ liệu...</Text>
-                </View>
-              ) : (
-                <Animated.View 
-                  style={[
-                    styles.aiSuggestionContainer,
-                    { opacity: aiTextAnim }
-                  ]}
-                >
-                  {/* Thông tin phân tích */}
-                  <View style={styles.aiAnalysisContainer}>
-                    <Text style={styles.aiAnalysisTitle}>Thông tin đã phân tích:</Text>
-                    {aiAnalysisInfo.map((info, index) => (
-                      <View key={`analysis-${index}`} style={styles.aiAnalysisItemContainer}>
-                        <View style={styles.aiAnalysisCheckmarkContainer}>
-                          <Text style={styles.aiAnalysisCheckmark}>✓</Text>
-                        </View>
-                        <Text style={styles.aiAnalysisItem}>{info.text}</Text>
-                      </View>
-                    ))}
-                  </View>
-                  
-                  {/* Gợi ý món ăn */}
-                  {aiSuggestions.length > 0 && (
-                    <>
-                      <Text style={styles.aiIntroText}>
-                        Dựa trên sở thích và mục tiêu dinh dưỡng của bạn, tôi gợi ý các món sau:
-                      </Text>
-                      
-                      <View style={styles.aiMealSuggestions}>
-                        {aiSuggestions.map((suggestion, index) => (
-                          <Text 
-                            key={index} 
-                            style={suggestion.type === 'header' ? styles.aiMealHeader : styles.aiMealItem}
-                          >
-                            {suggestion.type === 'meal' ? '- ' : ''}{suggestion.text}
-                          </Text>
-                        ))}
-                      </View>
-                      
-                      {/* Thêm khoảng trống để tránh che nút */}
-                      <View style={{ height: 80 }} />
-                    </>
-                  )}
-                </Animated.View>
-              )}
-            </ScrollView>
-            
-            {/* Nút Xem thực đơn - cố định ở dưới modal */}
-            <View style={styles.aiModalFooter}>
-              <TouchableOpacity 
-                style={[
-                  styles.aiAcceptButtonFixed,
-                  { opacity: aiProcessComplete ? 1 : 0.5 }
-                ]}
-                onPress={aiProcessComplete ? closeAIModal : null}
-                disabled={!aiProcessComplete}
-              >
-                <Text style={styles.aiAcceptButtonText}>
-                  Xem thực đơn 
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-      
       {/* Thêm MealAcceptedSheet */}
       <MealAcceptedSheet
         isOpen={isMealAcceptedSheetOpen}
@@ -602,342 +697,3 @@ export default function PageRenderAI() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#D4E9E1',
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingBottom: 20,
-  },
-  headerText: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: 'white',
-  },
-  menuSection: {
-    marginTop: 10,
-    marginHorizontal: 15,
-  },
-  mealTypeTabs: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  mealTypeTab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    backgroundColor: 'rgba(53, 165, 94, 0.1)',
-    borderRadius: 20,
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  activeMealTypeTab: {
-    backgroundColor: '#35A55E',
-  },
-  mealTypeText: {
-    fontSize: 14,
-    color: '#35A55E',
-    marginLeft: 5,
-  },
-  activeMealTypeText: {
-    color: '#FFFFFF',
-  },
-  menuGrid: {
-    marginTop: 5,
-  },
-  menuItemCardVertical: {
-    flexDirection: 'row',
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-    marginBottom: 12,
-    padding: 12,
-  },
-  menuItemImageVertical: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    resizeMode: 'cover',
-  },
-  menuItemContentVertical: {
-    flex: 1,
-    marginLeft: 12,
-    justifyContent: 'space-between',
-  },
-  menuItemInfo: {
-    flex: 1,
-  },
-  menuItemNameVertical: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333333',
-    marginBottom: 4,
-  },
-  menuItemDescription: {
-    fontSize: 13,
-    color: '#666666',
-    marginBottom: 8,
-    lineHeight: 18,
-  },
-  menuItemMacros: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  menuItemMacro: {
-    fontSize: 12,
-    color: '#666666',
-  },
-  menuItemActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  viewDetailButton: {
-    backgroundColor: '#F0F8F0',
-    borderRadius: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: '#35A55E',
-  },
-  viewDetailButtonText: {
-    fontSize: 12,
-    color: '#35A55E',
-    fontWeight: '500',
-  },
-  changeButton: {
-    backgroundColor: '#FFF3E0',
-    borderRadius: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: '#FF9800',
-  },
-  changeButtonText: {
-    fontSize: 12,
-    color: '#FF9800',
-    fontWeight: '500',
-  },
-  typeMealContainer: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: '#D32F2F',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 4,
-  },
-  typeMealText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  acceptMenuButton: {
-    position: 'absolute',
-    bottom: 50,
-    left: 15,
-    right: 15,
-    flexDirection: 'row',
-    backgroundColor: '#35A55E',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-    zIndex: 1000,
-  },
-  acceptMenuButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 16,
-    marginRight: 8,
-  },
-  // AI Modal styles
-  aiModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  
-  aiModalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    width: '100%',
-    height: '80%', // Chiều cao cố định
-    maxWidth: 400,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-    flexDirection: 'column',
-  },
-  
-  aiModalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start', // Thay đổi từ space-between
-    padding: 16,
-    backgroundColor: '#35A55E',
-  },
-
-  aiModalTitle: {
-    flex: 1,
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  
-  aiModalBody: {
-    flex: 1, // Chiếm toàn bộ không gian còn lại
-  },
-  
-  aiModalBodyContent: {
-    padding: 16,
-    // paddingBottom: 20,
-  },
-  
-  // Thêm footer cho modal
-  aiModalFooter: {
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  
-  // Nút cố định trong modal
-  aiAcceptButtonFixed: {
-    backgroundColor: '#35A55E',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 4,
-  },
-  
-  // Xóa aiAcceptButton style cũ vì không dùng nữa
-  
-  aiLoadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-  },
-  aiLoadingImage: {
-    width: 80,
-    height: 80,
-    marginBottom: 16,
-  },
-  aiLoadingText: {
-    fontSize: 16,
-    color: '#666666',
-    textAlign: 'center',
-  },
-  aiSuggestionContainer: {
-    // Để trống cho animation
-  },
-  aiAnalysisContainer: {
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  aiAnalysisTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333333',
-    marginBottom: 12,
-  },
-  aiAnalysisItemContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  aiAnalysisCheckmarkContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#28A745',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  aiAnalysisCheckmark: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  aiAnalysisItem: {
-    fontSize: 14,
-    color: '#666666',
-    flex: 1,
-    fontWeight: '400',
-  },
-  aiIntroText: {
-    fontSize: 14,
-    color: '#333333',
-    marginBottom: 12,
-    lineHeight: 20,
-  },
-  aiMealSuggestions: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    elevation: 2,
-  },
-  aiMealHeader: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#35A55E',
-    marginBottom: 8,
-  },
-  aiMealItem: {
-    fontSize: 14,
-    color: '#333333',
-    marginBottom: 4,
-    lineHeight: 20,
-  },
-  aiAcceptButton: {
-    backgroundColor: '#35A55E',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 4,
-  },
-  aiAcceptButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 16,
-    letterSpacing: 0.5,
-  },
-});

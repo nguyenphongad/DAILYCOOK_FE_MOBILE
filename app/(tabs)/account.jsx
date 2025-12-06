@@ -30,6 +30,14 @@ const nutritionItems = [
     rightComponent: 'arrow'
   },
   {
+    id: 'surveyinfo',
+    title: 'Khảo sát',
+    icon: require('../../assets/images/icons_account/s1.png'),
+    navigateTo: '/(stacks)/account/PersonalInfo',
+    badge: null,
+    rightComponent: 'arrow'
+  },
+  {
     id: 'goals',
     title: 'Mục tiêu',
     icon: require('../../assets/images/icons_account/s2.png'),

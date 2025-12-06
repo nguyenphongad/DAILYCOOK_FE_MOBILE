@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20, // Thêm padding dưới để tránh bị cắt nội dung
   },
   headerText: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '500',
     color: 'white',
   },
@@ -49,14 +49,14 @@ const styles = StyleSheet.create({
     borderColor: '#64ba82',
   },
   dayTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
     color: '#35A55E',
     marginBottom: 4,
     textAlign: 'left', // Căn lề trái
   },
   dateSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666666',
     fontWeight: '400',
     textAlign: 'left', // Căn lề trái
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#333',
     marginBottom: 15,
@@ -331,8 +331,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#35A55E',
     borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
     marginRight:20,
-    fontSize:16
+    fontSize:14
   },
 
   // Settings sheet styles

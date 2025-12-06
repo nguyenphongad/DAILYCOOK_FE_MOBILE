@@ -1,0 +1,482 @@
+import { StyleSheet } from 'react-native';
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#D4E9E1',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingBottom: 20,
+  },
+  headerText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'white',
+  },
+  menuSection: {
+    marginTop: 10,
+    marginHorizontal: 15,
+  },
+  mealTypeTabs: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  mealTypeTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    backgroundColor: 'rgba(53, 165, 94, 0.1)',
+    borderRadius: 20,
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  activeMealTypeTab: {
+    backgroundColor: '#35A55E',
+  },
+  mealTypeText: {
+    fontSize: 14,
+    color: '#35A55E',
+    marginLeft: 5,
+  },
+  activeMealTypeText: {
+    color: '#FFFFFF',
+  },
+  menuGrid: {
+    marginTop: 5,
+  },
+  menuItemCardVertical: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    marginBottom: 12,
+    padding: 12,
+  },
+  menuItemImageVertical: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    resizeMode: 'cover',
+  },
+  menuItemContentVertical: {
+    flex: 1,
+    marginLeft: 12,
+    justifyContent: 'space-between',
+  },
+  menuItemInfo: {
+    flex: 1,
+  },
+  menuItemNameVertical: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+    marginBottom: 4,
+  },
+  menuItemDescription: {
+    fontSize: 13,
+    color: '#666666',
+    marginBottom: 8,
+    lineHeight: 18,
+  },
+  menuItemMacros: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  menuItemMacro: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  menuItemActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  viewDetailButton: {
+    backgroundColor: '#F0F8F0',
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#35A55E',
+  },
+  viewDetailButtonText: {
+    fontSize: 12,
+    color: '#35A55E',
+    fontWeight: '500',
+  },
+  changeButton: {
+    backgroundColor: '#FFF3E0',
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#FF9800',
+  },
+  changeButtonText: {
+    fontSize: 12,
+    color: '#FF9800',
+    fontWeight: '500',
+  },
+  typeMealContainer: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#D32F2F',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  typeMealText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  acceptMenuButton: {
+    position: 'absolute',
+    bottom: 50,
+    left: 15,
+    right: 15,
+    flexDirection: 'row',
+    backgroundColor: '#35A55E',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+    zIndex: 1000,
+  },
+  acceptMenuButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+    marginRight: 8,
+  },
+  // AI Modal styles
+  aiModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  aiModalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    width: '100%',
+    height: '80%',
+    maxWidth: 400,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    flexDirection: 'column',
+  },
+  aiModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    padding: 16,
+    backgroundColor: '#35A55E',
+  },
+  aiModalTitle: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  aiModalBody: {
+    flex: 1,
+  },
+  aiModalBodyContent: {
+    padding: 16,
+  },
+  aiModalFooter: {
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+  aiAcceptButtonFixed: {
+    backgroundColor: '#35A55E',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  aiLoadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  aiLoadingImage: {
+    width: 80,
+    height: 80,
+    marginBottom: 16,
+  },
+  aiLoadingText: {
+    fontSize: 16,
+    color: '#666666',
+    textAlign: 'center',
+  },
+  aiSuggestionContainer: {
+    // Để trống cho animation
+  },
+  aiAnalysisContainer: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  aiAnalysisTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333333',
+    marginBottom: 12,
+  },
+  aiAnalysisItemContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  aiAnalysisCheckmarkContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#28A745',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  aiAnalysisCheckmark: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  aiAnalysisItem: {
+    fontSize: 14,
+    color: '#666666',
+    flex: 1,
+    fontWeight: '400',
+  },
+  aiIntroText: {
+    fontSize: 14,
+    color: '#333333',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  aiMealSuggestions: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    elevation: 2,
+  },
+  aiMealHeader: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#35A55E',
+    marginBottom: 8,
+  },
+  aiMealItem: {
+    fontSize: 14,
+    color: '#333333',
+    marginBottom: 4,
+    lineHeight: 20,
+  },
+  aiAcceptButton: {
+    backgroundColor: '#35A55E',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  aiAcceptButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+    letterSpacing: 0.5,
+  },
+  // AI Chatbox styles
+  aiChatContainer: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 16,
+    paddingHorizontal: 8,
+    minHeight: 500,
+    paddingBottom: 20, // Thêm padding bottom để tránh bị che
+  },
+  chatMessage: {
+    marginBottom: 12,
+    paddingHorizontal: 16,
+  },
+  
+  messageWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    maxWidth: '85%',
+  },
+  
+  userMessage: {
+    alignItems: 'flex-end',
+    width: '100%',
+  },
+  
+  aiMessage: {
+    alignItems: 'flex-start', 
+    width: '100%',
+  },
+  
+  messageBubble: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 18,
+    minWidth: 60,
+  },
+  
+  userBubble: {
+    backgroundColor: '#35A55E',
+    borderBottomRightRadius: 6,
+    alignSelf: 'flex-end',
+    maxWidth: '85%',
+  },
+  
+  aiBubble: {
+    backgroundColor: '#FFFFFF',
+    borderBottomLeftRadius: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+    alignSelf: 'flex-start',
+    flex: 1,
+    marginLeft: 8,
+  },
+
+  messageText: {
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  
+  userMessageText: {
+    color: '#FFFFFF',
+    fontWeight: '400',
+  },
+  
+  aiMessageText: {
+    color: '#333333',
+    fontWeight: '400',
+  },
+  
+  messageTime: {
+    fontSize: 12,
+    color: '#999999',
+    marginTop: 4,
+  },
+  
+  userMessageTime: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'right',
+  },
+  mealSuggestionCard: {
+    backgroundColor: '#F0F8F0',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#35A55E',
+  },
+  mealTimeTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#35A55E',
+    marginBottom: 6,
+  },
+  mealItem: {
+    fontSize: 13,
+    color: '#333333',
+    marginBottom: 3,
+    paddingLeft: 8,
+  },
+  chatFooter: {
+    paddingTop: 16,
+    paddingBottom: 8, // Thêm padding bottom
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  viewMenuButton: {
+    backgroundColor: '#35A55E',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  viewMenuButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  // Chat Interface styles
+  chatContainer: {
+    flex: 1,
+    marginHorizontal: 15,
+    marginTop: 10,
+  },
+  viewMenuButtonSmall: {
+    flexDirection: 'row',
+    backgroundColor: '#35A55E',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  viewMenuButtonSmallText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  typingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#333333', // Đổi từ '#35A55E' thành màu đen
+    marginHorizontal: 2,
+  },
+});
