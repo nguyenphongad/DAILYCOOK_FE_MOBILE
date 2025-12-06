@@ -18,4 +18,8 @@ export const ENDPOINT = {
     // dietary preferences
     GET_DIETARY_PREFERENCES: (userId) => `${BASE_ENDPOINT}/surveys/users/${userId}/dietary-preferences`,
     UPDATE_DIETARY_PREFERENCES: (userId) => `${BASE_ENDPOINT}/surveys/users/${userId}/dietary-preferences`,
+    
+    // nutrition goals
+    CALCULATE_NUTRITION_GOALS: `${BASE_ENDPOINT}/surveys/nutrition-goals/calculate`,
+    GET_NUTRITION_GOALS: `${BASE_ENDPOINT}/surveys/nutrition-goals`,
 }

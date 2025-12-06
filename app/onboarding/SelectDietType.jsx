@@ -190,7 +190,6 @@ export default function SelectDietTypeScreen() {
     const handleNext = async () => {
         if (selectedDiet) {
             try {
-                // Tìm diet object để lấy keyword
                 const selectedDietObject = sortedDietTypes.find(diet => diet._id === selectedDiet);
                 if (!selectedDietObject) {
                     if (Platform.OS === 'android') {
@@ -201,11 +200,9 @@ export default function SelectDietTypeScreen() {
                     return;
                 }
 
-                // Lưu dietary preferences với keyword thay vì _id
                 const dietaryPreferences = { DietType_id: selectedDietObject.keyword };
                 dispatch(setDietaryPreferences(dietaryPreferences));
                 
-                // Chuẩn bị dữ liệu để gửi API
                 const dataToSave = {
                     type: onboardingData.type,
                     data: {}
@@ -223,23 +220,25 @@ export default function SelectDietTypeScreen() {
                     };
                 }
                 
-                console.log('Saving onboarding data:', dataToSave);
-                console.log('Selected diet keyword:', selectedDietObject.keyword);
+                console.log('=== ONBOARDING DATA TO SAVE ===');
+                console.log('Type:', dataToSave.type);
+                console.log('Data to send:', JSON.stringify(dataToSave, null, 2));
+                console.log('================================');
                 
                 // Gọi API lưu dữ liệu
                 const result = await dispatch(saveOnboardingData(dataToSave)).unwrap();
                 
-                if (result.data?.isOnboardingCompleted) {
-                    // Onboarding hoàn thành, redirect về home
-                    router.replace('/(tabs)');
-                } else {
-                    // Tiếp tục với Questions nếu chưa hoàn thành
-                    dispatch(nextStep());
-                    router.push('/onboarding/Questions');
-                }
+                console.log('Save result - isOnboardingCompleted:', result.data.isOnboardingCompleted);
+                
+                // Chỉ cần dispatch nextStep, không cần set onboarding completed
+                dispatch(nextStep());
+                
+                // Chuyển về tabs, HomeScreen sẽ tự check nutrition goals
+                router.replace('/(tabs)');
+                
             } catch (error) {
                 console.error('Error saving onboarding data:', error);
-                // Hiển thị lỗi cho user
+                
                 if (Platform.OS === 'android') {
                     ToastAndroid.show('Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.', ToastAndroid.LONG);
                 } else {

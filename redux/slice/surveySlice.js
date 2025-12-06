@@ -3,7 +3,9 @@ import {
   checkOnboardingStatus, 
   saveOnboardingData, 
   getDietaryPreferences, 
-  updateDietaryPreferences 
+  updateDietaryPreferences, 
+  calculateNutritionGoals,
+  getNutritionGoals
 } from '../thunk/surveyThunk';
 
 const initialState = {
@@ -40,6 +42,10 @@ const initialState = {
   dietaryPreferencesError: null,
   updateDietaryPreferencesLoading: false,
   updateDietaryPreferencesError: null,
+  // Nutrition goals
+  nutritionGoals: null,
+  nutritionGoalsLoading: false,
+  nutritionGoalsError: null,
 };
 
 const surveySlice = createSlice({
@@ -114,6 +120,14 @@ const surveySlice = createSlice({
       state.dietaryPreferencesError = null;
       state.updateDietaryPreferencesError = null;
     },
+    // Actions cho nutrition goals
+    clearNutritionGoalsError: (state) => {
+      state.nutritionGoalsError = null;
+    },
+    resetNutritionGoals: (state) => {
+      state.nutritionGoals = null;
+      state.nutritionGoalsError = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -181,6 +195,37 @@ const surveySlice = createSlice({
       .addCase(updateDietaryPreferences.rejected, (state, action) => {
         state.updateDietaryPreferencesLoading = false;
         state.updateDietaryPreferencesError = action.payload;
+      })
+      // Cases cho calculateNutritionGoals
+      .addCase(calculateNutritionGoals.pending, (state) => {
+        state.nutritionGoalsLoading = true;
+        state.nutritionGoalsError = null;
+      })
+      .addCase(calculateNutritionGoals.fulfilled, (state, action) => {
+        state.nutritionGoalsLoading = false;
+        if (action.payload && action.payload.data) {
+          state.nutritionGoals = action.payload.data;
+        }
+      })
+      .addCase(calculateNutritionGoals.rejected, (state, action) => {
+        state.nutritionGoalsLoading = false;
+        state.nutritionGoalsError = action.payload;
+      })
+      
+      // Cases cho getNutritionGoals
+      .addCase(getNutritionGoals.pending, (state) => {
+        state.nutritionGoalsLoading = true;
+        state.nutritionGoalsError = null;
+      })
+      .addCase(getNutritionGoals.fulfilled, (state, action) => {
+        state.nutritionGoalsLoading = false;
+        if (action.payload && action.payload.data) {
+          state.nutritionGoals = action.payload.data;
+        }
+      })
+      .addCase(getNutritionGoals.rejected, (state, action) => {
+        state.nutritionGoalsLoading = false;
+        state.nutritionGoalsError = action.payload;
       });
   },
 });
@@ -200,7 +245,9 @@ export const {
   resetOnboardingData,
   clearSaveError,
   clearDietaryPreferencesError,
-  resetDietaryPreferences
+  resetDietaryPreferences,
+  clearNutritionGoalsError,
+  resetNutritionGoals
 } = surveySlice.actions;
 
 export default surveySlice.reducer;

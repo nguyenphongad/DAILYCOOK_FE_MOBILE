@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, Dimensions } from 're
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'expo-router';
 import { H2, Paragraph } from 'tamagui';
-import { nextStep, prevStep } from '../../redux/slice/surveySlice';
+import { nextStep, prevStep, setPersonalInfo } from '../../redux/slice/surveySlice';
 import HeaderComponent from '../../components/header/HeaderComponent';
 import ButtonComponent from '../../components/button/ButtonComponent';
 
@@ -50,6 +50,10 @@ export default function AgeScreen() {
 
   const handleNext = () => {
     if (selectedAge && selectedAge > 0 && selectedAge < 120) {
+      // Lưu age vào Redux
+      dispatch(setPersonalInfo({ age: selectedAge }));
+      console.log('Age selected:', selectedAge);
+      
       dispatch(nextStep());
       router.push('/onboarding/Height');
     }

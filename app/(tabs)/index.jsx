@@ -10,6 +10,8 @@ import WaterReminderSheet from '../../components/sheet/WaterReminderSheet';
 import SheetComponent from '../../components/sheet/SheetComponent';
 import { useDispatch, useSelector } from 'react-redux';
 import { checkTokenAndGetUser } from '../../redux/thunk/authThunk';
+import { getNutritionGoals } from '../../redux/thunk/surveyThunk';
+import LoadingComponent from '../../components/loading/LoadingComponent';
 
 // Giả lập dữ liệu
 const userData = {
@@ -193,6 +195,11 @@ export default function HomeScreen() {
 
   // Redux selectors để lấy thông tin user
   const { user, isLoading } = useSelector((state) => state.auth);
+  const { nutritionGoals, nutritionGoalsLoading } = useSelector((state) => state.survey);
+  
+  // Thêm state để track việc đã check nutrition goals
+  const [hasCheckedNutritionGoals, setHasCheckedNutritionGoals] = useState(false);
+  const [isCheckingNutritionGoals, setIsCheckingNutritionGoals] = useState(false);
 
   const [currentDate, setCurrentDate] = useState({
     dayName: getDayName(today.getDay()),
@@ -240,6 +247,54 @@ export default function HomeScreen() {
       dispatch(checkTokenAndGetUser());
     }
   }, []); // Dependency rỗng để chỉ chạy 1 lần
+
+  // Check nutrition goals sau khi có user - THÊM DEBOUNCE
+  useEffect(() => {
+    let timeoutId;
+    
+    const checkAndRedirect = async () => {
+      if (user && !hasCheckedNutritionGoals && !isCheckingNutritionGoals) {
+        // Debounce 500ms để tránh gọi nhiều lần
+        timeoutId = setTimeout(async () => {
+          setIsCheckingNutritionGoals(true);
+          
+          try {
+            // Gọi API lấy nutrition goals
+            const result = await dispatch(getNutritionGoals()).unwrap();
+            
+            console.log('HomeScreen - Nutrition goals check:', result?.data);
+            
+            // Check nếu nutrition goals null
+            const hasNullGoals = result?.data?.hasGoals === false || 
+                                 result?.data?.nutritionGoals?.caloriesPerDay === null;
+            
+            if (hasNullGoals) {
+              console.log('HomeScreen - Redirecting to GetNutriGoal...');
+              // Redirect sang GetNutriGoal để tính toán
+              setTimeout(() => {
+                router.push('/onboarding/GetNutriGoal');
+              }, 300); // Delay nhỏ để tránh conflict
+            } else {
+              console.log('HomeScreen - Nutrition goals OK, staying on home');
+            }
+            
+            setHasCheckedNutritionGoals(true);
+          } catch (error) {
+            console.error('HomeScreen - Error checking nutrition goals:', error);
+            setHasCheckedNutritionGoals(true);
+          } finally {
+            setIsCheckingNutritionGoals(false);
+          }
+        }, 500);
+      }
+    };
+    
+    checkAndRedirect();
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [user, hasCheckedNutritionGoals, isCheckingNutritionGoals, dispatch]);
 
   // Hàm xử lý khi người dùng kéo xuống để refresh
   const onRefresh = useCallback(() => {
@@ -448,6 +503,10 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
+      
+      {/* Loading Component khi đang check nutrition goals */}
+      <LoadingComponent visible={isCheckingNutritionGoals} />
+      
       {/* Header cố định */}
       <HeaderComponent>
         <Text style={styles.headerText}>
