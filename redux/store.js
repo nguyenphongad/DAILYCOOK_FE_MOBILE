@@ -8,6 +8,8 @@ import authReducer from './slice/authSlice';
 import surveyReducer from './slice/surveySlice';
 import mealReducer from './slice/mealSlice';
 import mealPlanReducer from './slice/mealPlanSlice';
+import ingredientReducer from './slice/ingredientSlice';
+import recipeReducer from './slice/recipeSlice';
 
 // Persist config
 const persistConfig = {
@@ -22,6 +24,8 @@ const rootReducer = combineReducers({
   survey: surveyReducer,
   meal: mealReducer,
   mealPlan: mealPlanReducer,
+  ingredient: ingredientReducer,
+  recipe: recipeReducer,
 });
 
 // Persisted reducer

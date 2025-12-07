@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, FlatList, Dimensions, SafeAreaView, Image, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, FlatList, Dimensions, SafeAreaView, Image, RefreshControl, ActivityIndicator, ToastAndroid, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import HeaderComponent from '../../components/header/HeaderComponent';
 import { useDispatch, useSelector } from 'react-redux';
-import { getMealHistory } from '../../redux/thunk/mealPlanThunk';
+import { getMealHistory, toggleMealEaten } from '../../redux/thunk/mealPlanThunk';
 import { getNutritionGoals } from '../../redux/thunk/surveyThunk';
 
 export default function RecordMeal() {
@@ -14,7 +14,7 @@ export default function RecordMeal() {
     const { mealHistory, mealHistoryLoading, mealHistoryError } = useSelector((state) => state.mealPlan);
     const { nutritionGoals, nutritionGoalsLoading } = useSelector((state) => state.survey);
 
-    const [selectedDate, setSelectedDate] = useState(today.getDate());
+    const [selectedDate, setSelectedDate] = useState(today);
     const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
     const flatListRef = useRef(null);
@@ -52,7 +52,12 @@ export default function RecordMeal() {
                 isToday: weekDate.getDate() === new Date().getDate() &&
                     weekDate.getMonth() === new Date().getMonth() &&
                     weekDate.getFullYear() === new Date().getFullYear(),
-                isFuture: weekDate > new Date(new Date().setHours(23, 59, 59, 999))
+                isFuture: weekDate > new Date(new Date().setHours(23, 59, 59, 999)),
+                // Thêm flag để check ngày được chọn
+                isSelected: selectedDate && 
+                    weekDate.getDate() === selectedDate.getDate() &&
+                    weekDate.getMonth() === selectedDate.getMonth() &&
+                    weekDate.getFullYear() === selectedDate.getFullYear()
             };
         });
     };
@@ -150,6 +155,51 @@ export default function RecordMeal() {
         return mealHistory.history.filter(item => item.servingTime === servingTime);
     };
 
+    // Thêm handler để uneat meal
+    const handleUneatMeal = async (historyItem) => {
+        try {
+            // Lấy dateString từ selectedDate với format đúng
+            let dateString;
+            if (selectedDate instanceof Date) {
+                const year = selectedDate.getFullYear();
+                const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+                const day = String(selectedDate.getDate()).padStart(2, '0');
+                dateString = `${year}-${month}-${day}`;
+            } else {
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                dateString = `${year}-${month}-${day}`;
+            }
+
+            console.log('Uneat meal - Date string:', dateString);
+
+            await dispatch(toggleMealEaten({
+                date: dateString,
+                servingTime: historyItem.servingTime,
+                mealId: historyItem.mealDetail._id,
+                action: 'UNEAT'
+            })).unwrap();
+
+            // Reload meal history để cập nhật UI
+            await loadMealHistory(selectedDate);
+            
+            // Hiển thị toast thông báo
+            if (Platform.OS === 'android') {
+                ToastAndroid.show('Đã hủy ghi nhận món ăn', ToastAndroid.SHORT);
+            } else {
+                Alert.alert('Thành công', 'Đã hủy ghi nhận món ăn');
+            }
+        } catch (error) {
+            console.error('Error uneating meal:', error);
+            if (Platform.OS === 'android') {
+                ToastAndroid.show('Không thể hủy ghi nhận món ăn', ToastAndroid.SHORT);
+            } else {
+                Alert.alert('Lỗi', error || 'Không thể hủy ghi nhận món ăn');
+            }
+        }
+    };
+
     // Render meal card
     const renderMealCard = (historyItem) => {
         const meal = historyItem.mealDetail;
@@ -165,6 +215,15 @@ export default function RecordMeal() {
                 <View style={styles.mealTimeLabel}>
                     <Text style={styles.mealTimeBadge}>{servingTimeLabel}</Text>
                 </View>
+                
+                {/* Thêm nút back để uneat */}
+                <TouchableOpacity 
+                    style={styles.uneatButton}
+                    onPress={() => handleUneatMeal(historyItem)}
+                >
+                    <Ionicons name="arrow-back" size={20} color="#FF6B6B" />
+                </TouchableOpacity>
+
                 <Image
                     source={{ uri: meal.mealImage }}
                     style={styles.mealImage}
@@ -189,7 +248,11 @@ export default function RecordMeal() {
     };
 
     const handleDatePress = () => {
-        Alert.alert('Date Picker', 'Chức năng chọn ngày sẽ được phát triển');
+        if (Platform.OS === 'android') {
+            ToastAndroid.show('Chức năng chọn ngày sẽ được phát triển', ToastAndroid.SHORT);
+        } else {
+            Alert.alert('Date Picker', 'Chức năng chọn ngày sẽ được phát triển');
+        }
     };
 
     return (
@@ -234,19 +297,20 @@ export default function RecordMeal() {
                                         key={day.id}
                                         style={[
                                             styles.dateItem,
-                                            day.isToday ? styles.activeDateItem : null,
+                                            day.isSelected ? styles.activeDateItem : null,
                                             day.isFuture ? styles.futureDateItem : null,
                                         ]}
                                         disabled={day.isFuture}
                                         onPress={() => {
-                                            setSelectedDate(day.date);
+                                            console.log('Selected date:', day.fullDate);
+                                            setSelectedDate(day.fullDate);
                                             loadMealHistory(day.fullDate);
                                         }}
                                     >
                                         <Text
                                             style={[
                                                 styles.dayText,
-                                                day.isToday ? styles.activeDayText : null,
+                                                day.isSelected ? styles.activeDayText : null,
                                                 day.isFuture ? styles.futureDayText : null,
                                             ]}
                                         >
@@ -255,13 +319,13 @@ export default function RecordMeal() {
 
                                         <View style={[
                                             styles.dateCircle,
-                                            day.isToday ? styles.activeDateCircle : null,
+                                            day.isSelected ? styles.activeDateCircle : null,
                                             day.isFuture ? styles.futureDateCircle : null,
                                         ]}>
                                             <Text
                                                 style={[
                                                     styles.dateText,
-                                                    day.isToday ? styles.activeDateText : null,
+                                                    day.isSelected ? styles.activeDateText : null,
                                                     day.isFuture ? styles.futureDateText : null,
                                                 ]}
                                             >
@@ -622,7 +686,26 @@ const styles = StyleSheet.create({
         borderColor: '#eee',
         borderRadius: 8,
         marginBottom: 25,
-        backgroundColor: "#e6f2ed"
+        backgroundColor: "#e6f2ed",
+        position: 'relative', // Thêm để định vị nút back
+    },
+    // Thêm style cho nút uneat
+    uneatButton: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: '#FFF',
+        borderRadius: 20,
+        width: 36,
+        height: 36,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+        zIndex: 10,
     },
     mealInfo: {
         flex: 1,

@@ -17,6 +17,14 @@ import { styles } from '../../styles/AccoutPage';
 // Danh sách các mục trong phần Dinh Dưỡng
 const nutritionItems = [
   {
+    id: 'nutrition-goals',
+    title: 'Chế độ dinh dưỡng hàng ngày',
+    icon: require('../../assets/images/icons_account/s1.png'),
+    navigateTo: '/(stacks)/account/NutritionGoals',
+    badge: null,
+    rightComponent: 'arrow'
+  },
+  {
     id: 'personal-info',
     title: 'Thông tin thể trạng',
     icon: require('../../assets/images/icons_account/s1.png'),
@@ -28,7 +36,7 @@ const nutritionItems = [
     id: 'surveyinfo',
     title: 'Khảo sát',
     icon: require('../../assets/images/icons_account/s1.png'),
-    navigateTo: '/(stacks)/account/PersonalInfo',
+    navigateTo: '/(stacks)/account/Questions',
     badge: null,
     rightComponent: 'arrow'
   },
@@ -379,94 +387,31 @@ export default function AccountScreen() {
           </View>
         </View>
 
-        {/* Daily Nutrition Goals Section */}
-        <View style={styles.nutritionSection}>
-          <Text style={styles.nutritionSectionTitle}>
-            {nutritionGoalsLoading || refreshing
-              ? 'Đang tải mục tiêu dinh dưỡng...' 
-              : nutritionGoalsData?.hasGoals 
-                ? 'Chế độ dinh dưỡng hàng ngày của bạn' 
-                : 'Chưa có mục tiêu dinh dưỡng'}
-          </Text>
-
-          {nutritionGoalsLoading || refreshing ? (
-            <View style={styles.nutritionGrid}>
-              {[1, 2, 3, 4].map((_, index) => (
-                <View 
-                  key={index} 
-                  style={[
-                    styles.nutritionCard, 
-                    { backgroundColor: '#E0E0E0' }
-                  ]}
-                >
-                  <View style={styles.nutritionCardHeader}>
-                    <Text style={styles.nutritionCardLabel}>Đang tải...</Text>
-                  </View>
-                  <View style={styles.progressBarContainer}>
-                    <View style={styles.progressBarFill} />
-                  </View>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.nutritionGrid}>
-              {nutritionGoals.map((item, index) => (
-                <View key={item.id} style={[styles.nutritionCard, { backgroundColor: item.backgroundColor }]}>
-                  <View style={styles.nutritionCardHeader}>
-                    <Text style={[styles.nutritionCardLabel, { color: item.textColor || '#000' }]}>
-                      {item.label}
-                      {/* {item.percentage && ` (${item.percentage}%)`} */}
-                    </Text>
-
-                    <View style={styles.nutritionCardContent}>
-                      <Text style={[styles.nutritionCardValue, { color: item.textColor || '#000' }]}>
-                        {Math.round(item.value)}
-                        <Text style={styles.nutritionCardUnit}>
-                          {item.unit}
-                        </Text>
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.progressBarContainer}>
-                    <Animated.View
-                      style={[
-                        styles.progressBarFill,
-                        {
-                          backgroundColor: item.progressColor,
-                          width: progressAnims[index]?.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ['0%', '100%']
-                          }) || '100%'
-                        }
-                      ]}
-                    />
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
+        {/* Divider */}
+        <View style={styles.divider} />
 
         {/* Nutrition Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Dinh Dưỡng</Text>
           <View style={styles.sectionContent}>
             {nutritionItems.map(renderListItem)}
           </View>
         </View>
 
+        {/* Divider */}
+        <View style={styles.divider} />
+
         {/* Plan Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Kế Hoạch</Text>
           <View style={styles.sectionContent}>
             {planItems.map(renderListItem)}
           </View>
         </View>
 
+        {/* Divider */}
+        <View style={styles.divider} />
+
         {/* General Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Chung</Text>
           <View style={styles.sectionContent}>
             {generalItems.map(renderListItem)}
           </View>

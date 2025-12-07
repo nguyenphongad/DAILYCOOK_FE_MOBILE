@@ -1,10 +1,15 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { getDietTypes } from '../thunk/mealThunk';
+import { getDietTypes, getMealDetail } from '../thunk/mealThunk';
 
 const initialState = {
   dietTypes: [],
   loading: false,
   error: null,
+  
+  // Meal detail state
+  mealDetail: null,
+  mealDetailLoading: false,
+  mealDetailError: null,
 };
 
 const mealSlice = createSlice({
@@ -18,6 +23,10 @@ const mealSlice = createSlice({
       state.dietTypes = [];
       state.loading = false;
       state.error = null;
+    },
+    clearMealDetail: (state) => {
+      state.mealDetail = null;
+      state.mealDetailError = null;
     },
   },
   extraReducers: (builder) => {
@@ -43,13 +52,27 @@ const mealSlice = createSlice({
       .addCase(getDietTypes.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Get meal detail
+      .addCase(getMealDetail.pending, (state) => {
+        state.mealDetailLoading = true;
+        state.mealDetailError = null;
+      })
+      .addCase(getMealDetail.fulfilled, (state, action) => {
+        state.mealDetailLoading = false;
+        state.mealDetail = action.payload.data;
+      })
+      .addCase(getMealDetail.rejected, (state, action) => {
+        state.mealDetailLoading = false;
+        state.mealDetailError = action.payload;
       });
   },
 });
 
 export const { 
   clearError,
-  resetMealState
+  resetMealState,
+  clearMealDetail 
 } = mealSlice.actions;
 
 export default mealSlice.reducer;

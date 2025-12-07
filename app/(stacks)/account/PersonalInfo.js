@@ -1,19 +1,28 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useDispatch, useSelector } from 'react-redux';
 import SheetComponent from '../../../components/sheet/SheetComponent';
 import EditInfoSheet from '../../../components/account/EditInfoSheet';
 import HeaderLeft from '../../../components/header/HeaderLeft';
 import HeaderComponent from '../../../components/header/HeaderComponent';
+import { getDietaryPreferences } from '../../../redux/thunk/surveyThunk';
+import { getDietTypes } from '../../../redux/thunk/mealThunk';
 
 const PersonalInfo = () => {
     const router = useRouter();
+    const dispatch = useDispatch();
     const [isEdit, setIsEdit] = useState(false);
     const [sheetVisible, setSheetVisible] = useState(false);
     const [selectedField, setSelectedField] = useState(null);
+
+    // Redux selectors
+    const { user } = useSelector((state) => state.auth);
+    const { currentDietaryPreferences, dietaryPreferencesLoading } = useSelector((state) => state.survey);
+    const { dietTypes } = useSelector((state) => state.meal);
 
     // Personal info data structure with JSON
     const [personalInfo, setPersonalInfo] = useState({
@@ -48,7 +57,47 @@ const PersonalInfo = () => {
             label: 'Cân nặng mục tiêu',
             isEditable: true,
         },
+        dietType: {
+            value: 'Đang tải...',
+            label: 'Chế độ ăn',
+            isEditable: false, // Không cho edit trực tiếp, phải vào DietType page
+            navigateTo: '/(stacks)/account/DietType',
+        },
     });
+
+    // Load dietary preferences và diet types khi mount
+    useEffect(() => {
+        if (user && user._id) {
+            dispatch(getDietaryPreferences(user._id));
+        }
+        if (dietTypes.length === 0) {
+            dispatch(getDietTypes());
+        }
+    }, [dispatch, user]);
+
+    // Update diet type value khi có data
+    useEffect(() => {
+        if (currentDietaryPreferences && dietTypes.length > 0) {
+            const dietTypeKeyword = currentDietaryPreferences.DietType_id;
+            const matchingDiet = dietTypes.find(diet => diet.keyword === dietTypeKeyword);
+            
+            setPersonalInfo(prev => ({
+                ...prev,
+                dietType: {
+                    ...prev.dietType,
+                    value: matchingDiet ? matchingDiet.title : 'Chưa chọn chế độ ăn'
+                }
+            }));
+        } else if (!dietaryPreferencesLoading) {
+            setPersonalInfo(prev => ({
+                ...prev,
+                dietType: {
+                    ...prev.dietType,
+                    value: 'Chưa chọn chế độ ăn'
+                }
+            }));
+        }
+    }, [currentDietaryPreferences, dietTypes, dietaryPreferencesLoading]);
 
     // Handler functions
     const handleGoBack = () => {
@@ -74,6 +123,12 @@ const PersonalInfo = () => {
     };
 
     const handleOpenEditSheet = (key, item) => {
+        // Nếu là diet type, navigate sang DietType page
+        if (key === 'dietType' && item.navigateTo) {
+            router.push(item.navigateTo);
+            return;
+        }
+        
         if (item.isEditable) {
             setSelectedField({ key, item });
             setSheetVisible(true);
@@ -82,19 +137,26 @@ const PersonalInfo = () => {
 
     const renderInfoItem = (key, item) => {
         const icon = getIconForInfoType(key);
+        const isNavigable = item.navigateTo && !item.isEditable;
 
         return (
             <TouchableOpacity
                 key={key}
                 style={styles.infoItem}
                 onPress={() => handleOpenEditSheet(key, item)}
-                disabled={!item.isEditable}
+                disabled={!item.isEditable && !isNavigable}
             >
                 {icon}
                 <Text style={styles.infoLabel}>{item.label}</Text>
                 <View style={styles.infoValueContainer}>
-                    <Text style={styles.infoValue}>{item.value}</Text>
-                    {item.isEditable && (
+                    <Text style={[
+                        styles.infoValue,
+                        item.value === 'Đang tải...' && { color: '#999' },
+                        item.value === 'Chưa chọn chế độ ăn' && { color: '#E86F50' }
+                    ]}>
+                        {item.value}
+                    </Text>
+                    {(item.isEditable || isNavigable) && (
                         <Ionicons name="chevron-forward" size={24} color="#888" />
                     )}
                 </View>
@@ -117,6 +179,8 @@ const PersonalInfo = () => {
                 return <Ionicons name="fitness-outline" size={24} color="#38b94a" style={styles.icon} />;
             case 'targetWeight':
                 return <Ionicons name="trending-down-outline" size={24} color="#38b94a" style={styles.icon} />;
+            case 'dietType':
+                return <Ionicons name="restaurant-outline" size={24} color="#38b94a" style={styles.icon} />;
             case 'activityLevel':
                 return <Ionicons name="walk-outline" size={24} color="#38b94a" style={styles.icon} />;
             default:

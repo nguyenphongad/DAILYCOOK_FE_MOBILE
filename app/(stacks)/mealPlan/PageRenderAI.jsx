@@ -33,7 +33,6 @@ export default function PageRenderAI() {
   
   // States cho AI
   const [showMealSection, setShowMealSection] = useState(false);
-  const [activeMeal, setActiveMeal] = useState('breakfast');
   
   // Thêm state cho MealAcceptedSheet
   const [isMealAcceptedSheetOpen, setIsMealAcceptedSheetOpen] = useState(false);
@@ -90,6 +89,14 @@ export default function PageRenderAI() {
       hour: '2-digit', 
       minute: '2-digit' 
     });
+  };
+
+  // Helper function để format date đúng
+  const formatDateString = (date = new Date()) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   // Tự động check cache và generate AI khi component mount
@@ -331,7 +338,7 @@ export default function PageRenderAI() {
         <View style={styles.messageWrapper}>
           {!isUser && (
             <View style={styles.aiAvatar}>
-              <Ionicons name="sparkles" size={16} color="#FFFFFF" />
+              <Ionicons name="sparkles" size={16} color="#35A55E" />
             </View>
           )}
           
@@ -346,8 +353,8 @@ export default function PageRenderAI() {
                 {Object.entries(message.mealSuggestions).map(([mealTime, meals]) => (
                   <View key={`suggestion-${mealTime}-${message.id}`} style={styles.mealSuggestionCard}>
                     <Text style={styles.mealTimeTitle}>
-                      {mealTime === 'breakfast' ? '🌅 Bữa sáng' : 
-                       mealTime === 'lunch' ? '☀️ Bữa trưa' : '🌙 Bữa tối'}
+                      {mealTime === 'breakfast' ? 'Bữa sáng' : 
+                       mealTime === 'lunch' ? 'Bữa trưa' : 'Bữa tối'}
                     </Text>
                     {meals.map((meal, index) => (
                       <Text key={`meal-${mealTime}-${index}-${message.id}`} style={styles.mealItem}>• {meal}</Text>
@@ -414,7 +421,7 @@ export default function PageRenderAI() {
         <View style={styles.aiMessage}>
           <View style={styles.messageWrapper}>
             <View style={styles.aiAvatar}>
-              <Ionicons name="sparkles" size={16} color="#FFFFFF" />
+              <Ionicons name="sparkles" size={16} color="#35A55E" />
             </View>
             
             <View style={[styles.messageBubble, styles.aiBubble]}>
@@ -447,21 +454,36 @@ export default function PageRenderAI() {
   });
 
   const handleChangeMeal = (mealId) => {
-    const meal = currentMealsData[activeMeal].find(m => m.id === mealId);
-    if (meal) {
-      setSelectedMealForChange(meal);
+    // Tìm meal trong tất cả các sections
+    let foundMeal = null;
+    let foundServingTime = null;
+    
+    for (const [servingTime, meals] of Object.entries(currentMealsData)) {
+      const meal = meals.find(m => m.id === mealId);
+      if (meal) {
+        foundMeal = meal;
+        foundServingTime = servingTime;
+        break;
+      }
+    }
+    
+    if (foundMeal && foundServingTime) {
+      setSelectedMealForChange({ ...foundMeal, servingTime: foundServingTime });
       setIsChangeMealModalVisible(true);
     }
   };
 
   const handleMealReplaced = (oldMealId, newMeal) => {
-    // Update currentMealsData
+    // Update currentMealsData - tìm trong tất cả sections
     setCurrentMealsData(prevData => {
       const updatedData = { ...prevData };
-      const mealIndex = updatedData[activeMeal].findIndex(m => m.id === oldMealId);
       
-      if (mealIndex !== -1) {
-        updatedData[activeMeal][mealIndex] = newMeal;
+      for (const servingTime of Object.keys(updatedData)) {
+        const mealIndex = updatedData[servingTime].findIndex(m => m.id === oldMealId);
+        if (mealIndex !== -1) {
+          updatedData[servingTime][mealIndex] = newMeal;
+          break;
+        }
       }
       
       return updatedData;
@@ -490,13 +512,28 @@ export default function PageRenderAI() {
     }
 
     try {
-      // Format date to YYYY-MM-DD
       const today = new Date();
-      const dateString = today.toISOString().split('T')[0];
+      const dateString = formatDateString(today);
+      
+      // Tìm servingTime của meal đang được replace
+      let targetServingTime = null;
+      for (const [servingTime, meals] of Object.entries(currentMealsData)) {
+        if (meals.find(m => m.id === selectedMealId)) {
+          targetServingTime = servingTime;
+          break;
+        }
+      }
+      
+      if (!targetServingTime) {
+        throw new Error('Không tìm thấy serving time của món ăn');
+      }
+      
+      console.log('Replace meal - Date string:', dateString);
+      console.log('Replace meal - Serving time:', targetServingTime);
       
       await dispatch(replaceMeal({
         date: dateString,
-        servingTime: activeMeal,
+        servingTime: targetServingTime,
         oldMealId: selectedMealId,
         newMealId: selectedNewMealId,
         portionSize: {
@@ -510,10 +547,10 @@ export default function PageRenderAI() {
       if (newMeal) {
         setCurrentMealsData(prevData => {
           const updatedData = { ...prevData };
-          const mealIndex = updatedData[activeMeal].findIndex(m => m.id === selectedMealId);
+          const mealIndex = updatedData[targetServingTime].findIndex(m => m.id === selectedMealId);
           
           if (mealIndex !== -1) {
-            updatedData[activeMeal][mealIndex] = {
+            updatedData[targetServingTime][mealIndex] = {
               id: newMeal._id,
               name: newMeal.nameMeal,
               description: newMeal.description,
@@ -550,72 +587,15 @@ export default function PageRenderAI() {
     }
   };
 
-  // Lấy danh sách món ăn hiện tại từ Redux state hoặc local state
-  const currentMeals = currentMealsData[activeMeal] || [];
-  const availableMealTabs = Object.keys(currentMealsData).filter(
-    key => currentMealsData[key]?.length > 0
-  );
-
-  console.log("currentMeals ", currentMeals );
-
-  // Render một item món ăn
-  const renderMenuItem = (item) => (
-    <View key={item.id} style={styles.menuItemCardVertical}>
-      <Image 
-        source={item.imageUrl?.uri ? item.imageUrl : require('../../../assets/images/logo.png')}
-        style={styles.menuItemImageVertical} 
-      />
-      
-      <View style={styles.typeMealContainer}>
-        <Text style={styles.typeMealText}>{item.typeMeal}</Text>
-      </View>
-      
-      <View style={styles.menuItemContentVertical}>
-        <View style={styles.menuItemInfo}>
-          <Text style={styles.menuItemNameVertical}>{item.name}</Text>
-          <Text style={styles.menuItemDescription}>{item.description}</Text>
-          <View style={styles.menuItemMacros}>
-            <Text style={styles.menuItemMacro}>🔥 {item.calories} kcal</Text>
-            <Text style={styles.menuItemMacro}>🥩 {item.protein}g</Text>
-            <Text style={styles.menuItemMacro}>🍚 {item.carbs}g</Text>
-          </View>
-        </View>
-        
-        <View style={styles.menuItemActions}>
-          <TouchableOpacity 
-            style={styles.viewDetailButton}
-            onPress={() => handleViewMealDetail(item.id)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.viewDetailButtonText}>Chi tiết</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.changeButton}
-            onPress={() => handleChangeMeal(item.id)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.changeButtonText}>Đổi món</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
-
-  const handleViewMealDetail = (mealId) => {
-    router.push({
-      pathname: '/(stacks)/meals/MealDetail',
-      params: { id: mealId }
-    });
-  };
-
   const handleAcceptMenu = async () => {
     console.log('Accept menu - Saving meal plan...');
     
     try {
       // Format date to YYYY-MM-DD
       const today = new Date();
-      const dateString = today.toISOString().split('T')[0];
+      const dateString = formatDateString(today);
+      
+      console.log('Save meal plan - Date string:', dateString);
       
       // Gọi API save meal plan
       await dispatch(saveMealPlan(dateString)).unwrap();
@@ -747,6 +727,106 @@ export default function PageRenderAI() {
     }, 100);
   };
 
+  // Lấy danh sách món ăn hiện tại từ Redux state hoặc local state
+  const availableMealTabs = Object.keys(currentMealsData).filter(
+    key => currentMealsData[key]?.length > 0
+  );
+
+  // Thứ tự hiển thị sections
+  const mealTimeOrder = ['breakfast', 'lunch', 'dinner'];
+  const mealTimeLabels = {
+    breakfast: 'Bữa sáng',
+    lunch: 'Bữa trưa',
+    dinner: 'Bữa tối'
+  };
+
+  // Component riêng cho meal item với animation
+  const MealItemCard = React.memo(({ item, onPress, onChangeMeal }) => {
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+
+    const handlePressIn = () => {
+      Animated.spring(scaleAnim, {
+        toValue: 0.95,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 5,
+      }).start();
+    };
+
+    const handlePressOut = () => {
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 5,
+      }).start();
+    };
+
+    return (
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={() => onPress(item.id)}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+      >
+        <Animated.View 
+          style={[
+            styles.menuItemCardVerticalWithMargin,
+            { transform: [{ scale: scaleAnim }] }
+          ]}
+        >
+          <Image 
+            source={item.imageUrl?.uri ? item.imageUrl : require('../../../assets/images/logo.png')}
+            style={styles.menuItemImageVertical} 
+          />
+          
+          <View style={styles.typeMealContainer}>
+            <Text style={styles.typeMealText}>{item.typeMeal}</Text>
+          </View>
+          
+          <View style={styles.menuItemContentVertical}>
+            <View style={styles.menuItemInfo}>
+              <Text style={styles.menuItemNameVertical}>{item.name}</Text>
+              <View style={styles.menuItemMacros}>
+                <Text style={styles.menuItemMacro}>🔥 {item.calories} kcal</Text>
+              </View>
+            </View>
+            
+            <View style={styles.menuItemActions}>
+              <TouchableOpacity 
+                style={styles.changeButton}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  onChangeMeal(item.id);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.changeButtonText}>Đổi món</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  });
+
+  // Render một item món ăn - simplified
+  const renderMenuItem = (item) => (
+    <MealItemCard
+      key={item.id}
+      item={item}
+      onPress={handleViewMealDetail}
+      onChangeMeal={handleChangeMeal}
+    />
+  );
+
+  const handleViewMealDetail = (mealId) => {
+    router.push({
+      pathname: '/(stacks)/meals/MealDetail',
+      params: { id: mealId }
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
@@ -817,45 +897,32 @@ export default function PageRenderAI() {
             )}
           </View>
         ) : (
-          /* Menu Section */
+          /* Menu Section - Section-based layout */
           <View style={styles.menuSection}>
             {availableMealTabs.length > 0 ? (
               <>
-                {/* Menu selector tabs */}
-                <View style={styles.mealTypeTabs}>
-                  {availableMealTabs.map((mealType) => (
-                    <TouchableOpacity 
-                      key={mealType}
-                      style={[
-                        styles.mealTypeTab,
-                        { flex: 1 / availableMealTabs.length },
-                        activeMeal === mealType && styles.activeMealTypeTab
-                      ]}
-                      onPress={() => setActiveMeal(mealType)}
-                    >
-                      <Ionicons 
-                        name={mealType === 'breakfast' ? 'sunny-outline' : 
-                             mealType === 'lunch' ? 'restaurant-outline' : 'moon-outline'} 
-                        size={16} 
-                        color={activeMeal === mealType ? '#FFFFFF' : '#35A55E'} 
-                      />
-                      <Text 
-                        style={[
-                          styles.mealTypeText,
-                          activeMeal === mealType && styles.activeMealTypeText
-                        ]}
-                      >
-                        {mealType === 'breakfast' ? 'Sáng' : 
-                         mealType === 'lunch' ? 'Trưa' : 'Tối'}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-                
-                {/* Grid view cho món ăn */}
-                <View style={styles.menuGrid}>
-                  {currentMeals.map(renderMenuItem)}
-                </View>
+                {/* Render meals by sections */}
+                {mealTimeOrder.map((mealTime) => {
+                  const meals = currentMealsData[mealTime];
+                  if (!meals || meals.length === 0) return null;
+                  
+                  return (
+                    <View key={mealTime} style={styles.mealTimeSection}>
+                      {/* Section Header */}
+                      <View style={styles.mealTimeSectionHeader}>
+                        <Text style={styles.mealTimeSectionTitle}>
+                          {mealTimeLabels[mealTime]}
+                        </Text>
+                        <View style={styles.mealTimeSectionDivider} />
+                      </View>
+                      
+                      {/* Meals List */}
+                      <View style={styles.mealTimeSectionContent}>
+                        {meals.map(renderMenuItem)}
+                      </View>
+                    </View>
+                  );
+                })}
               </>
             ) : (
               <View style={styles.emptyMenuContainer}>
@@ -916,7 +983,7 @@ export default function PageRenderAI() {
             onPress={handleRegenerateMealPlan}
             disabled={isRegenerating}
           >
-            <Ionicons name="sparkles" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+            <Ionicons name="sparkles" size={20} color="#35A55E" style={{ marginRight: 8 }} />
             <Text style={styles.regenerateButtonText}>
               {isRegenerating ? 'Đang tạo...' : 'Gợi ý thực đơn mới'}
             </Text>
@@ -1017,7 +1084,7 @@ export default function PageRenderAI() {
         </View>
       </SheetComponent>
 
-      {/* Change Meal Modal */}
+      {/* Change Meal Modal - Update servingTime */}
       <ChangeMealModal
         visible={isChangeMealModalVisible}
         onClose={() => {
@@ -1025,7 +1092,7 @@ export default function PageRenderAI() {
           setSelectedMealForChange(null);
         }}
         currentMeal={selectedMealForChange}
-        servingTime={activeMeal}
+        servingTime={selectedMealForChange?.servingTime}
         onMealReplaced={handleMealReplaced}
       />
     </SafeAreaView>

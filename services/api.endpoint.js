@@ -29,4 +29,14 @@ export const ENDPOINT = {
     GET_MEAL_PLAN_FROM_DATABASE: `${BASE_ENDPOINT}/mealplans/get-from-database`,
     TOGGLE_MEAL_EATEN: `${BASE_ENDPOINT}/mealplans/toggle-eaten`,
     GET_MEAL_HISTORY: (date) => `${BASE_ENDPOINT}/mealplans/history?date=${date}`,
+    
+    // meal detail
+    GET_MEAL_DETAIL: (mealId) => `${BASE_ENDPOINT}/meals/meal/${mealId}`,
+    
+    // ingredient endpoints
+    GET_INGREDIENT_DETAIL: (ingredientId) => `${BASE_ENDPOINT}/ingredients/ingredient/${ingredientId}`,
+    GET_MEASUREMENT_UNITS: `${BASE_ENDPOINT}/ingredients/measurement-units`,
+    
+    // recipe endpoints
+    GET_RECIPE_DETAIL: (recipeId) => `${BASE_ENDPOINT}/recipes/${recipeId}`,
 }

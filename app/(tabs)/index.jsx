@@ -135,6 +135,14 @@ export default function HomeScreen() {
   const [isSettingsSheetOpen, setIsSettingsSheetOpen] = useState(false);
   const [weatherIcon, setWeatherIcon] = useState(require('../../assets/images/icons_home/sun.png'));
 
+  // Helper function để format date đúng
+  const formatDateString = (date = new Date()) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // useEffect xử lý params từ AI page
   useEffect(() => {
     if (params.acceptedMeals && params.showAISection === 'false') {
@@ -271,9 +279,10 @@ export default function HomeScreen() {
     const loadSavedMealPlan = async () => {
       try {
         const today = new Date();
-        const dateString = today.toISOString().split('T')[0];
+        const dateString = formatDateString(today);
         
         console.log('HomeScreen - Loading saved meal plan for:', dateString);
+        console.log('HomeScreen - Current date object:', today);
         
         const result = await dispatch(getMealPlanFromDatabase(dateString)).unwrap();
         
@@ -326,7 +335,7 @@ export default function HomeScreen() {
 
     try {
       const today = new Date();
-      const dateString = today.toISOString().split('T')[0];
+      const dateString = formatDateString(today);
       
       console.log('HomeScreen - Refreshing meal plan for:', dateString);
       
@@ -382,7 +391,9 @@ export default function HomeScreen() {
   const handleAcknowledgeMeal = async (mealId) => {
     try {
       const today = new Date();
-      const dateString = today.toISOString().split('T')[0];
+      const dateString = formatDateString(today);
+      
+      console.log('Acknowledge meal - Date string:', dateString);
       
       // Gọi API toggle eaten
       await dispatch(toggleMealEaten({
@@ -474,7 +485,7 @@ export default function HomeScreen() {
         style={styles.scrollContainer}
         contentContainerStyle={[
           styles.contentContainer,
-          { paddingTop: insets.top + 30, paddingBottom: showAISuggestionButton ? 30 : 20 } // Thêm padding bottom khi có nút
+          { paddingTop: insets.top + 30, paddingBottom: showAISuggestionButton ? 30 : 20 }
         ]}
         refreshControl={
           <RefreshControl
@@ -487,9 +498,10 @@ export default function HomeScreen() {
           />
         }
       >
-        {/* Date Header Section */}
+        {/* Date Header Section - Cập nhật */}
         <View style={styles.dateHeaderSection}>
           <Text style={styles.dayTitle}>{currentDate.dayName}</Text>
+          <Text style={styles.dateSeparator}>•</Text>
           <Text style={styles.dateSubtitle}>
             Ngày {currentDate.date}, {currentDate.month}
           </Text>
