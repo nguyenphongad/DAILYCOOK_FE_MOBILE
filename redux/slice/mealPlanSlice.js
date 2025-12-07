@@ -5,7 +5,9 @@ import {
   getSimilarMeals, 
   replaceMeal,
   saveMealPlan,
-  getMealPlanFromDatabase
+  getMealPlanFromDatabase,
+  toggleMealEaten,
+  getMealHistory
 } from '../thunk/mealPlanThunk';
 
 const initialState = {
@@ -26,6 +28,13 @@ const initialState = {
   getMealPlanFromDatabaseError: null,
   databaseMealPlan: null,
   hasSavedMealPlan: false, // Flag để check đã có thực đơn đã lưu chưa
+  toggleMealEatenLoading: false,
+  toggleMealEatenError: null,
+
+  // Meal history
+  mealHistory: null,
+  mealHistoryLoading: false,
+  mealHistoryError: null,
 };
 
 const mealPlanSlice = createSlice({
@@ -56,6 +65,13 @@ const mealPlanSlice = createSlice({
       state.databaseMealPlan = null;
       state.getMealPlanFromDatabaseError = null;
       state.hasSavedMealPlan = false;
+    },
+    clearToggleMealEatenError: (state) => {
+      state.toggleMealEatenError = null;
+    },
+    clearMealHistory: (state) => {
+      state.mealHistory = null;
+      state.mealHistoryError = null;
     },
   },
   extraReducers: (builder) => {
@@ -181,6 +197,54 @@ const mealPlanSlice = createSlice({
         state.getMealPlanFromDatabaseLoading = false;
         state.getMealPlanFromDatabaseError = action.payload;
         state.hasSavedMealPlan = false;
+      })
+      // Toggle meal eaten
+      .addCase(toggleMealEaten.pending, (state) => {
+        console.log('toggleMealEaten.pending');
+        state.toggleMealEatenLoading = true;
+        state.toggleMealEatenError = null;
+      })
+      .addCase(toggleMealEaten.fulfilled, (state, action) => {
+        console.log('toggleMealEaten.fulfilled:', action.payload);
+        state.toggleMealEatenLoading = false;
+        
+        // Update databaseMealPlan nếu có
+        if (state.databaseMealPlan?.mealPlan) {
+          const { mealId, action: mealAction } = action.payload;
+          const isEaten = mealAction === 'eaten';
+          
+          state.databaseMealPlan.mealPlan = state.databaseMealPlan.mealPlan.map(mealTime => ({
+            ...mealTime,
+            meals: mealTime.meals.map(meal => 
+              meal.mealDetail._id === mealId 
+                ? { ...meal, isEaten } 
+                : meal
+            )
+          }));
+        }
+      })
+      .addCase(toggleMealEaten.rejected, (state, action) => {
+        console.log('toggleMealEaten.rejected:', action.payload);
+        state.toggleMealEatenLoading = false;
+        state.toggleMealEatenError = action.payload;
+      })
+      // Get meal history
+      .addCase(getMealHistory.pending, (state) => {
+        console.log('getMealHistory.pending');
+        state.mealHistoryLoading = true;
+        state.mealHistoryError = null;
+      })
+      .addCase(getMealHistory.fulfilled, (state, action) => {
+        console.log('getMealHistory.fulfilled:', action.payload);
+        state.mealHistoryLoading = false;
+        if (action.payload && action.payload.data) {
+          state.mealHistory = action.payload.data;
+        }
+      })
+      .addCase(getMealHistory.rejected, (state, action) => {
+        console.log('getMealHistory.rejected:', action.payload);
+        state.mealHistoryLoading = false;
+        state.mealHistoryError = action.payload;
       });
   },
 });
@@ -191,7 +255,9 @@ export const {
   clearSimilarMeals, 
   clearReplaceMealError,
   clearSaveMealPlanError,
-  clearDatabaseMealPlan
+  clearDatabaseMealPlan,
+  clearToggleMealEatenError,
+  clearMealHistory
 } = mealPlanSlice.actions;
 
 export default mealPlanSlice.reducer;

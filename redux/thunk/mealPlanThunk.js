@@ -2,12 +2,26 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import { apiService } from '../../services/api.axios';
 import { ENDPOINT } from '../../services/api.endpoint';
 
+// Helper function để format date
+const formatDateString = (date) => {
+  if (!date) {
+    date = new Date();
+  }
+  if (date instanceof Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  return date; // Nếu đã là string thì return luôn
+};
+
 // Get meal plan from cache
 export const getMealPlanFromCache = createAsyncThunk(
   'mealPlan/getFromCache',
   async (date = null, { rejectWithValue }) => {
     try {
-      const requestDate = date || new Date().toISOString().split('T')[0];
+      const requestDate = formatDateString(date);
       const requestData = { date: requestDate };
       
       console.log('=== GET MEAL PLAN FROM CACHE REQUEST ===');
@@ -41,7 +55,7 @@ export const generateAIMealPlan = createAsyncThunk(
   'mealPlan/generateAI',
   async (date = null, { rejectWithValue }) => {
     try {
-      const requestDate = date || new Date().toISOString().split('T')[0];
+      const requestDate = formatDateString(date);
       const requestData = { date: requestDate };
       
       console.log('=== GENERATE AI MEAL PLAN REQUEST ===');
@@ -140,7 +154,7 @@ export const saveMealPlan = createAsyncThunk(
   'mealPlan/save',
   async (date = null, { rejectWithValue }) => {
     try {
-      const requestDate = date || new Date().toISOString().split('T')[0];
+      const requestDate = formatDateString(date);
       const requestData = { date: requestDate };
       
       console.log('=== SAVE MEAL PLAN REQUEST ===');
@@ -171,7 +185,7 @@ export const getMealPlanFromDatabase = createAsyncThunk(
   'mealPlan/getFromDatabase',
   async (date = null, { rejectWithValue }) => {
     try {
-      const requestDate = date || new Date().toISOString().split('T')[0];
+      const requestDate = formatDateString(date);
       const requestData = { date: requestDate };
       
       console.log('=== GET MEAL PLAN FROM DATABASE REQUEST ===');
@@ -195,6 +209,80 @@ export const getMealPlanFromDatabase = createAsyncThunk(
       
       return rejectWithValue(
         error.response?.data?.message || error.message || 'Không thể lấy thực đơn từ database'
+      );
+    }
+  }
+);
+
+// Toggle meal eaten status
+export const toggleMealEaten = createAsyncThunk(
+  'mealPlan/toggleEaten',
+  async ({ date, servingTime, mealId, action }, { rejectWithValue }) => {
+    try {
+      const requestData = {
+        date,
+        servingTime,
+        mealId,
+        action // 'EAT' hoặc 'UNEAT'
+      };
+      
+      console.log('=== TOGGLE MEAL EATEN REQUEST ===');
+      console.log('Request data:', requestData);
+      console.log('=================================');
+      
+      const response = await apiService.post(ENDPOINT.TOGGLE_MEAL_EATEN, requestData);
+      
+      console.log('API Response - Toggle Meal Eaten:', response);
+      
+      return { ...response, mealId, action };
+    } catch (error) {
+      console.error('=== TOGGLE MEAL EATEN ERROR ===');
+      console.error('Error type:', error.constructor?.name);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response?.data);
+      console.error('================================');
+      
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Không thể ghi nhận món ăn'
+      );
+    }
+  }
+);
+
+// Get meal history
+export const getMealHistory = createAsyncThunk(
+  'mealPlan/getMealHistory',
+  async (date, { rejectWithValue }) => {
+    try {
+      // Format date to YYYY-MM-DD nếu là Date object
+      let dateString = date;
+      if (date instanceof Date) {
+        // Sử dụng local date thay vì ISO string để tránh lệch timezone
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        dateString = `${year}-${month}-${day}`;
+      }
+      
+      console.log('=== GET MEAL HISTORY REQUEST ===');
+      console.log('Date:', dateString);
+      console.log('Original date object:', date);
+      console.log('=================================');
+      
+      const response = await apiService.get(ENDPOINT.GET_MEAL_HISTORY(dateString));
+      
+      console.log('API Response - Get Meal History:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('=== GET MEAL HISTORY ERROR ===');
+      console.error('Error type:', error.constructor?.name);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response?.data);
+      console.error('================================');
+      
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Không thể lấy lịch sử ăn uống'
       );
     }
   }

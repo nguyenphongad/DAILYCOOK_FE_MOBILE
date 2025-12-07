@@ -172,13 +172,13 @@ export default function LoginScreen() {
             { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
           ]}
         >
-          <View style={styles.logoContainer}>
+          {/* <View style={styles.logoContainer}>
             <Image
               source={require('../../assets/images/logo.png')}
               style={styles.logo}
               resizeMode="contain"
             />
-          </View>
+          </View> */}
           <Text style={styles.title}>DAILY COOK</Text>
           <Text style={styles.subtitle}>Thực đơn nhà mình</Text>
         </Animated.View>

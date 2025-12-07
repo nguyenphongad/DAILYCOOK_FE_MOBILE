@@ -41,26 +41,25 @@ const styles = StyleSheet.create({
   
   // Cập nhật styles cho date header section
   dateHeaderSection: {
-    padding: 0, // Giảm padding
-    marginHorizontal: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
     marginBottom: 16,
-    alignItems: 'flex-start', 
-    borderLeftWidth: 4,
-    paddingLeft: 15,
-    borderColor: '#64ba82',
   },
   dayTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: '#35A55E',
-    marginBottom: 4,
-    textAlign: 'left', // Căn lề trái
+  },
+  dateSeparator: {
+    fontSize: 18,
+    color: '#999',
+    marginHorizontal: 8,
   },
   dateSubtitle: {
     fontSize: 14,
     color: '#666666',
     fontWeight: '400',
-    textAlign: 'left', // Căn lề trái
   },
   
   
@@ -281,9 +280,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   aiRecommendationCard: {
-    backgroundColor: '#FFFFFF',
+    // backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 20,
+    padding: 10,
     marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
@@ -296,8 +295,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   aiImage: {
-    width: 150,
-    height: 150,
+    width: 100,
+    height: 100,
     marginBottom: 35,
   },
   aiFeaturesContainer: {
@@ -645,12 +644,21 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingVertical: 6,
     paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#35A55E',
   },
-  
+  acknowledgeButtonDisabled: {
+    backgroundColor: '#E0E0E0',
+    borderColor: '#E0E0E0',
+    opacity: 0.6,
+  },
   acknowledgeButtonText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#FFFFFF',
     fontWeight: '500',
+  },
+  acknowledgeButtonTextDisabled: {
+    color: '#999999',
   },
   
   // Cập nhật typeMealContainer cho layout dọc

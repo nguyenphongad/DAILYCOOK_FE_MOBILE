@@ -140,34 +140,28 @@ export const styles = StyleSheet.create({
     borderRadius: 2,
   },
   section: {
-    marginTop: 14,
-    borderRadius: 8,
-    paddingLeft: 10,
-    paddingRight: 10,
-    marginHorizontal: 10,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 4, // Giảm từ 8 xuống 4
   },
   sectionContent: {
-    borderRadius: 8,
+    // Xóa backgroundColor và borderRadius
+    // backgroundColor: '#FFFFFF',
+    // borderRadius: 12,
     overflow: 'hidden',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    marginHorizontal: 20,
+    marginVertical: 8, // Giảm từ 12 xuống 8
   },
   listItem: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 15,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    backgroundColor: '#ffffff',
-    elevation: 0.2,
-    borderRadius: 12,
-    marginBottom: 10
+    alignItems: 'center',
+    paddingVertical: 12, // Giảm padding
+    paddingHorizontal: 0, // Bỏ padding ngang vì không còn background
+    // Xóa borderBottomWidth nếu có
   },
   listItemLeft: {
     flexDirection: 'row',
