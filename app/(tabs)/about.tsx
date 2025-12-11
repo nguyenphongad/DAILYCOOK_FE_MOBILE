@@ -13,17 +13,17 @@ export default function AboutScreen() {
     <View style={styles.container}>
       {/* Header */}
       <HeaderComponent style={styles.header}>
-        {activeTab === 'ingredients' ? (
+        {/* {activeTab === 'ingredients' ? (
           <Text style={styles.headerText}>Danh sách thực phẩm</Text>
         ) : (
           <Text style={styles.headerText}>Danh sách công thức</Text>
-        )}
+        )} */}
       </HeaderComponent>
-
+      {/* Tabs */}
       <View
         style={[
           styles.tabContainer,
-          { marginTop: insets.top + 60 }
+          { marginTop: insets.top + 25 }
         ]}
       >
         <TouchableOpacity
@@ -68,26 +68,25 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    backgroundColor: 'rgba(53, 165, 94, 0.1)',
     borderRadius: 20,
-    marginHorizontal: 40,
     height: 40,
+    width: "100%",
   },
   tabButton: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 20,
     alignItems: 'center',
   },
   activeTab: {
-    backgroundColor: '#35A55E',
+    borderBottomWidth: 2,
+    borderColor: '#35A55E'
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#333',
   },
   activeText: {
     fontWeight: '500',
-    color: '#fff',
+    color: '#35A55E',
   },
 });

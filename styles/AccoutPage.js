@@ -176,6 +176,7 @@ export const styles = StyleSheet.create({
   listItemText: {
     fontSize: 13,
     color: '#333',
+    fontWeight: '500',
   },
   listItemRight: {
     flexDirection: 'row',
@@ -203,8 +204,8 @@ export const styles = StyleSheet.create({
   logoutButton: {
     backgroundColor: '#E86F50',
     borderRadius: 8,
-    padding: 13,
-    marginHorizontal: 13,
+    padding: 8,
+    marginHorizontal: 10,
     marginTop: 20,
     marginBottom: 15,
     flexDirection: 'row',
@@ -215,7 +216,7 @@ export const styles = StyleSheet.create({
     marginRight: 8,
   },
   logoutText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },

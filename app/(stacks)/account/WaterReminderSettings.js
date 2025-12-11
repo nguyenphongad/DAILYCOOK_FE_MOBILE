@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     View,
     Text,
@@ -12,21 +12,153 @@ import {
     Alert,
     Modal,
     Dimensions,
-    Image
+    Image,
+    ActivityIndicator
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import HeaderComponent from '../../../components/header/HeaderComponent';
 import HeaderLeft from '../../../components/header/HeaderLeft';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Picker } from 'react-native-wheel-pick';
 
 const { height: screenHeight } = Dimensions.get('window');
+const WATER_REMINDER_KEY = '@water_reminder_settings';
+
+// Time Picker Modal Component với react-native-wheel-pick
+const TimePickerModal = ({ 
+    visible, 
+    onClose, 
+    selectedValue, 
+    onValueChange, 
+    onSave,
+    title 
+}) => {
+    const [tempValue, setTempValue] = useState(selectedValue);
+    
+    const hours = Array.from({ length: 25 }, (_, i) => ({
+        value: i,
+        label: `${i.toString().padStart(2, '0')}:00`
+    }));
+
+    useEffect(() => {
+        if (visible) {
+            setTempValue(selectedValue);
+        }
+    }, [visible, selectedValue]);
+
+    const handleSave = () => {
+        onValueChange(tempValue);
+        onSave();
+    };
+
+    return (
+        <Modal
+            visible={visible}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={onClose}
+        >
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalHeader}>
+                        <TouchableOpacity onPress={onClose}>
+                            <Text style={styles.modalCancelText}>Hủy</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.modalTitle}>{title}</Text>
+                        <TouchableOpacity onPress={handleSave}>
+                            <Text style={styles.modalSaveText}>Lưu</Text>
+                        </TouchableOpacity>
+                    </View>
+                    
+                    <View style={styles.pickerContainer}>
+                        <Picker
+                            style={styles.picker}
+                            selectedValue={tempValue}
+                            pickerData={hours}
+                            onValueChange={(value) => setTempValue(value)}
+                            itemSpace={60}
+                        />
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    );
+};
+
+// Interval Picker Modal Component với react-native-wheel-pick
+const IntervalPickerModal = ({ 
+    visible, 
+    onClose, 
+    selectedValue, 
+    onValueChange, 
+    onSave 
+}) => {
+    const [tempValue, setTempValue] = useState(selectedValue);
+    
+    const intervalOptions = [
+        { value: 1/60, label: '1 phút' },
+        { value: 0.167, label: '10 phút' },
+        { value: 0.5, label: '30 phút' },
+        { value: 1, label: '1 tiếng' },
+        { value: 2, label: '2 tiếng' },
+        { value: 5, label: '5 tiếng' },
+        { value: 7, label: '7 tiếng' },
+        { value: 10, label: '10 tiếng' },
+        { value: 12, label: '12 tiếng' }
+    ];
+
+    useEffect(() => {
+        if (visible) {
+            setTempValue(selectedValue);
+        }
+    }, [visible, selectedValue]);
+
+    const handleSave = () => {
+        onValueChange(tempValue);
+        onSave();
+    };
+
+    return (
+        <Modal
+            visible={visible}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={onClose}
+        >
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalHeader}>
+                        <TouchableOpacity onPress={onClose}>
+                            <Text style={styles.modalCancelText}>Hủy</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.modalTitle}>Khoảng cách thời gian</Text>
+                        <TouchableOpacity onPress={handleSave}>
+                            <Text style={styles.modalSaveText}>Lưu</Text>
+                        </TouchableOpacity>
+                    </View>
+                    
+                    <View style={styles.pickerContainer}>
+                        <Picker
+                            style={styles.picker}
+                            selectedValue={tempValue}
+                            pickerData={intervalOptions}
+                            onValueChange={(value) => setTempValue(value)}
+                            itemSpace={60}
+                        />
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    );
+};
 
 export default function WaterReminderSettings() {
-    const [isReminderEnabled, setIsReminderEnabled] = useState(true);
-    const [startTime, setStartTime] = useState(8); // 8h
-    const [endTime, setEndTime] = useState(22); // 22h
-    const [interval, setInterval] = useState(2); // 2 tiếng
+    const [isReminderEnabled, setIsReminderEnabled] = useState(false);
+    const [startTime, setStartTime] = useState(8);
+    const [endTime, setEndTime] = useState(22);
+    const [interval, setInterval] = useState(2);
+    const [isLoading, setIsLoading] = useState(true);
     
     // Modal states
     const [showStartTimePicker, setShowStartTimePicker] = useState(false);
@@ -46,9 +178,10 @@ export default function WaterReminderSettings() {
     // Danh sách giờ từ 0h đến 24h
     const hours = Array.from({ length: 25 }, (_, i) => i);
 
-    // Các khoảng cách thời gian
+    // Các khoảng cách thời gian - THÊM 1 PHÚT
     const intervalOptions = [
-        { value: 0.167, label: '10 phút' }, // 10/60 = 0.167
+        { value: 1/60, label: '1 phút' }, // Thêm option 1 phút
+        { value: 0.167, label: '10 phút' },
         { value: 0.5, label: '30 phút' },
         { value: 1, label: '1 tiếng' },
         { value: 2, label: '2 tiếng' },
@@ -58,18 +191,81 @@ export default function WaterReminderSettings() {
         { value: 12, label: '12 tiếng' }
     ];
 
-    const handleGoBack = () => {
-        router.back();
+    // Load settings khi component mount
+    useEffect(() => {
+        loadSettings();
+    }, []);
+
+    const loadSettings = async () => {
+        try {
+            const settingsJson = await AsyncStorage.getItem(WATER_REMINDER_KEY);
+            if (settingsJson) {
+                const settings = JSON.parse(settingsJson);
+                setIsReminderEnabled(settings.isEnabled || false);
+                setStartTime(settings.startTime || 8);
+                setEndTime(settings.endTime || 22);
+                setInterval(settings.interval || 2);
+                console.log('✅ Loaded water reminder settings:', settings);
+            } else {
+                // Lưu cài đặt mặc định lần đầu
+                await saveSettings({
+                    isEnabled: false,
+                    startTime: 8,
+                    endTime: 22,
+                    interval: 2
+                });
+                console.log('💾 Saved default water reminder settings');
+            }
+        } catch (error) {
+            console.error('❌ Error loading water reminder settings:', error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleSaveSettings = () => {
-        // Logic lưu cài đặt
-        console.log('Saving water reminder settings:', {
-            isReminderEnabled,
+    const saveSettings = async (settings) => {
+        try {
+            await AsyncStorage.setItem(WATER_REMINDER_KEY, JSON.stringify(settings));
+            console.log('💾 Saved water reminder settings:', settings);
+        } catch (error) {
+            console.error('❌ Error saving water reminder settings:', error);
+        }
+    };
+
+    // Lưu ngay khi toggle switch
+    const handleToggleReminder = async (value) => {
+        setIsReminderEnabled(value);
+        await saveSettings({
+            isEnabled: value,
             startTime,
             endTime,
             interval
         });
+    };
+
+    const handleGoBack = () => {
+        router.back();
+    };
+
+    const handleSaveSettings = async () => {
+        // Validate thời gian
+        if (startTime >= endTime) {
+            Alert.alert(
+                'Lỗi', 
+                'Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc!',
+                [{ text: 'OK' }]
+            );
+            return;
+        }
+
+        const settings = {
+            isEnabled: isReminderEnabled,
+            startTime,
+            endTime,
+            interval
+        };
+
+        await saveSettings(settings);
 
         if (Platform.OS === 'android') {
             ToastAndroid.show('Đã lưu cài đặt thông báo uống nước! 💧', ToastAndroid.LONG);
@@ -85,204 +281,34 @@ export default function WaterReminderSettings() {
     };
 
     const getIntervalLabel = (value) => {
-        const option = intervalOptions.find(opt => opt.value === value);
-        return option ? option.label : `${value} tiếng`;
-    };
-
-    // Time Picker Modal Component with improved scroll
-    const TimePickerModal = ({ 
-        visible, 
-        onClose, 
-        selectedValue, 
-        onValueChange, 
-        onSave,
-        title 
-    }) => {
-        const scrollRef = useRef(null);
-        const itemHeight = 60;
+        const option = intervalOptions.find(opt => Math.abs(opt.value - value) < 0.001);
+        if (option) return option.label;
         
-        React.useEffect(() => {
-            if (visible && scrollRef.current) {
-                const index = hours.findIndex(h => h === selectedValue);
-                setTimeout(() => {
-                    scrollRef.current?.scrollTo({ 
-                        y: index * itemHeight, 
-                        animated: false 
-                    });
-                }, 100);
-            }
-        }, [visible, selectedValue]);
-
-        const handleScroll = (event) => {
-            const y = event.nativeEvent.contentOffset.y;
-            const index = Math.round(y / itemHeight);
-            const newHour = hours[Math.max(0, Math.min(hours.length - 1, index))];
-            onValueChange(newHour);
-        };
-
-        return (
-            <Modal
-                visible={visible}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={onClose}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalHeader}>
-                            <TouchableOpacity onPress={onClose}>
-                                <Text style={styles.modalCancelText}>Hủy</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.modalTitle}>{title}</Text>
-                            <TouchableOpacity onPress={onSave}>
-                                <Text style={styles.modalSaveText}>Lưu</Text>
-                            </TouchableOpacity>
-                        </View>
-                        
-                        <View style={styles.pickerContainer}>
-                            <View style={styles.selectionIndicator} />
-                            <ScrollView 
-                                ref={scrollRef}
-                                style={styles.picker}
-                                showsVerticalScrollIndicator={false}
-                                onScroll={handleScroll}
-                                scrollEventThrottle={16}
-                                snapToInterval={itemHeight}
-                                decelerationRate="fast"
-                                contentContainerStyle={{ 
-                                    paddingTop: itemHeight * 2,
-                                    paddingBottom: itemHeight * 2
-                                }}
-                            >
-                                {hours.map((hour) => (
-                                    <TouchableOpacity
-                                        key={hour}
-                                        style={[
-                                            styles.pickerItem,
-                                            { height: itemHeight },
-                                            selectedValue === hour && styles.selectedPickerItem
-                                        ]}
-                                        onPress={() => {
-                                            onValueChange(hour);
-                                            const index = hours.findIndex(h => h === hour);
-                                            scrollRef.current?.scrollTo({ 
-                                                y: index * itemHeight, 
-                                                animated: true 
-                                            });
-                                        }}
-                                    >
-                                        <Text style={[
-                                            styles.pickerItemText,
-                                            selectedValue === hour && styles.selectedPickerItemText
-                                        ]}>
-                                            {formatTime(hour)}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </ScrollView>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
-        );
+        // Format cho các giá trị khác
+        if (value < 1) {
+            const minutes = Math.round(value * 60);
+            return `${minutes} phút`;
+        }
+        return `${value} tiếng`;
     };
 
-    // Interval Picker Modal Component with improved scroll
-    const IntervalPickerModal = ({ 
-        visible, 
-        onClose, 
-        selectedValue, 
-        onValueChange, 
-        onSave 
-    }) => {
-        const scrollRef = useRef(null);
-        const itemHeight = 60;
-        
-        React.useEffect(() => {
-            if (visible && scrollRef.current) {
-                const index = intervalOptions.findIndex(opt => opt.value === selectedValue);
-                setTimeout(() => {
-                    scrollRef.current?.scrollTo({ 
-                        y: index * itemHeight, 
-                        animated: false 
-                    });
-                }, 100);
-            }
-        }, [visible, selectedValue]);
-
-        const handleScroll = (event) => {
-            const y = event.nativeEvent.contentOffset.y;
-            const index = Math.round(y / itemHeight);
-            const newInterval = intervalOptions[Math.max(0, Math.min(intervalOptions.length - 1, index))];
-            onValueChange(newInterval.value);
-        };
-
+    // Hiển thị loading khi đang tải cài đặt
+    if (isLoading) {
         return (
-            <Modal
-                visible={visible}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={onClose}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalHeader}>
-                            <TouchableOpacity onPress={onClose}>
-                                <Text style={styles.modalCancelText}>Hủy</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.modalTitle}>Khoảng cách thời gian</Text>
-                            <TouchableOpacity onPress={onSave}>
-                                <Text style={styles.modalSaveText}>Lưu</Text>
-                            </TouchableOpacity>
-                        </View>
-                        
-                        <View style={styles.pickerContainer}>
-                            <View style={styles.selectionIndicator} />
-                            <ScrollView 
-                                ref={scrollRef}
-                                style={styles.picker}
-                                showsVerticalScrollIndicator={false}
-                                onScroll={handleScroll}
-                                scrollEventThrottle={16}
-                                snapToInterval={itemHeight}
-                                decelerationRate="fast"
-                                contentContainerStyle={{ 
-                                    paddingTop: itemHeight * 2,
-                                    paddingBottom: itemHeight * 2
-                                }}
-                            >
-                                {intervalOptions.map((option) => (
-                                    <TouchableOpacity
-                                        key={option.value}
-                                        style={[
-                                            styles.pickerItem,
-                                            { height: itemHeight },
-                                            selectedValue === option.value && styles.selectedPickerItem
-                                        ]}
-                                        onPress={() => {
-                                            onValueChange(option.value);
-                                            const index = intervalOptions.findIndex(opt => opt.value === option.value);
-                                            scrollRef.current?.scrollTo({ 
-                                                y: index * itemHeight, 
-                                                animated: true 
-                                            });
-                                        }}
-                                    >
-                                        <Text style={[
-                                            styles.pickerItemText,
-                                            selectedValue === option.value && styles.selectedPickerItemText
-                                        ]}>
-                                            {option.label}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </ScrollView>
-                        </View>
+            <SafeAreaView style={styles.container}>
+                <HeaderComponent>
+                    <HeaderLeft onGoBack={handleGoBack} title="Quay lại" />
+                    <View style={styles.headerCenter}>
+                        <Text style={styles.headerTitle}>Cài đặt nhắc uống nước</Text>
                     </View>
+                </HeaderComponent>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color="#35A55E" />
+                    <Text style={{ marginTop: 12, color: '#666' }}>Đang tải cài đặt...</Text>
                 </View>
-            </Modal>
+            </SafeAreaView>
         );
-    };
+    }
 
     return (
         <SafeAreaView style={styles.container}>
@@ -310,7 +336,7 @@ export default function WaterReminderSettings() {
 
                 {/* Main Settings */}
                 <View style={styles.settingsContainer}>
-                    {/* Enable/Disable Toggle */}
+                    {/* Enable/Disable Toggle - CẬP NHẬT */}
                     <View style={styles.settingItem}>
                         <View style={styles.settingLeft}>
                             <View style={[styles.settingIcon, { backgroundColor: '#E8F5E8' }]}>
@@ -325,7 +351,7 @@ export default function WaterReminderSettings() {
                         </View>
                         <Switch
                             value={isReminderEnabled}
-                            onValueChange={setIsReminderEnabled}
+                            onValueChange={handleToggleReminder}
                             trackColor={{ false: '#E5E5E5', true: '#35A55E' }}
                             thumbColor={isReminderEnabled ? '#FFFFFF' : '#FFFFFF'}
                             ios_backgroundColor="#E5E5E5"
@@ -721,9 +747,14 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     pickerContainer: {
-        height: 300,
-        paddingVertical: 10,
-        position: 'relative',
+        height: 250,
+        paddingVertical: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    picker: {
+        width: 200,
+        height: 200,
     },
     selectionIndicator: {
         position: 'absolute',
@@ -737,9 +768,6 @@ const styles = StyleSheet.create({
         zIndex: 1,
         borderWidth: 2,
         borderColor: 'rgba(53, 165, 94, 0.3)',
-    },
-    picker: {
-        flex: 1,
     },
     pickerItem: {
         justifyContent: 'center',

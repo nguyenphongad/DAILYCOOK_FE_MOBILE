@@ -67,7 +67,7 @@ const MenuItemCard = React.memo(({ item, onPress, onAcknowledge }) => {
         <View style={styles.menuItemContentVertical}>
           <View style={styles.menuItemInfo}>
             <Text style={styles.menuItemNameVertical}>{item.name}</Text>
-            <Text style={styles.menuItemDescription}>{item.description}</Text>
+            {/* <Text style={styles.menuItemDescription}>{item.description}</Text> */}
           </View>
 
           <View style={styles.menuItemActions}>
@@ -125,7 +125,6 @@ export default function HomeScreen() {
     date: today.getDate(),
     month: getMonthName(today.getMonth() + 1)
   });
-  const [activeMeal, setActiveMeal] = useState('breakfast');
   const [refreshing, setRefreshing] = useState(false);
   const [showAIMealSection, setShowAIMealSection] = useState(false);
   const [showAISuggestionButton, setShowAISuggestionButton] = useState(true);
@@ -314,21 +313,6 @@ export default function HomeScreen() {
     }
   }, [dispatch, params.acceptedMeals]);
 
-  // Auto switch to first available meal tab
-  useEffect(() => {
-    if (acceptedMealsData) {
-      const availableMeals = Object.keys(acceptedMealsData).filter(meal =>
-        acceptedMealsData[meal]?.length > 0
-      );
-
-      if (availableMeals.length === 0) return;
-
-      if (!availableMeals.includes(activeMeal)) {
-        setActiveMeal(availableMeals[0]);
-      }
-    }
-  }, [acceptedMealsData]);
-
   // Hàm xử lý khi người dùng kéo xuống để refresh
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -393,12 +377,26 @@ export default function HomeScreen() {
       const today = new Date();
       const dateString = formatDateString(today);
       
+      // Tìm servingTime của meal
+      let targetServingTime = null;
+      for (const [servingTime, meals] of Object.entries(acceptedMealsData)) {
+        if (meals.find(m => m.id === mealId)) {
+          targetServingTime = servingTime;
+          break;
+        }
+      }
+      
+      if (!targetServingTime) {
+        throw new Error('Không tìm thấy serving time của món ăn');
+      }
+      
       console.log('Acknowledge meal - Date string:', dateString);
+      console.log('Acknowledge meal - Serving time:', targetServingTime);
       
       // Gọi API toggle eaten
       await dispatch(toggleMealEaten({
         date: dateString,
-        servingTime: activeMeal,
+        servingTime: targetServingTime,
         mealId: mealId,
         action: 'EAT'
       })).unwrap();
@@ -413,7 +411,7 @@ export default function HomeScreen() {
       // Update local state
       setAcceptedMealsData(prevData => {
         const updatedData = { ...prevData };
-        updatedData[activeMeal] = updatedData[activeMeal].map(meal => 
+        updatedData[targetServingTime] = updatedData[targetServingTime].map(meal => 
           meal.id === mealId ? { ...meal, isEaten: true } : meal
         );
         return updatedData;
@@ -437,10 +435,17 @@ export default function HomeScreen() {
   };
 
   // Lấy danh sách món ăn và tabs hiện tại
-  const currentMeals = acceptedMealsData ? (acceptedMealsData[activeMeal] || []) : [];
   const availableMealTabs = acceptedMealsData 
     ? Object.keys(acceptedMealsData).filter(meal => acceptedMealsData[meal]?.length > 0)
     : [];
+
+  // Thứ tự hiển thị sections
+  const mealTimeOrder = ['breakfast', 'lunch', 'dinner'];
+  const mealTimeLabels = {
+    breakfast: 'Bữa sáng',
+    lunch: 'Bữa trưa',
+    dinner: 'Bữa tối'
+  };
 
   const renderMenuItem = (item) => (
     <MenuItemCard
@@ -558,106 +563,35 @@ export default function HomeScreen() {
             </View>
           )}
 
+          {/* Section-based layout instead of tabs */}
           {(showAIMealSection || acceptedMealsData) && (
             <>
-              {availableMealTabs.length > 0 && (
-                <View style={[
-                  styles.mealTypeTabs,
-                  availableMealTabs.length === 2 && styles.mealTypeTabsTwo,
-                  availableMealTabs.length === 1 && styles.mealTypeTabsOne
-                ]}>
-                  {availableMealTabs.includes('breakfast') && (
-                    <TouchableOpacity
-                      style={[
-                        styles.mealTypeTab,
-                        availableMealTabs.length === 1 && styles.mealTypeTabFull,
-                        availableMealTabs.length === 2 && styles.mealTypeTabHalf,
-                        availableMealTabs.length === 3 && styles.mealTypeTabThird,
-                        activeMeal === 'breakfast' && styles.activeMealTypeTab
-                      ]}
-                      onPress={() => setActiveMeal('breakfast')}
-                    >
-                      <Ionicons
-                        name="sunny-outline"
-                        size={16}
-                        color={activeMeal === 'breakfast' ? '#FFFFFF' : '#35A55E'}
-                      />
-                      <Text
-                        style={[
-                          styles.mealTypeText,
-                          activeMeal === 'breakfast' && styles.activeMealTypeText
-                        ]}
-                      >
-                        Sáng
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-
-                  {availableMealTabs.includes('lunch') && (
-                    <TouchableOpacity
-                      style={[
-                        styles.mealTypeTab,
-                        availableMealTabs.length === 1 && styles.mealTypeTabFull,
-                        availableMealTabs.length === 2 && styles.mealTypeTabHalf,
-                        availableMealTabs.length === 3 && styles.mealTypeTabThird,
-                        activeMeal === 'lunch' && styles.activeMealTypeTab
-                      ]}
-                      onPress={() => setActiveMeal('lunch')}
-                    >
-                      <Ionicons
-                        name="restaurant-outline"
-                        size={16}
-                        color={activeMeal === 'lunch' ? '#FFFFFF' : '#35A55E'}
-                      />
-                      <Text
-                        style={[
-                          styles.mealTypeText,
-                          activeMeal === 'lunch' && styles.activeMealTypeText
-                        ]}
-                      >
-                        Trưa
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-
-                  {availableMealTabs.includes('dinner') && (
-                    <TouchableOpacity
-                      style={[
-                        styles.mealTypeTab,
-                        availableMealTabs.length === 1 && styles.mealTypeTabFull,
-                        availableMealTabs.length === 2 && styles.mealTypeTabHalf,
-                        availableMealTabs.length === 3 && styles.mealTypeTabThird,
-                        activeMeal === 'dinner' && styles.activeMealTypeTab
-                      ]}
-                      onPress={() => setActiveMeal('dinner')}
-                    >
-                      <Ionicons
-                        name="moon-outline"
-                        size={16}
-                        color={activeMeal === 'dinner' ? '#FFFFFF' : '#35A55E'}
-                      />
-                      <Text
-                        style={[
-                          styles.mealTypeText,
-                          activeMeal === 'dinner' && styles.activeMealTypeText
-                        ]}
-                      >
-                        Tối
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              )}
-
-              {availableMealTabs.length > 0 && currentMeals.length > 0 && (
+              {availableMealTabs.length > 0 ? (
                 <View style={styles.menuGrid}>
-                  {currentMeals.map((item) => (
-                    <React.Fragment key={item.id}>
-                      {renderMenuItem(item)}
-                    </React.Fragment>
-                  ))}
+                  {/* Render meals by sections */}
+                  {mealTimeOrder.map((mealTime) => {
+                    const meals = acceptedMealsData[mealTime];
+                    if (!meals || meals.length === 0) return null;
+                    
+                    return (
+                      <View key={mealTime} style={styles.mealTimeSection}>
+                        {/* Section Header */}
+                        <View style={styles.mealTimeSectionHeader}>
+                          <Text style={styles.mealTimeSectionTitle}>
+                            {mealTimeLabels[mealTime]}
+                          </Text>
+                          <View style={styles.mealTimeSectionDivider} />
+                        </View>
+                        
+                        {/* Meals List */}
+                        <View style={styles.mealTimeSectionContent}>
+                          {meals.map(renderMenuItem)}
+                        </View>
+                      </View>
+                    );
+                  })}
                 </View>
-              )}
+              ) : null}
             </>
           )}
 

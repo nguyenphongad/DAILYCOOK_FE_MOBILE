@@ -1,9 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { 
   checkOnboardingStatus, 
-  saveOnboardingData, 
-  getDietaryPreferences, 
-  updateDietaryPreferences, 
+  saveOnboardingData,
+  getSurveyQuestions,
+  getSurveyResponses,
+  saveSurveyResponses,
+  updateSurveyResponses,
+  updateDietaryPreferences,
+  getDietaryPreferences,
   calculateNutritionGoals,
   getNutritionGoals
 } from '../thunk/surveyThunk';
@@ -46,6 +50,18 @@ const initialState = {
   nutritionGoals: null,
   nutritionGoalsLoading: false,
   nutritionGoalsError: null,
+  // State cho câu hỏi khảo sát
+  surveyQuestions: [],
+  surveyQuestionsLoading: false,
+  surveyQuestionsError: null,
+  // State cho câu trả lời khảo sát
+  surveyResponses: null,
+  surveyResponsesLoading: false,
+  surveyResponsesError: null,
+  saveSurveyResponsesLoading: false,
+  saveSurveyResponsesError: null,
+  updateSurveyResponsesLoading: false,
+  updateSurveyResponsesError: null,
 };
 
 const surveySlice = createSlice({
@@ -127,6 +143,18 @@ const surveySlice = createSlice({
     resetNutritionGoals: (state) => {
       state.nutritionGoals = null;
       state.nutritionGoalsError = null;
+    },
+    // Actions cho survey responses
+    clearSurveyResponsesError: (state) => {
+      state.surveyResponsesError = null;
+      state.saveSurveyResponsesError = null;
+      state.updateSurveyResponsesError = null;
+    },
+    resetSurveyResponses: (state) => {
+      state.surveyResponses = null;
+      state.surveyResponsesError = null;
+      state.saveSurveyResponsesError = null;
+      state.updateSurveyResponsesError = null;
     },
   },
   extraReducers: (builder) => {
@@ -226,6 +254,72 @@ const surveySlice = createSlice({
       .addCase(getNutritionGoals.rejected, (state, action) => {
         state.nutritionGoalsLoading = false;
         state.nutritionGoalsError = action.payload;
+      })
+      // Get survey questions
+      .addCase(getSurveyQuestions.pending, (state) => {
+        state.surveyQuestionsLoading = true;
+        state.surveyQuestionsError = null;
+      })
+      .addCase(getSurveyQuestions.fulfilled, (state, action) => {
+        state.surveyQuestionsLoading = false;
+        if (action.payload && action.payload.data) {
+          state.surveyQuestions = action.payload.data;
+        } else {
+          state.surveyQuestions = [];
+        }
+      })
+      .addCase(getSurveyQuestions.rejected, (state, action) => {
+        state.surveyQuestionsLoading = false;
+        state.surveyQuestionsError = action.payload;
+        state.surveyQuestions = [];
+      })
+      
+      // Get survey responses
+      .addCase(getSurveyResponses.pending, (state) => {
+        state.surveyResponsesLoading = true;
+        state.surveyResponsesError = null;
+      })
+      .addCase(getSurveyResponses.fulfilled, (state, action) => {
+        state.surveyResponsesLoading = false;
+        if (action.payload && action.payload.data) {
+          state.surveyResponses = action.payload.data;
+        }
+      })
+      .addCase(getSurveyResponses.rejected, (state, action) => {
+        state.surveyResponsesLoading = false;
+        state.surveyResponsesError = action.payload;
+      })
+      
+      // Save survey responses
+      .addCase(saveSurveyResponses.pending, (state) => {
+        state.saveSurveyResponsesLoading = true;
+        state.saveSurveyResponsesError = null;
+      })
+      .addCase(saveSurveyResponses.fulfilled, (state, action) => {
+        state.saveSurveyResponsesLoading = false;
+        if (action.payload && action.payload.data) {
+          state.surveyResponses = action.payload.data;
+        }
+      })
+      .addCase(saveSurveyResponses.rejected, (state, action) => {
+        state.saveSurveyResponsesLoading = false;
+        state.saveSurveyResponsesError = action.payload;
+      })
+      
+      // Update survey responses
+      .addCase(updateSurveyResponses.pending, (state) => {
+        state.updateSurveyResponsesLoading = true;
+        state.updateSurveyResponsesError = null;
+      })
+      .addCase(updateSurveyResponses.fulfilled, (state, action) => {
+        state.updateSurveyResponsesLoading = false;
+        if (action.payload && action.payload.data) {
+          state.surveyResponses = action.payload.data;
+        }
+      })
+      .addCase(updateSurveyResponses.rejected, (state, action) => {
+        state.updateSurveyResponsesLoading = false;
+        state.updateSurveyResponsesError = action.payload;
       });
   },
 });
@@ -247,7 +341,9 @@ export const {
   clearDietaryPreferencesError,
   resetDietaryPreferences,
   clearNutritionGoalsError,
-  resetNutritionGoals
+  resetNutritionGoals,
+  clearSurveyResponsesError,
+  resetSurveyResponses
 } = surveySlice.actions;
 
 export default surveySlice.reducer;

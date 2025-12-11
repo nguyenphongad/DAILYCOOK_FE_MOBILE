@@ -237,48 +237,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  mealTypeTabs: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    justifyContent: 'space-between', // Căn đều tất cả các tab
-    width: '100%', // Đảm bảo container sử dụng toàn bộ chiều rộng
+  
+  // Section-based layout styles (giống như PageRenderAI)
+  mealTimeSection: {
+    marginBottom: 24,
   },
-  mealTypeTabsTwo: {
-    justifyContent: 'space-between', // Nếu có 2 bữa thì căn đều 2 bên
-  },
-  mealTypeTabsOne: {
-    justifyContent: 'center', // Nếu chỉ có 1 bữa thì canh giữa
-  },
-  mealTypeTab: {
+  
+  mealTimeSectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 8, // Giảm padding ngang
-    backgroundColor: 'rgba(53, 165, 94, 0.1)',
-    borderRadius: 20,
-    justifyContent: 'center',
-    marginRight: 0, // Bỏ margin để không bị tràn
+    marginBottom: 10,
   },
-  mealTypeTabHalf: {
-    flex: 0.48, // Khi có 2 bữa ăn thì mỗi tab chiếm 48% chiều rộng
-  },
-  mealTypeTabFull: {
-    flex: 1, // Khi chỉ có 1 bữa ăn thì tab chiếm 100% chiều rộng
-  },
-  mealTypeTabThird: {
-    flex: 0.32, // Khi có 3 bữa, mỗi tab chiếm khoảng 32% chiều rộng
-  },
-  activeMealTypeTab: {
-    backgroundColor: '#35A55E',
-  },
-  mealTypeText: {
+  mealTimeSectionTitle: {
     fontSize: 14,
+    fontWeight: '600',
     color: '#35A55E',
-    marginLeft: 5,
+    marginRight: 12,
   },
-  activeMealTypeText: {
-    color: '#FFFFFF',
+  mealTimeSectionDivider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(53, 165, 94, 0.2)',
   },
+  mealTimeSectionContent: {
+    paddingLeft: 12, // Thụt vào bên trái
+  },
+
+  // Remove or comment out tab-related styles
+  // mealTypeTabs: { ... },
+  // mealTypeTab: { ... },
+  // activeMealTypeTab: { ... },
+  // etc.
+
   aiRecommendationCard: {
     // backgroundColor: '#FFFFFF',
     borderRadius: 16,
@@ -582,7 +572,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 0.2,
-    marginBottom: 12,
+    marginBottom: 10,
     padding: 12,
   },
   
@@ -665,7 +655,7 @@ const styles = StyleSheet.create({
   typeMealContainer: {
     position: 'absolute',
     top: 8,
-    right: 8,
+    left: 18,
     backgroundColor: '#D32F2F',
     paddingHorizontal: 6,
     paddingVertical: 3,

@@ -84,3 +84,31 @@ export const batchGetIngredientDetails = createAsyncThunk(
     }
   }
 );
+
+// Get random ingredients
+export const getRandomIngredients = createAsyncThunk(
+  'ingredient/getRandomIngredients',
+  async ({ page = 1, limit = 10 } = {}, { rejectWithValue }) => {
+    try {
+      console.log('=== GET RANDOM INGREDIENTS REQUEST ===');
+      console.log('Page:', page, 'Limit:', limit);
+      console.log('======================================');
+      
+      const response = await apiService.get(
+        `${ENDPOINT.GET_RANDOM_INGREDIENTS}?page=${page}&limit=${limit}`
+      );
+      
+      console.log('API Response - Random Ingredients:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('=== GET RANDOM INGREDIENTS ERROR ===');
+      console.error('Error:', error);
+      console.error('====================================');
+      
+      return rejectWithValue(
+        error.response?.data?.message || 'Không thể lấy danh sách nguyên liệu ngẫu nhiên'
+      );
+    }
+  }
+);

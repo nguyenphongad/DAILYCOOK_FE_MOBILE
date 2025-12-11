@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Platform, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Platform, Alert, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import SheetComponent from './SheetComponent';
+
+const WATER_REMINDER_KEY = '@water_reminder_settings';
 
 // Cấu hình thông báo với đầy đủ các trường cần thiết
 Notifications.setNotificationHandler({
@@ -18,20 +21,35 @@ Notifications.setNotificationHandler({
 });
 
 const WaterReminderSheet = ({ isOpen, onClose }) => {
-  // State để lưu thời gian đếm ngược (cập nhật thành 30 phút)
   const [countdown, setCountdown] = useState({
     hours: 0,
-    minutes: 30,
+    minutes: 0,
     seconds: 0
   });
   
-  // Refs cho notification
+  const [settings, setSettings] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [nextReminderTime, setNextReminderTime] = useState(null);
+  
   const notificationListener = useRef();
   const responseListener = useRef();
-  
-  // Thiết lập notification khi component mount
+  const countdownInterval = useRef(null);
+
+  // Load settings khi sheet mở
   useEffect(() => {
-    // Kiểm tra và yêu cầu quyền thông báo một cách đơn giản hơn
+    if (isOpen) {
+      loadSettingsAndCalculate();
+    }
+    
+    return () => {
+      if (countdownInterval.current) {
+        clearInterval(countdownInterval.current);
+      }
+    };
+  }, [isOpen]);
+
+  // Setup notifications
+  useEffect(() => {
     const requestPermissions = async () => {
       try {
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -60,7 +78,6 @@ const WaterReminderSheet = ({ isOpen, onClose }) => {
 
     requestPermissions();
 
-    // Thiết lập listeners cho thông báo
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
       console.log('Notification received:', notification);
     });
@@ -69,60 +86,163 @@ const WaterReminderSheet = ({ isOpen, onClose }) => {
       console.log('Notification response received:', response);
     });
 
-    // Cleanup
     return () => {
       Notifications.removeNotificationSubscription(notificationListener.current);
       Notifications.removeNotificationSubscription(responseListener.current);
     };
   }, []);
 
-  // Effect để đếm ngược thời gian khi sheet mở
-  useEffect(() => {
-    let timer = null;
+  const loadSettingsAndCalculate = async () => {
+    try {
+      setIsLoading(true);
+      const settingsJson = await AsyncStorage.getItem(WATER_REMINDER_KEY);
+      
+      if (settingsJson) {
+        const loadedSettings = JSON.parse(settingsJson);
+        setSettings(loadedSettings);
+        console.log('📱 Loaded water reminder settings:', loadedSettings);
+        
+        if (!loadedSettings.isEnabled) {
+          setCountdown({ hours: 0, minutes: 0, seconds: 0 });
+          setIsLoading(false);
+          return;
+        }
+        
+        calculateNextReminder(loadedSettings);
+      } else {
+        // Nếu chưa có settings, tạo mặc định
+        const defaultSettings = {
+          isEnabled: false,
+          startTime: 8,
+          endTime: 22,
+          interval: 2
+        };
+        await AsyncStorage.setItem(WATER_REMINDER_KEY, JSON.stringify(defaultSettings));
+        setSettings(defaultSettings);
+        setCountdown({ hours: 0, minutes: 0, seconds: 0 });
+      }
+      
+      setIsLoading(false);
+    } catch (error) {
+      console.error('❌ Error loading settings:', error);
+      setIsLoading(false);
+    }
+  };
+
+  const calculateNextReminder = (loadedSettings) => {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentSecond = now.getSeconds();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute + currentSecond / 60;
     
-    if (isOpen) {
-      timer = setInterval(() => {
-        setCountdown(prevTime => {
-          // Nếu hết thời gian, hiển thị thông báo và reset
-          if (prevTime.hours === 0 && prevTime.minutes === 0 && prevTime.seconds === 0) {
-            // Thông báo khi hết giờ
-            sendTestNotification();
-            return { hours: 0, minutes: 30, seconds: 0 }; // Reset lại thành 30 phút
-          }
-          
-          // Logic đếm ngược
-          let newHours = prevTime.hours;
-          let newMinutes = prevTime.minutes;
-          let newSeconds = prevTime.seconds;
-          
-          if (newSeconds > 0) {
-            newSeconds--;
-          } else {
-            newSeconds = 59;
-            if (newMinutes > 0) {
-              newMinutes--;
-            } else {
-              newMinutes = 59;
-              if (newHours > 0) {
-                newHours--;
-              }
-            }
-          }
-          
-          return { hours: newHours, minutes: newMinutes, seconds: newSeconds };
-        });
-      }, 1000);
+    const startTimeInMinutes = loadedSettings.startTime * 60;
+    const endTimeInMinutes = loadedSettings.endTime * 60;
+    const intervalInMinutes = loadedSettings.interval * 60;
+    
+    console.log('⏰ Current time:', `${currentHour}:${currentMinute}:${currentSecond}`);
+    console.log('⏰ Start time:', loadedSettings.startTime);
+    console.log('⏰ End time:', loadedSettings.endTime);
+    console.log('⏰ Interval:', loadedSettings.interval, 'hours');
+    
+    let nextReminderInMinutes;
+    
+    // Nếu chưa đến giờ bắt đầu
+    if (currentTimeInMinutes < startTimeInMinutes) {
+      nextReminderInMinutes = startTimeInMinutes;
+      console.log('⏰ Chưa đến giờ bắt đầu, nhắc lúc:', loadedSettings.startTime, ':00');
+    }
+    // Nếu đã qua giờ kết thúc
+    else if (currentTimeInMinutes >= endTimeInMinutes) {
+      // Nhắc vào ngày mai lúc startTime
+      nextReminderInMinutes = startTimeInMinutes + 24 * 60;
+      console.log('⏰ Đã qua giờ kết thúc, nhắc ngày mai lúc:', loadedSettings.startTime, ':00');
+    }
+    // Đang trong khoảng thời gian nhắc
+    else {
+      // Tính thời điểm nhắc tiếp theo
+      const timeSinceStart = currentTimeInMinutes - startTimeInMinutes;
+      const remindersPassed = Math.floor(timeSinceStart / intervalInMinutes);
+      nextReminderInMinutes = startTimeInMinutes + (remindersPassed + 1) * intervalInMinutes;
+      
+      // Nếu thời gian nhắc tiếp theo vượt quá endTime
+      if (nextReminderInMinutes >= endTimeInMinutes) {
+        // Nhắc vào ngày mai lúc startTime
+        nextReminderInMinutes = startTimeInMinutes + 24 * 60;
+        console.log('⏰ Nhắc tiếp theo vượt quá giờ kết thúc, nhắc ngày mai');
+      }
     }
     
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [isOpen]);
+    // Tính thời gian còn lại
+    const timeDiffInMinutes = nextReminderInMinutes - currentTimeInMinutes;
+    const totalSeconds = Math.round(timeDiffInMinutes * 60);
+    
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    
+    console.log('⏰ Thời gian còn lại:', `${hours}h ${minutes}m ${seconds}s`);
+    
+    setCountdown({ hours, minutes, seconds });
+    setNextReminderTime(nextReminderInMinutes);
+    
+    // Bắt đầu đếm ngược
+    startCountdown(totalSeconds);
+  };
 
-  // Hàm đơn giản để gửi thông báo test
+  const startCountdown = (totalSeconds) => {
+    if (countdownInterval.current) {
+      clearInterval(countdownInterval.current);
+    }
+    
+    let remainingSeconds = totalSeconds;
+    
+    countdownInterval.current = setInterval(() => {
+      remainingSeconds--;
+      
+      if (remainingSeconds <= 0) {
+        // Hết thời gian, gửi thông báo
+        sendWaterReminder();
+        // Load lại settings và tính toán lần tiếp theo
+        if (settings) {
+          calculateNextReminder(settings);
+        }
+      } else {
+        const hours = Math.floor(remainingSeconds / 3600);
+        const minutes = Math.floor((remainingSeconds % 3600) / 60);
+        const seconds = remainingSeconds % 60;
+        
+        setCountdown({ hours, minutes, seconds });
+      }
+    }, 1000);
+  };
+
+  const sendWaterReminder = async () => {
+    try {
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status !== 'granted') {
+        return;
+      }
+      
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '💧 Nhắc nhở uống nước',
+          body: 'Đã đến giờ uống nước rồi! Hãy uống một ly nước ngay bây giờ nhé.',
+          sound: true,
+          vibrate: [0, 250, 250, 250],
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+        },
+        trigger: null,
+      });
+      
+      console.log('✅ Water reminder notification sent');
+    } catch (error) {
+      console.error('❌ Error sending water reminder:', error);
+    }
+  };
+
   const sendTestNotification = async () => {
     try {
-      // Kiểm tra quyền một lần nữa trước khi gửi thông báo
       const { status } = await Notifications.getPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
@@ -133,37 +253,65 @@ const WaterReminderSheet = ({ isOpen, onClose }) => {
         return;
       }
       
-      const notificationId = await Notifications.scheduleNotificationAsync({
+      await Notifications.scheduleNotificationAsync({
         content: {
-          title: 'Nhắc nhở uống nước',
-          body: 'Đã đến giờ uống nước rồi! Hãy uống một ly nước ngay bây giờ nhé.',
+          title: '💧 Nhắc nhở uống nước (Test)',
+          body: 'Đây là thông báo test. Hãy uống một ly nước ngay bây giờ nhé!',
           sound: true,
           vibrate: [0, 250, 250, 250],
           priority: Notifications.AndroidNotificationPriority.HIGH,
         },
-        trigger: null, // Hiển thị ngay lập tức
+        trigger: null,
       });
-      console.log('Notification sent with ID:', notificationId);
+      
+      console.log('✅ Test notification sent');
     } catch (error) {
-      console.error('Error sending notification:', error);
+      console.error('❌ Error sending test notification:', error);
       Alert.alert('Lỗi', 'Không thể gửi thông báo. Vui lòng thử lại sau.');
     }
   };
   
-  // Format thời gian với 2 chữ số (01, 02, etc.)
   const formatTime = (value) => {
     return value.toString().padStart(2, '0');
   };
   
-  // Hàm chuyển đến trang cài đặt nhắc nhở
   const handleNavigateToSettings = () => {
-    onClose(); // Đóng sheet trước khi điều hướng
-    
-    // Thêm setTimeout để tránh animation bị giật
+    onClose();
     setTimeout(() => {
       router.push('/(stacks)/account/WaterReminderSettings');
     }, 100);
   };
+  
+  // // Loading state
+  // if (isLoading) {
+  //   return (
+  //     <View style={styles.container}>
+  //       <ActivityIndicator size="small" color="#35A55E" />
+  //       <Text style={[styles.title, { marginTop: 12 }]}>Đang tải...</Text>
+  //     </View>
+  //   );
+  // }
+  
+  // // Disabled state
+  // if (!settings || !settings.isEnabled) {
+  //   return (
+  //     <View style={styles.container}>
+  //       <Text style={styles.title}>Nhắc nhở uống nước</Text>
+  //       <Text style={styles.disabledText}>
+  //         Chức năng nhắc nhở đang tắt
+  //       </Text>
+        
+  //       <TouchableOpacity 
+  //         style={styles.settingButton}
+  //         onPress={handleNavigateToSettings}
+  //       >
+  //         <Text style={styles.settingButtonText}>
+  //           Bật nhắc nhở uống nước
+  //         </Text>
+  //       </TouchableOpacity>
+  //     </View>
+  //   );
+  // }
   
   return (
     <SheetComponent
@@ -256,6 +404,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '500',
+    textAlign: 'center',
+  },
+  disabledText: {
+    fontSize: 15,
+    color: '#999',
+    marginBottom: 24,
     textAlign: 'center',
   },
 });
