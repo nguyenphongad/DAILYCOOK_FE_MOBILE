@@ -19,3 +19,28 @@ export const getDietTypes = createAsyncThunk(
     }
   }
 );
+
+export const getMealDetail = createAsyncThunk(
+  'meal/getMealDetail',
+  async (mealId, { rejectWithValue }) => {
+    try {
+      console.log('=== GET MEAL DETAIL REQUEST ===');
+      console.log('Meal ID:', mealId);
+      console.log('===============================');
+      
+      const response = await apiService.get(ENDPOINT.GET_MEAL_DETAIL(mealId));
+      
+      console.log('API Response - Meal Detail:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('=== GET MEAL DETAIL ERROR ===');
+      console.error('Error:', error);
+      console.error('============================');
+      
+      return rejectWithValue(
+        error.response?.data?.message || 'Không thể lấy thông tin món ăn'
+      );
+    }
+  }
+);

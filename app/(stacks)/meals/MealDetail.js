@@ -1,28 +1,139 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
     Text,
     Image,
     TouchableOpacity,
     ScrollView,
-    StyleSheet,
     Animated,
+    ActivityIndicator,
+    StyleSheet,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useDispatch, useSelector } from 'react-redux';
+import { getMealDetail } from '../../../redux/thunk/mealThunk';
+import { clearMealDetail } from '../../../redux/slice/mealSlice';
+import { batchGetIngredientDetails, getMeasurementUnits } from '../../../redux/thunk/ingredientThunk';
+import { getRecipeDetail } from '../../../redux/thunk/recipeThunk';
+import { styles } from '../../../styles/meals/mealDetail';
 
-export default function MealDetail1() {
+// Skeleton Loading Components
+const SkeletonBox = ({ width, height, style }) => {
+    const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(shimmerAnim, {
+                    toValue: 1,
+                    duration: 1000,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(shimmerAnim, {
+                    toValue: 0,
+                    duration: 1000,
+                    useNativeDriver: true,
+                }),
+            ])
+        ).start();
+    }, []);
+
+    return (
+        <View style={[{ width, height, backgroundColor: '#E0E0E0', borderRadius: 8, overflow: 'hidden' }, style]}>
+            <Animated.View
+                style={[
+                    StyleSheet.absoluteFill,
+                    {
+                        backgroundColor: '#F5F5F5',
+                        opacity: shimmerAnim,
+                    },
+                ]}
+            />
+        </View>
+    );
+};
+
+export default function MealDetail() {
     const router = useRouter();
+    const params = useLocalSearchParams();
+    const dispatch = useDispatch();
+    
     const [activeTab, setActiveTab] = useState('ingredient');
+    const indicatorAnim = useRef(new Animated.Value(0)).current;
 
-    // Animation cho tab indicator
-    const indicatorAnim = React.useRef(new Animated.Value(0)).current;
+    // Redux selectors - thêm recipe state
+    const { mealDetail, mealDetailLoading, mealDetailError } = useSelector((state) => state.meal);
+    const { ingredientDetails, measurementUnits, ingredientDetailLoading } = useSelector((state) => state.ingredient);
+    const { recipeDetail, recipeDetailLoading } = useSelector((state) => state.recipe);
+
+    // Load meal detail khi component mount
+    useEffect(() => {
+        if (params.id) {
+            console.log('Loading meal detail for ID:', params.id);
+            dispatch(getMealDetail(params.id));
+        }
+
+        return () => {
+            dispatch(clearMealDetail());
+        };
+    }, [params.id, dispatch]);
+
+    // Load ingredient details và measurement units khi có mealDetail
+    useEffect(() => {
+        const loadIngredientDetails = async () => {
+            if (mealDetail && mealDetail.ingredients && mealDetail.ingredients.length > 0) {
+                console.log('Loading ingredient details for meal:', mealDetail.nameMeal);
+                
+                // Lấy danh sách ingredient IDs từ meal
+                const ingredientIds = mealDetail.ingredients
+                    .map(ing => ing.ingredient_id?._id || ing.ingredient_id)
+                    .filter(Boolean);
+                
+                console.log('Ingredient IDs to load:', ingredientIds);
+                
+                // Load measurement units nếu chưa có
+                if (measurementUnits.length === 0) {
+                    dispatch(getMeasurementUnits());
+                }
+                
+                // Load ingredient details
+                if (ingredientIds.length > 0) {
+                    try {
+                        await dispatch(batchGetIngredientDetails(ingredientIds)).unwrap();
+                        console.log('Ingredient details loaded successfully');
+                    } catch (error) {
+                        console.error('Error loading ingredient details:', error);
+                    }
+                }
+            }
+        };
+        
+        loadIngredientDetails();
+    }, [mealDetail, dispatch]);
+
+    // Load recipe detail khi có mealDetail
+    useEffect(() => {
+        const loadRecipeDetail = async () => {
+            if (mealDetail && mealDetail.recipe && mealDetail.recipe.recipe_id) {
+                console.log('Loading recipe detail for recipe ID:', mealDetail.recipe.recipe_id);
+                
+                try {
+                    await dispatch(getRecipeDetail(mealDetail.recipe.recipe_id)).unwrap();
+                    console.log('Recipe detail loaded successfully');
+                } catch (error) {
+                    console.error('Error loading recipe detail:', error);
+                }
+            }
+        };
+        
+        loadRecipeDetail();
+    }, [mealDetail, dispatch]);
 
     // Xử lý chuyển tab với animation
     const handleTabChange = (tab) => {
         setActiveTab(tab);
         
-        // Animation cho indicator
         Animated.spring(indicatorAnim, {
             toValue: tab === 'ingredient' ? 0 : 1,
             useNativeDriver: false,
@@ -31,45 +142,214 @@ export default function MealDetail1() {
         }).start();
     };
 
+    // Skeleton Loading UI
+    if (mealDetailLoading) {
+        return (
+            <View style={styles.container}>
+                {/* Skeleton Image */}
+                <View style={styles.imageContainer}>
+                    <SkeletonBox width="100%" height={260} style={{ borderRadius: 0 }} />
+                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                        <Ionicons name="chevron-back" size={26} color="#fff" />
+                    </TouchableOpacity>
+                </View>
+
+                <ScrollView style={styles.content}>
+                    {/* Skeleton Type Meal */}
+                    <SkeletonBox width={100} height={30} style={{ marginBottom: 15 }} />
+                    
+                    {/* Skeleton Meal Name */}
+                    <SkeletonBox width="80%" height={28} style={{ marginBottom: 10 }} />
+                    
+                    {/* Skeleton Time */}
+                    <View style={styles.timeContainer}>
+                        <SkeletonBox width={100} height={20} />
+                        <SkeletonBox width={100} height={20} style={{ marginLeft: 20 }} />
+                    </View>
+                    
+                    {/* Skeleton Nutrition */}
+                    <View style={styles.nutritionContainer}>
+                        {[1, 2, 3, 4].map((_, index) => (
+                            <View key={index} style={[styles.nutritionItem, index === 0 && { borderLeftWidth: 0 }]}>
+                                <SkeletonBox width={50} height={20} style={{ marginBottom: 4 }} />
+                                <SkeletonBox width={60} height={16} />
+                            </View>
+                        ))}
+                    </View>
+                    
+                    {/* Skeleton Tabs */}
+                    <SkeletonBox width="100%" height={40} style={{ marginVertical: 15, marginHorizontal: 40 }} />
+                    
+                    {/* Skeleton Content */}
+                    <View style={{ paddingBottom: 20 }}>
+                        {[1, 2, 3].map((_, index) => (
+                            <SkeletonBox key={index} width="100%" height={60} style={{ marginBottom: 10 }} />
+                        ))}
+                    </View>
+                </ScrollView>
+            </View>
+        );
+    }
+
+    // Error state
+    if (mealDetailError) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <TouchableOpacity style={[styles.backButton, { top: 60, left: 20 }]} onPress={() => router.back()}>
+                    <Ionicons name="chevron-back" size={26} color="#333" />
+                </TouchableOpacity>
+                <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B" />
+                <Text style={{ marginTop: 16, fontSize: 16, color: '#666' }}>
+                    {mealDetailError}
+                </Text>
+                <TouchableOpacity 
+                    style={{ marginTop: 20, backgroundColor: '#35A55E', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 }}
+                    onPress={() => dispatch(getMealDetail(params.id))}
+                >
+                    <Text style={{ color: '#fff', fontWeight: '600' }}>Thử lại</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
+    // No data
+    if (!mealDetail) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <TouchableOpacity style={[styles.backButton, { top: 60, left: 20 }]} onPress={() => router.back()}>
+                    <Ionicons name="chevron-back" size={26} color="#333" />
+                </TouchableOpacity>
+                <Text style={{ fontSize: 16, color: '#666' }}>Không tìm thấy thông tin món ăn</Text>
+            </View>
+        );
+    }
+
+    // Extract data từ API response - fix steps extraction
+    const recipe = mealDetail.recipeDetail || {};
+    const recipeNutrition = recipe.nutrition || {};
+    
+    // Transform ingredients với data từ ingredientDetails
+    const ingredients = mealDetail.ingredientDetails || mealDetail.ingredients?.map(ing => {
+        const ingredientId = ing.ingredient_id?._id || ing.ingredient_id;
+        const ingredientDetail = ingredientDetails[ingredientId];
+        
+        // Tìm measurement unit name
+        const unitData = measurementUnits.find(u => u.key === ing.unit_id);
+        
+        return {
+            ingredientId: ingredientId,
+            nameIngredient: ingredientDetail?.nameIngredient || ing.ingredient_id?.nameIngredient || 'Đang tải...',
+            ingredientImage: ingredientDetail?.ingredientImage || ing.ingredient_id?.ingredientImage,
+            quantity: ing.quantity || 0,
+            unit: unitData?.label || ing.unit_id?.unitName || 'g',
+            category: ingredientDetail?.ingredientCategory?.title,
+            nutrition: ingredientDetail?.nutrition,
+        };
+    }) || [];
+    
+    // Tính tổng dinh dưỡng từ ingredients
+    const calculateNutritionFromIngredients = () => {
+        let totalNutrition = {
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fat: 0
+        };
+
+        ingredients.forEach(ingredient => {
+            if (ingredient.nutrition) {
+                // Giả sử nutrition trong ingredient là per 100g
+                // Cần tính toán dựa trên quantity thực tế
+                const multiplier = ingredient.quantity / 100;
+                
+                totalNutrition.calories += (ingredient.nutrition.calories || 0) * multiplier;
+                totalNutrition.protein += (ingredient.nutrition.protein || 0) * multiplier;
+                totalNutrition.carbs += (ingredient.nutrition.carbs || 0) * multiplier;
+                totalNutrition.fat += (ingredient.nutrition.fat || 0) * multiplier;
+            }
+        });
+
+        return totalNutrition;
+    };
+
+    // Tính dinh dưỡng hiển thị với adjustment từ recipe
+    const getAdjustedNutrition = () => {
+        // Tính tổng từ ingredients
+        const ingredientTotal = calculateNutritionFromIngredients();
+
+        // Lấy giá trị từ recipe nutrition (đây là % adjustment)
+        const adjustments = {
+            calories: recipeNutrition.calories || 100,
+            protein: recipeNutrition.protein || 100,
+            carbs: recipeNutrition.carbs || 100,
+            fat: recipeNutrition.fat || 100
+        };
+
+        // Apply adjustments (nếu 105 thì tăng 5%, nếu 95 thì giảm 5%)
+        return {
+            calories: Math.round(ingredientTotal.calories * (adjustments.calories / 100)),
+            protein: Math.round(ingredientTotal.protein * (adjustments.protein / 100)),
+            carbs: Math.round(ingredientTotal.carbs * (adjustments.carbs / 100)),
+            fat: Math.round(ingredientTotal.fat * (adjustments.fat / 100))
+        };
+    };
+
+    // Sử dụng adjusted nutrition
+    const nutrition = getAdjustedNutrition();
+    
+    // Lấy steps từ recipeDetail
+    let steps = [];
+    if (recipeDetail && recipeDetail.steps && Array.isArray(recipeDetail.steps)) {
+        steps = recipeDetail.steps
+            .sort((a, b) => a.stepNumber - b.stepNumber)
+            .map(step => step.description);
+    } else if (recipe.instructions && Array.isArray(recipe.instructions)) {
+        steps = recipe.instructions;
+    }
+
     return (
         <View style={styles.container}>
             {/* Ảnh Header */}
             <View style={styles.imageContainer}>
-                <Image source={{ uri: 'https://images.pexels.com/photos/699953/pexels-photo-699953.jpeg' }} style={styles.image} />
+                <Image 
+                    source={mealDetail.mealImage ? { uri: mealDetail.mealImage } : require('../../../assets/images/food1.png')} 
+                    style={styles.image} 
+                />
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                     <Ionicons name="chevron-back" size={26} color="#fff" />
                 </TouchableOpacity>
+                  <View style={styles.typeMealContainer}>
+                    <Text style={styles.typeMealText}>{mealDetail.mealCategory?.title || 'danh mục'}</Text>
+                </View>
             </View>
 
             {/* Nội dung */}
             <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 20 }}>
 
-                <View style={styles.typeMealContainer}>
-                    <Text style={styles.typeMealText}>Bữa chính</Text>
-                </View>
+              
 
-                <Text style={styles.mealName}>THỊT KHO MẮM RUỐC</Text>
+                <Text style={styles.mealName}>{mealDetail.nameMeal}</Text>
 
                 {/* Thông tin thời gian */}
                 <View style={styles.timeContainer}>
                     <View style={styles.timeItem}>
                         <Ionicons name="time-outline" size={16} color="#666" />
-                        <Text style={styles.timeValue}>15 phút</Text>
+                        <Text style={styles.timeValue}>{recipe.prepTime || '15'} phút</Text>
                     </View>
 
                     <View style={styles.timeItem}>
                         <Ionicons name="flame-outline" size={16} color="#666" />
-                        <Text style={styles.timeValue}>30 phút</Text>
+                        <Text style={styles.timeValue}>{recipe.cookTime || '30'} phút</Text>
                     </View>
                 </View>
 
-                {/* Thông tin dinh dưỡng */}
+                {/* Thông tin dinh dưỡng - Sử dụng nutrition đã tính toán */}
                 <View style={styles.nutritionContainer}>
                     {[
-                        { value: '42kcal', label: 'Calories', color: '#8ea846' },
-                        { value: '3.4g', label: 'Protein', color: '#35A55E' },
-                        { value: '12g', label: 'Carbs', color: '#FF9500' },
-                        { value: '1g', label: 'Fat', color: '#FF6B6B' },
+                        {value: `${nutrition.calories}kcal`, label: 'Calories', color: '#8ea846' },
+                        { value: `${nutrition.protein}g`, label: 'Protein', color: '#35A55E' },
+                        { value: `${nutrition.carbs}g`, label: 'Carbs', color: '#FF9500' },
+                        { value: `${nutrition.fat}g`, label: 'Fat', color: '#FF6B6B' },
                     ].map((item, index) => (
                         <View key={index} style={[styles.nutritionItem, index === 0 && { borderLeftWidth: 0 }]}>
                             <Text style={[styles.nutritionValue, { color: item.color }]}>{item.value}</Text>
@@ -78,7 +358,7 @@ export default function MealDetail1() {
                     ))}
                 </View>
 
-                {/* Tab chuyển đổi tùy chỉnh với animation */}
+                {/* Tab chuyển đổi */}
                 <View style={styles.tabContainer}>
                     <View style={styles.tabBackground}>
                         <TouchableOpacity
@@ -99,7 +379,6 @@ export default function MealDetail1() {
                             </Text>
                         </TouchableOpacity>
                         
-                        {/* Animated indicator */}
                         <Animated.View
                             style={[
                                 styles.tabIndicator,
@@ -114,40 +393,59 @@ export default function MealDetail1() {
                     </View>
                 </View>
 
-                {/* Nội dung Tab với animation fade */}
+                {/* Nội dung Tab */}
                 <View style={styles.tabContentContainer}>
                     {activeTab === 'ingredient' ? (
                         <View style={styles.ingredientList}>
-                            <View style={styles.ingredientItem}>
-                                <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/1046/1046769.png' }} style={styles.ingredientIcon} />
-                                <Text style={styles.ingredientName}>Thịt lợn</Text>
-                                <Text style={styles.ingredientAmount}>500g</Text>
-                            </View>
-                            <View style={styles.ingredientItem}>
-                                <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/765/765500.png' }} style={styles.ingredientIcon} />
-                                <Text style={styles.ingredientName}>Cải thìa</Text>
-                                <Text style={styles.ingredientAmount}>200g</Text>
-                            </View>
-                            <View style={styles.ingredientItem}>
-                                <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/766/766267.png' }} style={styles.ingredientIcon} />
-                                <Text style={styles.ingredientName}>Nghệ tươi</Text>
-                                <Text style={styles.ingredientAmount}>2 thìa cà phê</Text>
-                            </View>
+                            {ingredientDetailLoading ? (
+                                <View style={{ paddingVertical: 20 }}>
+                                    <ActivityIndicator size="small" color="#35A55E" />
+                                    <Text style={{ textAlign: 'center', color: '#999', marginTop: 8 }}>
+                                        Đang tải thông tin nguyên liệu...
+                                    </Text>
+                                </View>
+                            ) : ingredients.length > 0 ? (
+                                ingredients.map((ingredient, index) => (
+                                    <View key={index} style={styles.ingredientItem}>
+                                        <Image 
+                                            source={
+                                                ingredient.ingredientImage 
+                                                    ? { uri: ingredient.ingredientImage } 
+                                                    : { uri: 'https://cdn-icons-png.flaticon.com/512/1046/1046769.png' }
+                                            } 
+                                            style={styles.ingredientIcon} 
+                                        />
+                                        <Text style={styles.nameIngredient}>{ingredient.nameIngredient}</Text>
+                                        <Text style={styles.ingredientAmount}>
+                                            {ingredient.quantity} {ingredient.unit}
+                                        </Text>
+                                    </View>
+                                ))
+                            ) : (
+                                <Text style={{ textAlign: 'center', color: '#999', paddingVertical: 20 }}>
+                                    Chưa có thông tin nguyên liệu
+                                </Text>
+                            )}
                         </View>
                     ) : (
                         <View style={styles.guideContainer}>
-                            <Text style={styles.stepText}>1. Rửa sạch thịt, cắt miếng vừa ăn.</Text>
-                            <Text style={styles.stepText}>2. Phi thơm mắm ruốc với hành tỏi.</Text>
-                            <Text style={styles.stepText}>3. Cho thịt vào xào cho săn rồi kho đến khi nước sệt lại.</Text>
-                            <Text style={styles.stepText}>1. Rửa sạch thịt, cắt miếng vừa ăn.</Text>
-                            <Text style={styles.stepText}>2. Phi thơm mắm ruốc với hành tỏi.</Text>
-                            <Text style={styles.stepText}>3. Cho thịt vào xào cho săn rồi kho đến khi nước sệt lại.</Text>
-                            <Text style={styles.stepText}>1. Rửa sạch thịt, cắt miếng vừa ăn.</Text>
-                            <Text style={styles.stepText}>2. Phi thơm mắm ruốc với hành tỏi.</Text>
-                            <Text style={styles.stepText}>3. Cho thịt vào xào cho săn rồi kho đến khi nước sệt lại.</Text>
-                            <Text style={styles.stepText}>1. Rửa sạch thịt, cắt miếng vừa ăn.</Text>
-                            <Text style={styles.stepText}>2. Phi thơm mắm ruốc với hành tỏi.</Text>
-                            <Text style={styles.stepText}>3. Cho thịt vào xào cho săn rồi kho đến khi nước sệt lại.</Text>
+                            {recipeDetailLoading ? (
+                                <View style={{ paddingVertical: 20 }}>
+                                    <ActivityIndicator size="small" color="#35A55E" />
+                                    <Text style={{ textAlign: 'center', color: '#999', marginTop: 8 }}>
+                                        Đang tải hướng dẫn...
+                                    </Text>
+                                </View>
+                            ) : steps.length > 0 ? (
+                                steps.map((step, index) => (
+                                    <Text key={index} style={styles.stepText}>
+                                        {index + 1}. {step}
+                                    </Text>
+                                ))) : (
+                                <Text style={{ textAlign: 'center', color: '#999', paddingVertical: 20 }}>
+                                    Chưa có hướng dẫn nấu
+                                </Text>
+                            )}
                         </View>
                     )}
                 </View>
@@ -155,192 +453,3 @@ export default function MealDetail1() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#D4E9E1',
-    },
-    imageContainer: {
-        position: 'relative',
-    },
-    image: {
-        width: '100%',
-        height: 260,
-    },
-    backButton: {
-        position: 'absolute',
-        top: 60,
-        left: 20,
-        backgroundColor: '#0008',
-        borderRadius: 20,
-        padding: 6,
-    },
-    content: {
-        padding: 15,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        backgroundColor: '#D4E9E1',
-        marginTop: -20,
-    },
-    typeMealContainer: {
-        alignSelf: 'flex-start',
-        backgroundColor: '#f9eaf1',
-        padding: 5,
-        borderRadius: 5,
-        marginBottom: 15,
-    },
-    typeMealText: {
-        color: '#bf93bd',
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    mealName: {
-        textAlign: 'left',
-        fontSize: 22,
-        fontWeight: '700',
-        color: '#333',
-        marginBottom: 10,
-    },
-
-    /** Thời gian */
-    timeContainer: {
-        flexDirection: 'row',
-        justifyContent: 'flex-start', // Thay đổi từ '' thành 'flex-start'
-        marginBottom: 15,
-        // paddingHorizontal: 20,
-    },
-    timeItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginRight: 20, // Thêm khoảng cách giữa 2 item
-        // Xóa flex: 1 và justifyContent: 'center'
-    },
-    timeLabel: {
-        fontSize: 14,
-        color: '#666',
-        marginLeft: 6,
-        marginRight: 4,
-    },
-    timeValue: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#333',
-        marginLeft: 6, // Thêm khoảng cách giữa icon và text
-    },
-
-    /** Dinh dưỡng */
-    nutritionContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        marginTop: 10,
-        paddingHorizontal: 10,
-        backgroundColor: '#fff',
-        borderRadius: 15,
-        padding: 10
-    },
-    nutritionItem: {
-        alignItems: 'center',
-        flex: 1,
-        borderLeftWidth: 2,
-        borderLeftColor: '#eee',
-    },
-    nutritionValue: {
-        fontSize: 17,
-        fontWeight: '700',
-        marginBottom: 4,
-    },
-    nutritionLabel: {
-        fontSize: 13,
-        color: '#555',
-        textAlign: 'center',
-    },
-
-    /** Tab tùy chỉnh với animation */
-    tabContainer: {
-        marginHorizontal: 40,
-        marginTop: 15,
-        marginBottom: 15,
-    },
-    tabBackground: {
-        backgroundColor: 'rgba(53, 165, 94, 0.1)',
-        borderRadius: 20,
-        height: 40,
-        position: 'relative',
-        flexDirection: 'row',
-    },
-    tabButton: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 2,
-    },
-    tabIndicator: {
-        position: 'absolute',
-        width: '46%',
-        height: '90%',
-        backgroundColor: '#35A55E',
-        borderRadius: 18,
-        top: '5%',
-        zIndex: 1,
-    },
-    tabText: {
-        fontSize: 14,
-        color: '#333',
-        fontWeight: '500',
-    },
-    activeTabText: {
-        color: '#FFFFFF',
-        fontWeight: '600',
-    },
-    tabContentContainer: {
-        minHeight: 200,
-    },
-
-    /** Nguyên liệu */
-    ingredientList: { borderRadius: 10 },
-    ingredientItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        marginBottom: 10,
-        shadowColor: '#000',
-        shadowRadius: 3,
-        elevation: 0.2,
-    },
-    ingredientIcon: {
-        width: 30,
-        height: 30,
-        borderRadius: 6
-    },
-    ingredientName: {
-        flex: 1,
-        marginLeft: 10,
-        fontSize: 14,
-        color: '#333',
-        fontWeight: '500'
-    },
-    ingredientAmount: {
-        fontSize: 13,
-        color: '#666'
-    },
-
-    /** Hướng dẫn */
-    guideContainer: {
-        borderRadius: 10,
-        paddingBottom: 50
-    },
-    stepText: {
-        fontSize: 14,
-        color: '#333',
-        lineHeight: 22,
-        marginBottom: 6
-    },
-
-    
-});

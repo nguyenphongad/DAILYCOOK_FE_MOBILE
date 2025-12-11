@@ -41,26 +41,25 @@ const styles = StyleSheet.create({
   
   // Cập nhật styles cho date header section
   dateHeaderSection: {
-    padding: 0, // Giảm padding
-    marginHorizontal: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
     marginBottom: 16,
-    alignItems: 'flex-start', 
-    borderLeftWidth: 4,
-    paddingLeft: 15,
-    borderColor: '#64ba82',
   },
   dayTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: '#35A55E',
-    marginBottom: 4,
-    textAlign: 'left', // Căn lề trái
+  },
+  dateSeparator: {
+    fontSize: 18,
+    color: '#999',
+    marginHorizontal: 8,
   },
   dateSubtitle: {
     fontSize: 14,
     color: '#666666',
     fontWeight: '400',
-    textAlign: 'left', // Căn lề trái
   },
   
   
@@ -238,52 +237,42 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  mealTypeTabs: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    justifyContent: 'space-between', // Căn đều tất cả các tab
-    width: '100%', // Đảm bảo container sử dụng toàn bộ chiều rộng
+  
+  // Section-based layout styles (giống như PageRenderAI)
+  mealTimeSection: {
+    marginBottom: 24,
   },
-  mealTypeTabsTwo: {
-    justifyContent: 'space-between', // Nếu có 2 bữa thì căn đều 2 bên
-  },
-  mealTypeTabsOne: {
-    justifyContent: 'center', // Nếu chỉ có 1 bữa thì canh giữa
-  },
-  mealTypeTab: {
+  
+  mealTimeSectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 8, // Giảm padding ngang
-    backgroundColor: 'rgba(53, 165, 94, 0.1)',
-    borderRadius: 20,
-    justifyContent: 'center',
-    marginRight: 0, // Bỏ margin để không bị tràn
+    marginBottom: 10,
   },
-  mealTypeTabHalf: {
-    flex: 0.48, // Khi có 2 bữa ăn thì mỗi tab chiếm 48% chiều rộng
-  },
-  mealTypeTabFull: {
-    flex: 1, // Khi chỉ có 1 bữa ăn thì tab chiếm 100% chiều rộng
-  },
-  mealTypeTabThird: {
-    flex: 0.32, // Khi có 3 bữa, mỗi tab chiếm khoảng 32% chiều rộng
-  },
-  activeMealTypeTab: {
-    backgroundColor: '#35A55E',
-  },
-  mealTypeText: {
+  mealTimeSectionTitle: {
     fontSize: 14,
+    fontWeight: '600',
     color: '#35A55E',
-    marginLeft: 5,
+    marginRight: 12,
   },
-  activeMealTypeText: {
-    color: '#FFFFFF',
+  mealTimeSectionDivider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(53, 165, 94, 0.2)',
   },
+  mealTimeSectionContent: {
+    paddingLeft: 12, // Thụt vào bên trái
+  },
+
+  // Remove or comment out tab-related styles
+  // mealTypeTabs: { ... },
+  // mealTypeTab: { ... },
+  // activeMealTypeTab: { ... },
+  // etc.
+
   aiRecommendationCard: {
-    backgroundColor: '#FFFFFF',
+    // backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 20,
+    padding: 10,
     marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
@@ -296,8 +285,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   aiImage: {
-    width: 150,
-    height: 150,
+    width: 100,
+    height: 100,
     marginBottom: 35,
   },
   aiFeaturesContainer: {
@@ -583,7 +572,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 0.2,
-    marginBottom: 12,
+    marginBottom: 10,
     padding: 12,
   },
   
@@ -645,19 +634,28 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingVertical: 6,
     paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#35A55E',
   },
-  
+  acknowledgeButtonDisabled: {
+    backgroundColor: '#E0E0E0',
+    borderColor: '#E0E0E0',
+    opacity: 0.6,
+  },
   acknowledgeButtonText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#FFFFFF',
     fontWeight: '500',
+  },
+  acknowledgeButtonTextDisabled: {
+    color: '#999999',
   },
   
   // Cập nhật typeMealContainer cho layout dọc
   typeMealContainer: {
     position: 'absolute',
     top: 8,
-    right: 8,
+    left: 18,
     backgroundColor: '#D32F2F',
     paddingHorizontal: 6,
     paddingVertical: 3,

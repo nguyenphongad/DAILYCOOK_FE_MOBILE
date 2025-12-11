@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 
 export const styles = StyleSheet.create({
   container: {
@@ -76,6 +76,7 @@ export const styles = StyleSheet.create({
   },
   menuItemInfo: {
     flex: 1,
+    justifyContent: 'center',
   },
   menuItemNameVertical: {
     fontSize: 16,
@@ -100,8 +101,9 @@ export const styles = StyleSheet.create({
   },
   menuItemActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
+    marginTop: 8,
   },
   viewDetailButton: {
     backgroundColor: '#F0F8F0',
@@ -117,22 +119,20 @@ export const styles = StyleSheet.create({
     fontWeight: '500',
   },
   changeButton: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: '#35A55E',
     borderRadius: 6,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: '#FF9800',
   },
   changeButtonText: {
     fontSize: 12,
-    color: '#FF9800',
+    color: '#FFFFFF',
     fontWeight: '500',
   },
   typeMealContainer: {
     position: 'absolute',
     top: 8,
-    right: 8,
+    left: 15,
     backgroundColor: '#D32F2F',
     paddingHorizontal: 6,
     paddingVertical: 3,
@@ -327,21 +327,16 @@ export const styles = StyleSheet.create({
   // AI Chatbox styles
   aiChatContainer: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 16,
-    paddingHorizontal: 8,
-    minHeight: 500,
-    paddingBottom: 20, // Thêm padding bottom để tránh bị che
   },
   chatMessage: {
     marginBottom: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 10,
   },
   
   messageWrapper: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    maxWidth: '85%',
+    maxWidth: '90%',
   },
   
   userMessage: {
@@ -451,16 +446,15 @@ export const styles = StyleSheet.create({
   // Chat Interface styles
   chatContainer: {
     flex: 1,
-    marginHorizontal: 15,
-    marginTop: 10,
+    paddingHorizontal: 16,
   },
   viewMenuButtonSmall: {
     flexDirection: 'row',
-    backgroundColor: '#35A55E',
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
     alignItems: 'center',
+    backgroundColor: '#35A55E',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -470,7 +464,7 @@ export const styles = StyleSheet.create({
   viewMenuButtonSmallText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   typingDot: {
     width: 8,
@@ -478,5 +472,264 @@ export const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#333333', // Đổi từ '#35A55E' thành màu đen
     marginHorizontal: 2,
+  },
+  emptyMenuContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyMenuText: {
+    fontSize: 16,
+    color: '#666666',
+    textAlign: 'center',
+  },
+  // Reload sheet styles
+  reloadSheetContent: {
+    padding: 20,
+  },
+  reloadSheetTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333333',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  reloadSheetDescription: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  regenerateButton: {
+    flexDirection: 'row',
+    backgroundColor: '#35A55E',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  regenerateButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Similar Meals Sheet styles
+  similarMealsSheetContent: {
+    flex: 1,
+    paddingTop: 10,
+  },
+  similarMealsSheetTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333333',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  currentMealInfo: {
+    backgroundColor: '#F0F8F0',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  currentMealLabel: {
+    fontSize: 12,
+    color: '#666666',
+    marginBottom: 4,
+  },
+  currentMealName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#35A55E',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  similarMealsList: {
+    flex: 1,
+    marginBottom: 16,
+  },
+  similarMealItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  selectedSimilarMealItem: {
+    backgroundColor: '#F0F8FF',
+    borderColor: '#35A55E',
+  },
+  similarMealLeft: {
+    flexDirection: 'row',
+    flex: 1,
+    marginRight: 12,
+  },
+  similarMealImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  similarMealInfo: {
+    flex: 1,
+  },
+  similarMealName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333333',
+    marginBottom: 4,
+  },
+  similarMealDescription: {
+    fontSize: 12,
+    color: '#666666',
+    marginBottom: 6,
+  },
+  similarMealNutrition: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  similarMealNutritionText: {
+    fontSize: 11,
+    color: '#666666',
+  },
+  radioButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#CCCCCC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radioButtonSelected: {
+    borderColor: '#35A55E',
+  },
+  radioButtonInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#35A55E',
+  },
+  similarMealsSheetActions: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#EEEEEE',
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#666666',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  confirmButton: {
+    flex: 1,
+    backgroundColor: '#35A55E',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  confirmButtonDisabled: {
+    backgroundColor: '#CCCCCC',
+  },
+  confirmButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Thêm styles mới cho section-based layout
+  mealTimeSection: {
+    marginBottom: 24,
+  },
+  
+  mealTimeSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  
+  mealTimeSectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#35A55E',
+    marginRight: 12,
+  },
+  
+  mealTimeSectionDivider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(53, 165, 94, 0.2)',
+  },
+  
+  mealTimeSectionContent: {
+    paddingLeft: 12, // Thụt vào bên trái
+  },
+
+  // Cập nhật style cho menu item card với margin
+  menuItemCardVerticalWithMargin: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    marginBottom: 12,
+    padding: 12,
+  },
+
+  menuItemContentVertical: {
+    flex: 1,
+    marginLeft: 12,
+    justifyContent: 'space-between',
+  },
+
+  menuItemInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+
+  menuItemActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+
+  changeButton: {
+    backgroundColor: '#35A55E',
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+
+  changeButtonText: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontWeight: '500',
   },
 });

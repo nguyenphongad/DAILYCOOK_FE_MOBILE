@@ -1,10 +1,23 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, FlatList, Dimensions, SafeAreaView, Image } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, FlatList, Dimensions, SafeAreaView, Image, RefreshControl, ActivityIndicator, ToastAndroid, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import HeaderComponent from '../../components/header/HeaderComponent';
+import { useDispatch, useSelector } from 'react-redux';
+import { getMealHistory, toggleMealEaten } from '../../redux/thunk/mealPlanThunk';
+import { getNutritionGoals } from '../../redux/thunk/surveyThunk';
 
 export default function RecordMeal() {
     const today = new Date();
+    const dispatch = useDispatch();
+
+    // Redux selectors - thêm nutritionGoals
+    const { mealHistory, mealHistoryLoading, mealHistoryError } = useSelector((state) => state.mealPlan);
+    const { nutritionGoals, nutritionGoalsLoading } = useSelector((state) => state.survey);
+
+    const [selectedDate, setSelectedDate] = useState(today);
+    const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+    const [refreshing, setRefreshing] = useState(false);
+    const flatListRef = useRef(null);
 
     // Hàm lấy tên tháng từ số tháng
     const getMonthName = (monthNumber) => {
@@ -14,29 +27,17 @@ export default function RecordMeal() {
         ];
         return months[monthNumber - 1];
     };
-
-    const [mealData, setMealData] = useState({
-        name: '',
-        description: '',
-        calories: '',
-        mealTime: 'breakfast'
-    });
-
-    const [selectedDate, setSelectedDate] = useState(today.getDate());
-    const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+    
     const [currentMonth, setCurrentMonth] = useState(getMonthName(today.getMonth() + 1));
-    const flatListRef = useRef(null);
 
-
-    // Hàm để lấy các ngày trong tuần với offset (tuần trước, tuần này, tuần sau)
+    // Hàm để lấy các ngày trong tuần với offset
     const getWeekDays = (date = new Date(), weekOffset = 0) => {
         const newDate = new Date(date);
-        newDate.setDate(newDate.getDate() + (weekOffset * 7)); // Thêm/trừ số ngày theo tuần
+        newDate.setDate(newDate.getDate() + (weekOffset * 7));
 
-        const day = newDate.getDay(); // 0 là Chủ nhật, 1 là Thứ hai,...
-        const diff = newDate.getDate() - day + (day === 0 ? -6 : 1); // Điều chỉnh về thứ hai
+        const day = newDate.getDay();
+        const diff = newDate.getDate() - day + (day === 0 ? -6 : 1);
 
-        // Tạo mảng 7 ngày từ thứ 2 đến Chủ nhật
         return Array(7).fill(0).map((_, i) => {
             const weekDate = new Date(newDate);
             weekDate.setDate(diff + i);
@@ -51,103 +52,208 @@ export default function RecordMeal() {
                 isToday: weekDate.getDate() === new Date().getDate() &&
                     weekDate.getMonth() === new Date().getMonth() &&
                     weekDate.getFullYear() === new Date().getFullYear(),
-                isFuture: weekDate > new Date(new Date().setHours(23, 59, 59, 999))
+                isFuture: weekDate > new Date(new Date().setHours(23, 59, 59, 999)),
+                // Thêm flag để check ngày được chọn
+                isSelected: selectedDate && 
+                    weekDate.getDate() === selectedDate.getDate() &&
+                    weekDate.getMonth() === selectedDate.getMonth() &&
+                    weekDate.getFullYear() === selectedDate.getFullYear()
             };
         });
     };
 
-    // Cập nhật dữ liệu dinh dưỡng mẫu
+    // Load meal history và nutrition goals khi component mount
+    useEffect(() => {
+        loadMealHistory(today);
+        dispatch(getNutritionGoals());
+    }, []);
+
+    // Load meal history
+    const loadMealHistory = async (date) => {
+        try {
+            await dispatch(getMealHistory(date)).unwrap();
+        } catch (error) {
+            console.error('Error loading meal history:', error);
+        }
+    };
+
+    // Refresh handler
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await loadMealHistory(today);
+        setRefreshing(false);
+    };
+
+    // Tính tổng dinh dưỡng từ mealHistory
+    const getTotalNutrition = () => {
+        if (!mealHistory || !mealHistory.stats) {
+            return { calories: 0, protein: 0, fat: 0, carbs: 0 };
+        }
+        return mealHistory.stats.totalNutrition;
+    };
+
+    // Lấy target nutrition từ nutritionGoals
+    const getTargetNutrition = () => {
+        if (!nutritionGoals || !nutritionGoals.nutritionGoals || !nutritionGoals.macroDetails) {
+            return {
+                calories: 2000,
+                protein: 150,
+                fat: 70,
+                carbs: 250
+            };
+        }
+
+        return {
+            calories: nutritionGoals.nutritionGoals.caloriesPerDay,
+            protein: Math.round(nutritionGoals.macroDetails.protein.grams),
+            fat: Math.round(nutritionGoals.macroDetails.fat.grams),
+            carbs: Math.round(nutritionGoals.macroDetails.carbs.grams)
+        };
+    };
+
+    // Cập nhật dữ liệu dinh dưỡng từ API với target từ nutritionGoals
+    const totalNutrition = getTotalNutrition();
+    const targetNutrition = getTargetNutrition();
+    
     const nutritionData = [
-        { icon: 'food-steak', label: 'Protein', current: 0, target: 88, unit: 'g', color: '#4ECDC4' },
-        { icon: 'nutrition', label: 'Fat', current: 0, target: 49, unit: 'g', color: '#FFB347' },
-        { icon: 'barley', label: 'Carbs', current: 0, target: 241, unit: 'g', color: '#45B7D1' },
+        { 
+            icon: 'food-steak', 
+            label: 'Protein', 
+            current: totalNutrition.protein, 
+            target: targetNutrition.protein, 
+            unit: 'g', 
+            color: '#4ECDC4' 
+        },
+        { 
+            icon: 'nutrition', 
+            label: 'Fat', 
+            current: totalNutrition.fat, 
+            target: targetNutrition.fat, 
+            unit: 'g', 
+            color: '#FFB347' 
+        },
+        { 
+            icon: 'barley', 
+            label: 'Carbs', 
+            current: totalNutrition.carbs, 
+            target: targetNutrition.carbs, 
+            unit: 'g', 
+            color: '#45B7D1' 
+        },
     ];
 
-    // Tạo mảng các tuần (-1: tuần trước, 0: tuần hiện tại)
+    // Tạo mảng các tuần
     const weeks = [
         { id: '-1', days: getWeekDays(today, -1) },
         { id: '0', days: getWeekDays(today, 0) }
     ];
 
-    const handleInputChange = (field, value) => {
-        setMealData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+    // Get meals từ mealHistory và group theo servingTime
+    const getMealsByServingTime = (servingTime) => {
+        if (!mealHistory || !mealHistory.history) return [];
+        
+        return mealHistory.history.filter(item => item.servingTime === servingTime);
     };
 
-    const handleSave = () => {
-        if (!mealData.name || !mealData.calories) {
-            Alert.alert('Lỗi', 'Vui lòng nhập tên món ăn và calories');
-            return;
+    // Thêm handler để uneat meal
+    const handleUneatMeal = async (historyItem) => {
+        try {
+            // Lấy dateString từ selectedDate với format đúng
+            let dateString;
+            if (selectedDate instanceof Date) {
+                const year = selectedDate.getFullYear();
+                const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+                const day = String(selectedDate.getDate()).padStart(2, '0');
+                dateString = `${year}-${month}-${day}`;
+            } else {
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                dateString = `${year}-${month}-${day}`;
+            }
+
+            console.log('Uneat meal - Date string:', dateString);
+
+            await dispatch(toggleMealEaten({
+                date: dateString,
+                servingTime: historyItem.servingTime,
+                mealId: historyItem.mealDetail._id,
+                action: 'UNEAT'
+            })).unwrap();
+
+            // Reload meal history để cập nhật UI
+            await loadMealHistory(selectedDate);
+            
+            // Hiển thị toast thông báo
+            if (Platform.OS === 'android') {
+                ToastAndroid.show('Đã hủy ghi nhận món ăn', ToastAndroid.SHORT);
+            } else {
+                Alert.alert('Thành công', 'Đã hủy ghi nhận món ăn');
+            }
+        } catch (error) {
+            console.error('Error uneating meal:', error);
+            if (Platform.OS === 'android') {
+                ToastAndroid.show('Không thể hủy ghi nhận món ăn', ToastAndroid.SHORT);
+            } else {
+                Alert.alert('Lỗi', error || 'Không thể hủy ghi nhận món ăn');
+            }
         }
-        Alert.alert('Thành công', 'Đã lưu món ăn!');
-        handleReset();
     };
 
-    const handleReset = () => {
-        setMealData({
-            name: '',
-            description: '',
-            calories: '',
-            mealTime: 'breakfast'
-        });
-    };
+    // Render meal card
+    const renderMealCard = (historyItem) => {
+        const meal = historyItem.mealDetail;
+        const servingTimeLabel = {
+            breakfast: 'Bữa sáng',
+            lunch: 'Bữa trưa',
+            dinner: 'Bữa tối',
+            snack: 'Ăn vặt'
+        }[historyItem.servingTime] || historyItem.servingTime;
 
-    const mealTimes = [
-        { value: 'breakfast', label: 'Sáng' },
-        { value: 'lunch', label: 'Trưa' },
-        { value: 'dinner', label: 'Tối' },
-        { value: 'snack', label: 'Ăn vặt' }
-    ];
+        return (
+            <View key={historyItem._id} style={styles.mealCard}>
+                <View style={styles.mealTimeLabel}>
+                    <Text style={styles.mealTimeBadge}>{servingTimeLabel}</Text>
+                </View>
+                
+                {/* Thêm nút back để uneat */}
+                <TouchableOpacity 
+                    style={styles.uneatButton}
+                    onPress={() => handleUneatMeal(historyItem)}
+                >
+                    <Ionicons name="arrow-back" size={20} color="#FF6B6B" />
+                </TouchableOpacity>
+
+                <Image
+                    source={{ uri: meal.mealImage }}
+                    style={styles.mealImage}
+                />
+                <View style={styles.mealInfo}>
+                    <Text style={styles.mealName}>{meal.nameMeal}</Text>
+                    <View style={styles.nutritionInfo}>
+                        <Text style={styles.nutritionText}>
+                            <MaterialCommunityIcons name="food-steak" size={16} /> {Math.round(meal.actualNutrition.protein)}g
+                        </Text>
+                        <Text style={styles.nutritionText}>
+                            <MaterialCommunityIcons name="nutrition" size={16} /> {Math.round(meal.actualNutrition.fat)}g
+                        </Text>
+                        <Text style={styles.nutritionText}>
+                            <MaterialCommunityIcons name="barley" size={16} /> {Math.round(meal.actualNutrition.carbs)}g
+                        </Text>
+                        <Text style={styles.calories}>{Math.round(meal.actualNutrition.calories)} kcal</Text>
+                    </View>
+                </View>
+            </View>
+        );
+    };
 
     const handleDatePress = () => {
-        Alert.alert('Date Picker', 'Chức năng chọn ngày sẽ được phát triển');
+        if (Platform.OS === 'android') {
+            ToastAndroid.show('Chức năng chọn ngày sẽ được phát triển', ToastAndroid.SHORT);
+        } else {
+            Alert.alert('Date Picker', 'Chức năng chọn ngày sẽ được phát triển');
+        }
     };
-
-    // Thêm dữ liệu mẫu cho món ăn
-    const sampleMeals = [
-        {
-            id: 1,
-            name: 'Cơm gà xối mỡ',
-            protein: 25,
-            fat: 15,
-            carbs: 40,
-            calories: 450,
-            mealTime: 'breakfast',
-            image: 'https://images.squarespace-cdn.com/content/v1/53883795e4b016c956b8d243/1597822154096-LK0WD8P39LYLJAG0PXJ6/chup-anh-thuc-an-1.jpg'
-        },
-        {
-            id: 2,
-            name: 'Cơm gà xối mỡ',
-            protein: 25,
-            fat: 15,
-            carbs: 40,
-            calories: 450,
-            mealTime: 'breakfast',
-            image: 'https://images.squarespace-cdn.com/content/v1/53883795e4b016c956b8d243/1597822154096-LK0WD8P39LYLJAG0PXJ6/chup-anh-thuc-an-1.jpg'
-        },
-        {
-            id: 3,
-            name: 'Cơm gà xối mỡ',
-            protein: 25,
-            fat: 15,
-            carbs: 40,
-            calories: 450,
-            mealTime: 'breakfast',
-            image: 'https://images.squarespace-cdn.com/content/v1/53883795e4b016c956b8d243/1597822154096-LK0WD8P39LYLJAG0PXJ6/chup-anh-thuc-an-1.jpg'
-        },
-        {
-            id: 4,
-            name: 'Cơm gà xối mỡ',
-            protein: 25,
-            fat: 15,
-            carbs: 40,
-            calories: 450,
-            mealTime: 'breakfast',
-            image: 'https://images.squarespace-cdn.com/content/v1/53883795e4b016c956b8d243/1597822154096-LK0WD8P39LYLJAG0PXJ6/chup-anh-thuc-an-1.jpg'
-        },
-    ];
 
     return (
         <SafeAreaView style={styles.container}>
@@ -160,15 +266,7 @@ export default function RecordMeal() {
             </HeaderComponent>
 
             {/* Calendar Section */}
-            {/* Calendar Section */}
             <View style={styles.calendarContainer}>
-                {/* <View style={styles.calendarHeader}>
-                        <Text style={styles.sectionTitle}>Ghi nhận</Text>
-                        <View style={styles.monthTitleContainer}>
-                            <Text style={styles.monthTitle}>{currentMonth}</Text>
-                        </View>
-                    </View> */}
-
                 <View style={styles.calendarNavigationContainer}>
                     <FlatList
                         ref={flatListRef}
@@ -177,7 +275,7 @@ export default function RecordMeal() {
                         pagingEnabled
                         showsHorizontalScrollIndicator={false}
                         keyExtractor={(item) => item.id}
-                        initialScrollIndex={1} // Bắt đầu từ tuần hiện tại
+                        initialScrollIndex={1}
                         getItemLayout={(data, index) => ({
                             length: Dimensions.get('window').width - 30,
                             offset: (Dimensions.get('window').width - 30) * index,
@@ -185,7 +283,6 @@ export default function RecordMeal() {
                         })}
                         onMomentumScrollEnd={(event) => {
                             const position = event.nativeEvent.contentOffset.x;
-                            // Xác định tuần hiện tại dựa trên vị trí scroll
                             const newOffset = position < (Dimensions.get('window').width / 2) ? -1 : 0;
                             setCurrentWeekOffset(newOffset);
                         }}
@@ -200,33 +297,35 @@ export default function RecordMeal() {
                                         key={day.id}
                                         style={[
                                             styles.dateItem,
-                                            day.isToday ? styles.activeDateItem : null,
+                                            day.isSelected ? styles.activeDateItem : null,
                                             day.isFuture ? styles.futureDateItem : null,
                                         ]}
                                         disabled={day.isFuture}
-                                        onPress={() => setSelectedDate(day.date)}
+                                        onPress={() => {
+                                            console.log('Selected date:', day.fullDate);
+                                            setSelectedDate(day.fullDate);
+                                            loadMealHistory(day.fullDate);
+                                        }}
                                     >
-                                        {/* Thứ - không có viền và không có nền cho active */}
                                         <Text
                                             style={[
                                                 styles.dayText,
-                                                day.isToday ? styles.activeDayText : null,
+                                                day.isSelected ? styles.activeDayText : null,
                                                 day.isFuture ? styles.futureDayText : null,
                                             ]}
                                         >
                                             {day.day}
                                         </Text>
 
-                                        {/* Ngày - có hình tròn với nền xanh đậm cho active */}
                                         <View style={[
                                             styles.dateCircle,
-                                            day.isToday ? styles.activeDateCircle : null,
+                                            day.isSelected ? styles.activeDateCircle : null,
                                             day.isFuture ? styles.futureDateCircle : null,
                                         ]}>
                                             <Text
                                                 style={[
                                                     styles.dateText,
-                                                    day.isToday ? styles.activeDateText : null,
+                                                    day.isSelected ? styles.activeDateText : null,
                                                     day.isFuture ? styles.futureDateText : null,
                                                 ]}
                                             >
@@ -241,16 +340,24 @@ export default function RecordMeal() {
                 </View>
             </View>
 
-            {/* Nutrition Info Box */}
+            {/* Nutrition Info Box - Cập nhật hiển thị */}
             <View style={styles.nutritionBox}>
                 <View style={styles.nutritionContent}>
                     <View style={styles.caloriesSection}>
                         <View style={styles.caloriesCircle}>
                             <MaterialCommunityIcons name="fire" size={24} color="#FF6B6B" />
                         </View>
-                        <Text style={styles.caloriesNumber}>1750</Text>
-                        <Text style={styles.caloriesLabel}>Calo còn lại</Text>
+                        <Text style={styles.caloriesNumber}>
+                            {Math.round(totalNutrition.calories)}
+                        </Text>
+                        <Text style={styles.caloriesLabel}>Calo đã ăn</Text>
+                        
+                        {/* Hiển thị target calories */}
+                        <Text style={styles.caloriesTarget}>
+                            / {targetNutrition.calories} kcal
+                        </Text>
                     </View>
+                    
                     <View style={styles.nutritionGrid}>
                         {nutritionData.map((item, index) => (
                             <View key={index} style={styles.nutritionItem}>
@@ -258,57 +365,58 @@ export default function RecordMeal() {
                                     <MaterialCommunityIcons name={item.icon} size={20} color={item.color} />
                                     <Text style={styles.nutritionLabel}>{item.label}</Text>
                                     <Text style={styles.nutritionValue}>
-                                        {item.current}/{item.target} {item.unit}
+                                        {Math.round(item.current)}/{item.target} {item.unit}
                                     </Text>
                                 </View>
                                 <View style={styles.nutritionProgressBar}>
-                                    <View style={[styles.nutritionProgress, { width: `${(item.current / item.target) * 100}%`, backgroundColor: item.color }]} />
+                                    <View style={[
+                                        styles.nutritionProgress, 
+                                        { 
+                                            width: `${Math.min((item.current / item.target) * 100, 100)}%`, 
+                                            backgroundColor: item.color 
+                                        }
+                                    ]} />
                                 </View>
                             </View>
                         ))}
                     </View>
                 </View>
             </View>
+
             <View style={styles.mealHeader}>
                 <Text style={styles.mealHeaderText}>Lượng calo tiêu thụ</Text>
-                <Text style={styles.caloriesCount}>450 kcal</Text>
+                <Text style={styles.caloriesCount}>{Math.round(totalNutrition.calories)} kcal</Text>
             </View>
 
-            <ScrollView style={styles.scrollContent}>
-                <View style={styles.mealSection}>
-
-
-                    {sampleMeals.map((meal) => (
-                        <View key={meal.id} style={styles.mealCard}>
-                            <View style={styles.mealTimeLabel}>
-                                <Text style={styles.mealTimeBadge}>Bữa sáng</Text>
-                            </View>
-                            <Image
-                                source={{ uri: meal.image }}
-                                style={styles.mealImage}
-                            />
-                            <View style={styles.mealInfo}>
-                                <Text style={styles.mealName}>{meal.name}</Text>
-                                <View style={styles.nutritionInfo}>
-                                    <Text style={styles.nutritionText}>
-                                        <MaterialCommunityIcons name="food-steak" size={16} /> {meal.protein}g
-                                    </Text>
-                                    <Text style={styles.nutritionText}>
-                                        <MaterialCommunityIcons name="nutrition" size={16} /> {meal.fat}g
-                                    </Text>
-                                    <Text style={styles.nutritionText}>
-                                        <MaterialCommunityIcons name="barley" size={16} /> {meal.carbs}g
-                                    </Text>
-                                    <Text style={styles.calories}>{meal.calories} kcal</Text>
-                                </View>
-                            </View>
-
-                        </View>
-                    ))}
-
-
+            {mealHistoryLoading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#35A55E" />
+                    <Text style={styles.loadingText}>Đang tải...</Text>
                 </View>
-            </ScrollView>
+            ) : (
+                <ScrollView 
+                    style={styles.scrollContent}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={['#35A55E']}
+                            tintColor="#35A55E"
+                        />
+                    }
+                >
+                    <View style={styles.mealSection}>
+                        {mealHistory && mealHistory.history && mealHistory.history.length > 0 ? (
+                            mealHistory.history.map((historyItem) => renderMealCard(historyItem))
+                        ) : (
+                            <View style={styles.emptyContainer}>
+                                <Ionicons name="restaurant-outline" size={64} color="#CCCCCC" />
+                                <Text style={styles.emptyText}>Chưa có món ăn nào được ghi nhận</Text>
+                            </View>
+                        )}
+                    </View>
+                </ScrollView>
+            )}
         </SafeAreaView>
     );
 }
@@ -452,7 +560,6 @@ const styles = StyleSheet.create({
         // backgroundColor: '#fff',
         padding: 30,
         borderStyle: 'solid',
-        // borderWidth: 1,
         borderColor: '#f4fffb',
         borderRadius: 15,
         backgroundColor: "#e6f2ed"
@@ -477,6 +584,13 @@ const styles = StyleSheet.create({
     caloriesLabel: {
         fontSize: 12,
         color: '#666',
+    },
+    // Thêm style mới cho target calories
+    caloriesTarget: {
+        fontSize: 11,
+        color: '#999',
+        marginTop: 2,
+        fontWeight: '500',
     },
     nutritionGrid: {
         flex: 1,
@@ -572,7 +686,26 @@ const styles = StyleSheet.create({
         borderColor: '#eee',
         borderRadius: 8,
         marginBottom: 25,
-        backgroundColor: "#e6f2ed"
+        backgroundColor: "#e6f2ed",
+        position: 'relative', // Thêm để định vị nút back
+    },
+    // Thêm style cho nút uneat
+    uneatButton: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: '#FFF',
+        borderRadius: 20,
+        width: 36,
+        height: 36,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+        zIndex: 10,
     },
     mealInfo: {
         flex: 1,
@@ -602,5 +735,27 @@ const styles = StyleSheet.create({
         height: 70,
         borderRadius: 8,
     },
-
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 60,
+    },
+    loadingText: {
+        marginTop: 12,
+        fontSize: 14,
+        color: '#666',
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 60,
+    },
+    emptyText: {
+        marginTop: 16,
+        fontSize: 16,
+        color: '#999',
+        textAlign: 'center',
+    },
 });

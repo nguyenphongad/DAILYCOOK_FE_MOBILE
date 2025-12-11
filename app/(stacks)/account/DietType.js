@@ -234,6 +234,12 @@ export default function DietType() {
                 dietTypeId: selectedDietObject.keyword
             })).unwrap();
 
+
+            console.log("userId: ",  user._id)
+            console.log("dietTypeId: ", selectedDietObject.keyword)
+
+
+
             // Hiển thị thông báo thành công
             if (Platform.OS === 'android') {
                 ToastAndroid.show('Đã cập nhật chế độ ăn thành công! 🎉', ToastAndroid.LONG);

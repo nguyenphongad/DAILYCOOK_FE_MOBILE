@@ -20,7 +20,7 @@ const tabMenus: TabMenu[] = [
 	},
 	{
 		name: 'about',
-		title: 'Danh Mục',
+		title: 'Thông tin',
 		icon: 'book',
 	},
 	{

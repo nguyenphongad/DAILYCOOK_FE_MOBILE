@@ -104,6 +104,13 @@ export default function StackLayout() {
         }}
       />
 
+       <Stack.Screen
+        name="account/Questions"
+        options={{
+          title: 'Khảo sát',
+        }}
+      />
+
 
 
 
