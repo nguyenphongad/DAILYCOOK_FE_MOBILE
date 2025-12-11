@@ -51,6 +51,7 @@
     "react-native-screens": "~4.11.1",
     "react-native-url-polyfill": "^3.0.0",
     "react-native-web": "~0.20.0",
+    "react-native-wheel-pick": "^1.2.6",
     "react-redux": "^9.2.0",
     "redux-persist": "^6.0.0",
     "tamagui": "^1.135.2"

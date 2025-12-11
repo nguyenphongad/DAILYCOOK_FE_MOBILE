@@ -1,78 +1,77 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
-import { useDispatch } from 'react-redux';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
 import { H2, Paragraph } from 'tamagui';
 import { Ionicons } from '@expo/vector-icons';
 import { prevStep, resetOnboarding } from '../../../redux/slice/surveySlice';
+import { 
+  getSurveyQuestions, 
+  getSurveyResponses, 
+  saveSurveyResponses,
+  updateSurveyResponses 
+} from '../../../redux/thunk/surveyThunk';
 import HeaderComponent from '../../../components/header/HeaderComponent';
 import ButtonComponent from '../../../components/button/ButtonComponent';
 
-// Mock data từ API
-const questionsData = [
-  {
-    "_id": "6909fdde40f85f32a922b240",
-    "title": "Bạn có ăn cay được không?",
-    "questionType": "radio",
-    "isActive": true,
-    "isRequired": true,
-    "order": 1,
-    "options": [
-      {
-        "value": "option_1",
-        "label": "Có",
-        "_id": "6909fdde40f85f32a922b241"
-      },
-      {
-        "value": "option_2",
-        "label": "Không",
-        "_id": "6909fdde40f85f32a922b242"
-      }
-    ],
-    "category": "dietaryPreferences"
-  },
-  {
-    "_id": "6909fe0640f85f32a922b244",
-    "title": "Bạn chế độ ăn mặn thế nào?",
-    "questionType": "radio",
-    "isActive": true,
-    "isRequired": true,
-    "order": 2,
-    "options": [
-      {
-        "value": "option_1",
-        "label": "Mặn vừa",
-        "_id": "6909fe0640f85f32a922b245"
-      },
-      {
-        "value": "option_2",
-        "label": "Mặn hơn mức bình thường",
-        "_id": "6909fe0640f85f32a922b246"
-      },
-      {
-        "value": "option_3",
-        "label": "Không ăn mặn",
-        "_id": "6909fe0640f85f32a922b247"
-      }
-    ],
-    "category": "dietaryPreferences"
-  }
-];
-
 export default function QuestionsScreen() {
   const [answers, setAnswers] = useState({});
-  const [questions, setQuestions] = useState([]);
   const dispatch = useDispatch();
   const router = useRouter();
 
+  // Lấy data từ Redux store
+  const { 
+    surveyQuestions, 
+    surveyQuestionsLoading, 
+    surveyQuestionsError,
+    surveyResponses,
+    surveyResponsesLoading,
+    saveSurveyResponsesLoading,
+    updateSurveyResponsesLoading
+  } = useSelector((state) => state.survey);
+
   useEffect(() => {
-    // Sắp xếp câu hỏi theo order và chỉ lấy câu hỏi active
-    const activeQuestions = questionsData
-      .filter(q => q.isActive)
-      .sort((a, b) => a.order - b.order);
+    // Gọi API để lấy danh sách câu hỏi và câu trả lời cũ (nếu có)
+    console.log('🚀 Dispatching getSurveyQuestions...');
+    dispatch(getSurveyQuestions());
     
-    setQuestions(activeQuestions);
-  }, []);
+    console.log('🚀 Dispatching getSurveyResponses...');
+    dispatch(getSurveyResponses());
+  }, [dispatch]);
+
+  // Load câu trả lời cũ vào state nếu có
+  useEffect(() => {
+    if (surveyResponses && surveyResponses.responses) {
+      console.log('📝 Loading existing responses:', surveyResponses.responses);
+      
+      // Chuyển đổi từ array [{ surveyId, answer }] sang object { questionId: answer }
+      const loadedAnswers = {};
+      
+      if (Array.isArray(surveyResponses.responses)) {
+        surveyResponses.responses.forEach(response => {
+          if (response.surveyId && response.answer) {
+            loadedAnswers[response.surveyId] = response.answer;
+          }
+        });
+      }
+      
+      console.log('📝 Converted answers to object:', loadedAnswers);
+      setAnswers(loadedAnswers);
+    }
+  }, [surveyResponses]);
+
+  // Thêm log để debug
+  useEffect(() => {
+    console.log('📋 Survey Questions from Redux:', surveyQuestions);
+    console.log('📋 Is Array?', Array.isArray(surveyQuestions));
+  }, [surveyQuestions]);
+
+  // Sắp xếp và lọc câu hỏi active - thêm check an toàn
+  const questions = Array.isArray(surveyQuestions) 
+    ? surveyQuestions
+        .filter(q => q.isActive)
+        .sort((a, b) => a.order - b.order)
+    : [];
 
   const handleOptionSelect = (questionId, optionValue) => {
     setAnswers(prev => ({
@@ -86,12 +85,39 @@ export default function QuestionsScreen() {
     return requiredQuestions.every(q => answers[q._id]);
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (isAllRequiredAnswered()) {
-      console.log('Answers:', answers);
-      // TODO: Gửi answers lên API
-      dispatch(resetOnboarding());
-      router.replace('/(tabs)');
+      console.log('✅ Submitting Answers:', answers);
+      
+      try {
+        // Format answers theo cấu trúc API yêu cầu: [{ surveyId, answer }]
+        const formattedResponses = Object.entries(answers).map(([questionId, answerValue]) => ({
+          surveyId: questionId,
+          answer: answerValue
+        }));
+        
+        console.log('📤 Formatted responses for API:', formattedResponses);
+        
+        // Nếu đã có câu trả lời cũ thì update, không thì tạo mới
+        if (surveyResponses && surveyResponses._id) {
+          console.log('🔄 Updating existing survey response:', surveyResponses._id);
+          await dispatch(updateSurveyResponses({
+            responseId: surveyResponses._id,
+            responses: { responses: formattedResponses }
+          })).unwrap();
+        } else {
+          console.log('💾 Saving new survey response');
+          await dispatch(saveSurveyResponses({ 
+            responses: formattedResponses 
+          })).unwrap();
+        }
+        
+        console.log('✅ Survey saved successfully');
+        dispatch(resetOnboarding());
+        router.replace('/(tabs)');
+      } catch (error) {
+        console.error('❌ Error saving survey:', error);
+      }
     }
   };
 
@@ -157,6 +183,38 @@ export default function QuestionsScreen() {
     }
   };
 
+  if (surveyQuestionsLoading || surveyResponsesLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <HeaderComponent />
+        <View style={[styles.content, styles.centerContent]}>
+          <ActivityIndicator size="large" color="#35A55E" />
+          <Text style={styles.loadingText}>
+            {surveyQuestionsLoading ? 'Đang tải câu hỏi khảo sát...' : 'Đang tải câu trả lời...'}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (surveyQuestionsError) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <HeaderComponent />
+        <View style={[styles.content, styles.centerContent]}>
+          <Ionicons name="alert-circle-outline" size={48} color="#E74C3C" />
+          <Text style={styles.errorText}>{surveyQuestionsError}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={() => dispatch(getSurveyQuestions())}
+          >
+            <Text style={styles.retryButtonText}>Thử lại</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <HeaderComponent />
@@ -182,12 +240,13 @@ export default function QuestionsScreen() {
             onBack={handleBack}
             onNext={handleComplete}
             nextText="Hoàn thành"
-            disableNext={!isAllRequiredAnswered()}
+            disableNext={!isAllRequiredAnswered() || saveSurveyResponsesLoading || updateSurveyResponsesLoading}
             nextColor="#35A55E"
+            loading={saveSurveyResponsesLoading || updateSurveyResponsesLoading}
           />
 
           <Paragraph textAlign="center" color="$gray8" fontSize="$3" marginTop="$2">
-            Bước 6/6
+            Bước 6/6 {surveyResponses ? '(Đang chỉnh sửa)' : ''}
           </Paragraph>
         </View>
       </View>
@@ -292,5 +351,33 @@ const styles = StyleSheet.create({
   },
   bottomContainer: {
     paddingBottom: 40,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#E74C3C',
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
+  retryButton: {
+    marginTop: 24,
+    backgroundColor: '#35A55E',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

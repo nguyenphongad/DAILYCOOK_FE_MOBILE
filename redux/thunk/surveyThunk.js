@@ -118,3 +118,82 @@ export const getNutritionGoals = createAsyncThunk(
     }
   }
 );
+
+// Lấy danh sách câu hỏi khảo sát
+export const getSurveyQuestions = createAsyncThunk(
+  'survey/getSurveyQuestions',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiService.get(ENDPOINT.GET_SURVEY_QUESTIONS);
+      
+      console.log('API Response - Get Survey Questions:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('Get survey questions error:', error);
+      return rejectWithValue(
+        error.response?.data?.message || 'Không thể lấy danh sách câu hỏi khảo sát'
+      );
+    }
+  }
+);
+
+// Lấy câu trả lời khảo sát đã lưu
+export const getSurveyResponses = createAsyncThunk(
+  'survey/getSurveyResponses',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiService.get(ENDPOINT.GET_SURVEY_RESPONSES);
+      
+      console.log('API Response - Get Survey Responses:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('Get survey responses error:', error);
+      return rejectWithValue(
+        error.response?.data?.message || 'Không thể lấy câu trả lời khảo sát'
+      );
+    }
+  }
+);
+
+// Lưu câu trả lời khảo sát
+export const saveSurveyResponses = createAsyncThunk(
+  'survey/saveSurveyResponses',
+  async (responses, { rejectWithValue }) => {
+    try {
+      const response = await apiService.post(ENDPOINT.SAVE_SURVEY_RESPONSES, responses);
+      
+      console.log('API Response - Save Survey Responses:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('Save survey responses error:', error);
+      return rejectWithValue(
+        error.response?.data?.message || 'Không thể lưu câu trả lời khảo sát'
+      );
+    }
+  }
+);
+
+// Cập nhật câu trả lời khảo sát
+export const updateSurveyResponses = createAsyncThunk(
+  'survey/updateSurveyResponses',
+  async ({ responseId, responses }, { rejectWithValue }) => {
+    try {
+      const response = await apiService.put(
+        ENDPOINT.UPDATE_SURVEY_RESPONSES(responseId),
+        responses
+      );
+      
+      console.log('API Response - Update Survey Responses:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('Update survey responses error:', error);
+      return rejectWithValue(
+        error.response?.data?.message || 'Không thể cập nhật câu trả lời khảo sát'
+      );
+    }
+  }
+);

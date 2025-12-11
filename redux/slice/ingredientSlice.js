@@ -1,5 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { getIngredientDetail, getMeasurementUnits, batchGetIngredientDetails } from '../thunk/ingredientThunk';
+import { 
+  getIngredientDetail, 
+  getMeasurementUnits, 
+  batchGetIngredientDetails,
+  getRandomIngredients 
+} from '../thunk/ingredientThunk';
 
 const initialState = {
   // Ingredient details - lưu theo ID để dễ truy xuất
@@ -14,6 +19,17 @@ const initialState = {
   
   // Batch loading state
   batchLoadingIds: [], // Array of ingredient IDs đang được load
+
+  // Random ingredients
+  randomIngredients: [],
+  randomIngredientsLoading: false,
+  randomIngredientsError: null,
+  randomIngredientsPagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: 10,
+  },
 };
 
 const ingredientSlice = createSlice({
@@ -27,6 +43,10 @@ const ingredientSlice = createSlice({
     clearSingleIngredient: (state, action) => {
       const ingredientId = action.payload;
       delete state.ingredientDetails[ingredientId];
+    },
+    clearRandomIngredients: (state) => {
+      state.randomIngredients = [];
+      state.randomIngredientsError = null;
     },
   },
   extraReducers: (builder) => {
@@ -76,8 +96,39 @@ const ingredientSlice = createSlice({
       .addCase(batchGetIngredientDetails.rejected, (state) => {
         state.batchLoadingIds = [];
       });
+    
+    // Get random ingredients
+    builder
+      .addCase(getRandomIngredients.pending, (state) => {
+        state.randomIngredientsLoading = true;
+        state.randomIngredientsError = null;
+      })
+      .addCase(getRandomIngredients.fulfilled, (state, action) => {
+        state.randomIngredientsLoading = false;
+        // Fix: lấy từ data.ingredients thay vì data
+        state.randomIngredients = action.payload.data?.ingredients || [];
+        
+        // Update pagination
+        if (action.payload.data) {
+          state.randomIngredientsPagination = {
+            currentPage: action.payload.data.page || 1,
+            totalPages: action.payload.data.totalPages || 1,
+            totalItems: action.payload.data.total || 0,
+            limit: action.payload.data.limit || 10,
+          };
+        }
+      })
+      .addCase(getRandomIngredients.rejected, (state, action) => {
+        state.randomIngredientsLoading = false;
+        state.randomIngredientsError = action.payload;
+      });
   },
 });
 
-export const { clearIngredientDetails, clearSingleIngredient } = ingredientSlice.actions;
+export const { 
+  clearIngredientDetails, 
+  clearSingleIngredient,
+  clearRandomIngredients 
+} = ingredientSlice.actions;
+
 export default ingredientSlice.reducer;

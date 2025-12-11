@@ -1,234 +1,326 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-    View,
-    Text,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    Image,
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
+  TextInput,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import { router } from 'expo-router';
+import { useDispatch, useSelector } from 'react-redux';
+import { getRandomIngredients } from '../../../redux/thunk/ingredientThunk';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 export default function IngredientsTab() {
-    const [search, setSearch] = useState('');
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Redux selectors
+  const { 
+    randomIngredients, 
+    randomIngredientsLoading, 
+    randomIngredientsError,
+    randomIngredientsPagination 
+  } = useSelector((state) => state.ingredient);
 
-    // 🧺 Dữ liệu mẫu (mock data)
-    const ingredients = [
-        {
-            "_id": "1",
-            "nameIngredient": "Thịt gà",
-            "description": "Thịt gà là thực phẩm gia cầm phổ biến nhất trên thế giới.[3] Do có chi phí thấp và dễ chăn nuôi hơn so với các động vật khác như trâu bò hoặc lợn, nên gà đã trở thành loại thực phẩm không thể thiếu trong ẩm thực của nhiều nền văn hóa trên thế giới, đồng thời thịt của chúng đã được biến tấu để phù hợp với khẩu vị của từng khu vực. Thịt gà có thể được chế biến theo nhiều cách khác nhau tùy theo mục đích của chúng, bao gồm bỏ lò, nướng, quay, chiên hoặc luộc, cùng nhiều phương pháp khác. Kể từ nửa sau của thế kỷ 20, thịt gà chế biến sẵn đã trở thành một mặt hàng chủ yếu của dòng thực phẩm thức ăn nhanh. Loại thịt này đôi khi được coi là tốt cho sức khỏe hơn thịt đỏ, trong đó nồng độ cholesterol và chất béo bão hòa thấp hơn hẳn.",
-            "ingredientCategory": "3",
-            "ingredientImage": "https://suckhoedoisong.qltns.mediacdn.vn/324455921873985536/2024/9/16/thit-ga-1726458605898981451967.jpg",
-            "defaultAmount": 100,
-            "defaultUnit": "g",
-            "nutrition": {
-                "calories": 239,
-                "protein": 27,
-                "carbs": 1,
-                "fat": 14
-            },
-            "commonUses": [
-                "Xào",
-                "Luộc",
-                "Nướng"
-            ]
-        },
-        {
-            "_id": "2",
-            "nameIngredient": "Cà rốt",
-            "description": "Rau củ giàu vitamin A",
-            "ingredientCategory": "1",
-            "ingredientImage": "https://cdn.tienphong.vn/images/7f5c70d3e738104229acfb7638bb6b02ac67c58eec83f4c6727d92353613fbb8196bf8171bdf00ee59e632379267a678db1b10efbc027cba1d42798aca4c668b/Carrots_Nantes1_RYXE.jpg",
-            "defaultAmount": 1,
-            "defaultUnit": "củ",
-            "nutrition": {
-                "calories": 41,
-                "protein": 1,
-                "carbs": 10,
-                "fat": 0
-            },
-            "commonUses": [
-                "Xào",
-                "Canh",
-                "Salad"
-            ]
-        },
-        {
-            "_id": "3",
-            "nameIngredient": "Sữa tươi TH true MILK",
-            "description": "Đồ uống giàu canxi",
-            "ingredientCategory": "5",
-            "ingredientImage": "https://suachobeyeu.vn/upload/images/sua-tuoi-th-true-milk-co-duong-hop-180ml-4-2.jpg",
-            "defaultAmount": 100,
-            "defaultUnit": "ml",
-            "nutrition": {
-                "calories": 42,
-                "protein": 3.4,
-                "carbs": 5,
-                "fat": 1
-            },
-            "commonUses": [
-                "Uống",
-                "Pha chế",
-                "Làm bánh"
-            ]
-        },
-    ];
+  // Load random ingredients khi mount
+  useEffect(() => {
+    loadIngredients(1);
+  }, []);
 
-    // Hàm điều hướng sang chi tiết
-    const handleViewIngredientDetail = (ingredient) => {
-        router.push({
-            pathname: '/(stacks)/ingredients/IngredientDetail',
-            params: {
-                _id: ingredient._id,
-                nameIngredient: ingredient.nameIngredient,
-                ingredientImage: ingredient.ingredientImage,
-                description: ingredient.description,
-                ingredientCategory: ingredient.ingredientCategory,
-                defaultAmount: ingredient.defaultAmount,
-                defaultUnit: ingredient.defaultUnit,
-                calories: ingredient.nutrition.calories,
-                protein: ingredient.nutrition.protein,
-                carbs: ingredient.nutrition.carbs,
-                fat: ingredient.nutrition.fat,
-                commonUses: JSON.stringify(ingredient.commonUses),
-            },
-        });
+  const loadIngredients = async (pageNum = 1) => {
+    try {
+      await dispatch(getRandomIngredients({ page: pageNum, limit: 20 })).unwrap();
+      setPage(pageNum);
+    } catch (error) {
+      console.error('Error loading random ingredients:', error);
     }
-    // Lọc theo từ khóa tìm kiếm
-    const filteredIngredients = ingredients.filter((item) =>
-        item.nameIngredient.toLowerCase().includes(search.toLowerCase())
-    );
+  };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadIngredients(1);
+    setRefreshing(false);
+  };
 
+  // Tắt load more - comment out hoặc xóa hàm này
+  // const handleLoadMore = () => {
+  //   if (!randomIngredientsLoading && page < randomIngredientsPagination.totalPages) {
+  //     loadIngredients(page + 1);
+  //   }
+  // };
+
+  // Filter ingredients based on search query
+  const filteredIngredients = randomIngredients.filter(item =>
+    item.nameIngredient.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const renderIngredientItem = ({ item }) => (
+    <TouchableOpacity 
+      style={styles.ingredientCard} 
+      activeOpacity={0.7}
+      onPress={() => router.push(`/(stacks)/ingredients/IngredientDetail?id=${item._id}`)}
+    >
+      <Image
+        source={
+          item.ingredientImage
+            ? { uri: item.ingredientImage }
+            : require('../../../assets/images/logo.png')
+        }
+        style={styles.ingredientImage}
+      />
+      
+      <View style={styles.ingredientInfo}>
+        <Text style={styles.ingredientName}>{item.nameIngredient}</Text>
+        <Text style={styles.ingredientDescription} numberOfLines={2}>
+          {item.description}
+        </Text>
+        
+        {item.nutrition && (
+          <View style={styles.nutritionRow}>
+            <Text style={styles.nutritionText}>
+              🔥 {Math.round(item.nutrition.calories)} kcal
+            </Text>
+            <Text style={styles.nutritionText}>
+              🥩 {Math.round(item.nutrition.protein)}g
+            </Text>
+          </View>
+        )}
+      </View>
+      
+      <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
+    </TouchableOpacity>
+  );
+
+  const renderEmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="leaf-outline" size={64} color="#CCCCCC" />
+      <Text style={styles.emptyText}>
+        {searchQuery ? 'Không tìm thấy nguyên liệu nào' : 'Chưa có nguyên liệu nào'}
+      </Text>
+    </View>
+  );
+
+  const renderFooter = () => {
+    if (!randomIngredientsLoading) return null;
+    
     return (
-        <ScrollView
-            style={styles.scrollContainer}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-        >
-            {/* Thanh tìm kiếm + icon sắp xếp */}
-            <View style={styles.searchBarContainer}>
-                <View style={styles.searchInputContainer}>
-                    <Ionicons name="search-outline" size={20} color="#35A55E" />
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Tìm thực phẩm..."
-                        value={search}
-                        onChangeText={setSearch}
-                        placeholderTextColor="#999"
-                    />
-                </View>
-
-                <TouchableOpacity style={styles.sortButton}>
-                    <Ionicons name="filter-outline" size={22} color="#35A55E" />
-                </TouchableOpacity>
-            </View>
-
-            {/* Danh sách nguyên liệu */}
-            {filteredIngredients.map((ingredient) => (
-                <TouchableOpacity
-                    key={ingredient._id}
-                    style={styles.card}
-                    onPress={() => handleViewIngredientDetail(ingredient)}
-                >
-                    <Image source={{ uri: ingredient.ingredientImage }} style={styles.logo} />
-                    <View style={styles.cardContent}>
-                        <Text style={styles.title}>{ingredient.nameIngredient}</Text>
-                        <Text style={styles.description} numberOfLines={2}>
-                            {ingredient.description}
-                        </Text>
-                    </View>
-                </TouchableOpacity>
-            ))}
-
-            {filteredIngredients.length === 0 && (
-                <Text style={styles.noResult}>Không tìm thấy thực phẩm nào</Text>
-            )}
-        </ScrollView>
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color="#35A55E" />
+      </View>
     );
+  };
+
+  if (randomIngredientsLoading && page === 1) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#35A55E" />
+        <Text style={styles.loadingText}>Đang tải nguyên liệu...</Text>
+      </View>
+    );
+  }
+
+  if (randomIngredientsError) {
+    return (
+      <View style={styles.errorContainer}>
+        <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B" />
+        <Text style={styles.errorText}>{randomIngredientsError}</Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => loadIngredients(1)}
+        >
+          <Text style={styles.retryButtonText}>Thử lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      {/* Search Box */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBox}>
+          <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Tìm kiếm nguyên liệu..."
+            placeholderTextColor="#999"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={20} color="#999" />
+            </TouchableOpacity>
+          )}
+        </View>
+        
+        {/* Filter Button */}
+        <TouchableOpacity style={styles.filterButton}>
+          <Ionicons name="options-outline" size={20} color="#35A55E" />
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        data={filteredIngredients}
+        renderItem={renderIngredientItem}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={renderEmptyComponent}
+        ListFooterComponent={renderFooter}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#35A55E']}
+            tintColor="#35A55E"
+          />
+        }
+        // Tắt load more - comment out onEndReached
+        // onEndReached={handleLoadMore}
+        // onEndReachedThreshold={0.5}
+      />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    scrollContainer: {
-        flex: 1,
-    },
-    scrollContent: {
-        paddingVertical: 20,
-    },
-
-    // Thanh tìm kiếm
-    searchBarContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    searchInputContainer: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        paddingHorizontal: 10,
-        height: 42,
-        borderWidth: 1,
-        borderColor: '#35A55E',
-    },
-    searchInput: {
-        flex: 1,
-        marginLeft: 8,
-        fontSize: 14,
-        height: 40,
-        color: '#333',
-    },
-    sortButton: {
-        marginLeft: 10,
-        padding: 8,
-        borderRadius: 10,
-        backgroundColor: 'rgba(53, 165, 94, 0.1)',
-    },
-
-    // Card item
-    card: {
-        flexDirection: 'row',
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        marginBottom: 10,
-        padding: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 2,
-    },
-    logo: {
-        width: 80,
-        height: 80,
-        borderRadius: 10,
-        marginRight: 12,
-    },
-    cardContent: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    title: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#222',
-        marginBottom: 4,
-    },
-    description: {
-        fontSize: 13,
-        color: '#333',
-        lineHeight: 18,
-    },
-    noResult: {
-        textAlign: 'center',
-        color: '#666',
-        marginTop: 20,
-        fontSize: 14,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#D4E9E1',
+  },
+  // Search container styles
+  searchContainer: {
+    flexDirection: 'row',
+    padding: 0,
+    gap: 10,
+    marginBottom:15,
+    marginTop:15,
+  },
+  searchBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    height: 48,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#333',
+  },
+  filterButton: {
+    width: 48,
+    height: 48,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  listContent: {
+    padding: 0,
+    paddingTop: 0,
+    paddingBottom: 80,
+  },
+  ingredientCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 8,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  ingredientImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    backgroundColor: '#F0F0F0',
+  },
+  ingredientInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  ingredientName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  ingredientDescription: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 6,
+  },
+  nutritionRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  nutritionText: {
+    fontSize: 12,
+    color: '#999',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#D4E9E1',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#D4E9E1',
+    padding: 20,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: 20,
+    backgroundColor: '#35A55E',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#999',
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
 });

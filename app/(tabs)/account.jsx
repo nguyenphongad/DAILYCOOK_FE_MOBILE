@@ -305,7 +305,7 @@ export default function AccountScreen() {
         )}
 
         {item.rightComponent === 'arrow' && (
-          <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+          <Ionicons name="chevron-forward" size={22} color="#CCCCCC" />
         )}
 
         {item.rightComponent === 'text' && (

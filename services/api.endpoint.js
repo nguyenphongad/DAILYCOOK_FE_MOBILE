@@ -9,6 +9,11 @@ export const ENDPOINT = {
     CHECK_IS_BOARDING: `${BASE_ENDPOINT}/surveys/onboarding/status`,
     SAVE_ONBOARDING_DATA: `${BASE_ENDPOINT}/surveys/onboarding/save`,
 
+    GET_SURVEY_QUESTIONS: `${BASE_ENDPOINT}/surveys/surveys`,
+    GET_SURVEY_RESPONSES: `${BASE_ENDPOINT}/surveys/surveys/responses`,
+    SAVE_SURVEY_RESPONSES: `${BASE_ENDPOINT}/surveys/surveys/responses`,
+    UPDATE_SURVEY_RESPONSES: (responseId) => `${BASE_ENDPOINT}/surveys/surveys/responses/${responseId}`,
+    
     //meal
     GET_LIST_DIETTYPE: `${BASE_ENDPOINT}/meals/diet-types`,
     
@@ -36,6 +41,7 @@ export const ENDPOINT = {
     // ingredient endpoints
     GET_INGREDIENT_DETAIL: (ingredientId) => `${BASE_ENDPOINT}/ingredients/ingredient/${ingredientId}`,
     GET_MEASUREMENT_UNITS: `${BASE_ENDPOINT}/ingredients/measurement-units`,
+    GET_RANDOM_INGREDIENTS: `${BASE_ENDPOINT}/ingredients/random`,
     
     // recipe endpoints
     GET_RECIPE_DETAIL: (recipeId) => `${BASE_ENDPOINT}/recipes/${recipeId}`,
