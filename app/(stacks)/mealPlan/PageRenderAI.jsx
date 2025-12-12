@@ -243,7 +243,7 @@ export default function PageRenderAI() {
           protein: recipe?.nutrition?.protein || 0,
           carbs: recipe?.nutrition?.carbs || 0,
           fat: recipe?.nutrition?.fat || 0,
-          typeMeal: mealDetail.mealCategory?.title || 'Món chính',
+          typeMeal: mealDetail.mealCategory?.title || '',
           imageUrl: mealDetail.mealImage 
             ? { uri: mealDetail.mealImage }
             : require('../../../assets/images/food1.png'),
@@ -558,7 +558,7 @@ export default function PageRenderAI() {
               protein: newMeal.recipeDetail?.nutrition?.protein || 0,
               carbs: newMeal.recipeDetail?.nutrition?.carbs || 0,
               fat: newMeal.recipeDetail?.nutrition?.fat || 0,
-              typeMeal: newMeal.mealCategory?.title || 'Món chính',
+              typeMeal: newMeal.mealCategory?.title || '',
               imageUrl: newMeal.mealImage 
                 ? { uri: newMeal.mealImage }
                 : require('../../../assets/images/food1.png'),

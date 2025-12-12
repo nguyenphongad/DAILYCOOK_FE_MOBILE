@@ -44,3 +44,30 @@ export const getMealDetail = createAsyncThunk(
     }
   }
 );
+
+export const getRandomMeals = createAsyncThunk(
+  'meal/getRandomMeals',
+  async ({ page = 1, limit = 20 } = {}, { rejectWithValue }) => {
+    try {
+      console.log('=== GET RANDOM MEALS REQUEST ===');
+      console.log('Page:', page, 'Limit:', limit);
+      console.log('================================');
+      
+      const response = await apiService.get(
+        `${ENDPOINT.GET_RANDOM_MEALS}?page=${page}&limit=${limit}`
+      );
+      
+      console.log('API Response - Random Meals:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('=== GET RANDOM MEALS ERROR ===');
+      console.error('Error:', error);
+      console.error('==============================');
+      
+      return rejectWithValue(
+        error.response?.data?.message || 'Không thể lấy danh sách món ăn'
+      );
+    }
+  }
+);

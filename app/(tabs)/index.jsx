@@ -261,7 +261,7 @@ export default function HomeScreen() {
           protein: recipe?.nutrition?.protein || 0,
           carbs: recipe?.nutrition?.carbs || 0,
           fat: recipe?.nutrition?.fat || 0,
-          typeMeal: mealDetail.mealCategory?.title || 'Món chính',
+          typeMeal: mealDetail.mealCategory?.title || '',
           imageUrl: mealDetail.mealImage 
             ? { uri: mealDetail.mealImage }
             : require('../../assets/images/food1.png'),
@@ -457,7 +457,7 @@ export default function HomeScreen() {
   );
 
   // Lấy tên user từ Redux state hoặc fallback
-  const displayName = user?.fullName  || 'Người dùng';
+  const displayName = user?.fullName  || '';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -469,7 +469,7 @@ export default function HomeScreen() {
       {/* Header cố định */}
       <HeaderComponent>
         <Text style={styles.headerText}>
-          Xin chào, {isLoading ? 'đang tải...' : displayName}
+          Xin chào {isLoading ? 'đang tải...' : displayName}
         </Text>
         <View style={styles.headerRight}>
           <Image source={weatherIcon} style={styles.weatherIcon} />

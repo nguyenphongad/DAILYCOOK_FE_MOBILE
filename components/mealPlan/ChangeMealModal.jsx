@@ -93,7 +93,7 @@ const ChangeMealModal = ({
           protein: newMeal.recipeDetail?.nutrition?.protein || 0,
           carbs: newMeal.recipeDetail?.nutrition?.carbs || 0,
           fat: newMeal.recipeDetail?.nutrition?.fat || 0,
-          typeMeal: newMeal.mealCategory?.title || 'Món chính',
+          typeMeal: newMeal.mealCategory?.title || '',
           imageUrl: newMeal.mealImage
             ? { uri: newMeal.mealImage }
             : require('../../assets/images/food1.png'),
