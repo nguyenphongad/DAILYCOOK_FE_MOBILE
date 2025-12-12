@@ -1,6 +1,6 @@
 // ShoppingScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, RefreshControl, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import HeaderComponent from '@/components/header/HeaderComponent';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,9 +8,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import SheetComponent from '../../components/sheet/SheetComponent';
 import { styles } from '../../styles/ShoppingPage';
 import { saveShoppingItems, getShoppingItems } from '../../utils/storage';
-import menuData from '../../data/menuIngredients.json';
+import { useDispatch, useSelector } from 'react-redux';
+import { getMealPlanFromDatabase } from '../../redux/thunk/mealPlanThunk';
+import { batchGetIngredientDetails, getMeasurementUnits } from '../../redux/thunk/ingredientThunk';
 
 export default function ShoppingScreen() {
+  const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [inputText, setInputText] = useState('');
@@ -18,55 +21,139 @@ export default function ShoppingScreen() {
   
   const [shoppingItems, setShoppingItems] = useState([]);
   const [menuIngredients, setMenuIngredients] = useState([]);
+  const [isLoadingIngredients, setIsLoadingIngredients] = useState(true);
+
+  // Redux selectors
+  const { databaseMealPlan, getMealPlanFromDatabaseLoading } = useSelector(state => state.mealPlan);
+  const { ingredientDetails, measurementUnits } = useSelector(state => state.ingredient);
 
   // Load data khi component mount
   useEffect(() => {
-    loadData();
+    loadMealPlanAndIngredients();
   }, []);
 
-  // Save data khi shoppingItems thay đổi
+  // Process ingredients khi có meal plan và ingredient details
   useEffect(() => {
-    if (shoppingItems.length > 0 || menuIngredients.length > 0) {
+    if (databaseMealPlan && databaseMealPlan.mealPlan) {
+      processIngredientsFromMealPlan();
+    }
+  }, [databaseMealPlan, ingredientDetails, measurementUnits]);
+
+  const loadMealPlanAndIngredients = async () => {
+    try {
+      setIsLoadingIngredients(true);
+      
+      // Load measurement units
+      await dispatch(getMeasurementUnits()).unwrap();
+      
+      // Load meal plan from database
+      const today = new Date();
+      await dispatch(getMealPlanFromDatabase(today)).unwrap();
+      
+    } catch (error) {
+      console.error('Error loading meal plan:', error);
+    } finally {
+      setIsLoadingIngredients(false);
+    }
+  };
+
+  const processIngredientsFromMealPlan = async () => {
+    if (!databaseMealPlan || !databaseMealPlan.mealPlan) {
+      setIsLoadingIngredients(false);
+      return;
+    }
+
+    try {
+      // Collect all ingredient IDs
+      const ingredientIds = new Set();
+      const ingredientsMap = new Map(); // Map để lưu ingredient với quantity và unit
+
+      databaseMealPlan.mealPlan.forEach(mealTime => {
+        mealTime.meals.forEach(meal => {
+          const mealDetail = meal.mealDetail;
+          
+          if (mealDetail.ingredients && Array.isArray(mealDetail.ingredients)) {
+            mealDetail.ingredients.forEach(ing => {
+              const ingId = ing.ingredient_id;
+              ingredientIds.add(ingId);
+              
+              // Lưu thông tin ingredient với quantity và unit
+              if (!ingredientsMap.has(ingId)) {
+                ingredientsMap.set(ingId, {
+                  quantity: ing.quantity,
+                  unit: ing.unit,
+                  mealName: mealDetail.nameMeal
+                });
+              } else {
+                // Nếu đã có, cộng thêm quantity
+                const existing = ingredientsMap.get(ingId);
+                if (existing.unit === ing.unit) {
+                  existing.quantity += ing.quantity;
+                }
+              }
+            });
+          }
+        });
+      });
+
+      console.log('Total unique ingredients:', ingredientIds.size);
+
+      // Load ingredient details nếu chưa có
+      const idsToLoad = Array.from(ingredientIds).filter(id => !ingredientDetails[id]);
+      
+      if (idsToLoad.length > 0) {
+        console.log('Loading ingredient details for', idsToLoad.length, 'ingredients');
+        await dispatch(batchGetIngredientDetails(idsToLoad)).unwrap();
+      }
+
+      // Load saved shopping items from storage
+      const { items } = await getShoppingItems();
+      
+      // Process menu ingredients
+      const processedMenuIngredients = Array.from(ingredientsMap.entries()).map(([ingId, data]) => {
+        const detail = ingredientDetails[ingId];
+        const unitData = measurementUnits.find(u => u.key === data.unit);
+        
+        // Check if this ingredient is completed in saved items
+        const savedItem = items.find(item => item.ingredientId === ingId && item.fromMenu);
+        
+        return {
+          id: ingId,
+          ingredientId: ingId,
+          text: detail?.nameIngredient || 'Đang tải...',
+          quantity: data.quantity,
+          unit: unitData?.label || data.unit,
+          mealName: data.mealName,
+          completed: savedItem?.completed || false,
+          fromMenu: true
+        };
+      });
+
+      // Load user added items (not from menu)
+      const userItems = items.filter(item => !item.fromMenu);
+
+      setMenuIngredients(processedMenuIngredients);
+      setShoppingItems(userItems);
+      
+      console.log('Processed menu ingredients:', processedMenuIngredients.length);
+      console.log('User items:', userItems.length);
+      
+    } catch (error) {
+      console.error('Error processing ingredients:', error);
+    }
+  };
+
+  // Save to storage khi có thay đổi
+  useEffect(() => {
+    if (menuIngredients.length > 0 || shoppingItems.length > 0) {
       const allItems = [...menuIngredients, ...shoppingItems];
       saveShoppingItems(allItems);
     }
   }, [shoppingItems, menuIngredients]);
 
-  const loadData = async () => {
-    try {
-      const { items, isNewDay } = await getShoppingItems();
-      
-      if (isNewDay || items.length === 0) {
-        // Load menu ingredients nếu là ngày mới hoặc chưa có data
-        const menuItems = menuData.menuIngredients.map(item => ({
-          ...item,
-          completed: false,
-          fromMenu: true
-        }));
-        setMenuIngredients(menuItems);
-        setShoppingItems([]);
-      } else {
-        // Phân tách menu items và user items
-        const menuItems = items.filter(item => item.fromMenu);
-        const userItems = items.filter(item => !item.fromMenu);
-        setMenuIngredients(menuItems);
-        setShoppingItems(userItems);
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-      // Fallback to menu data
-      const menuItems = menuData.menuIngredients.map(item => ({
-        ...item,
-        completed: false,
-        fromMenu: true
-      }));
-      setMenuIngredients(menuItems);
-    }
-  };
-
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await loadMealPlanAndIngredients();
     setRefreshing(false);
   };
 
@@ -106,6 +193,24 @@ export default function ShoppingScreen() {
     setMenuIngredients(menuIngredients.map(item => ({ ...item, completed: true })));
     setShoppingItems(shoppingItems.map(item => ({ ...item, completed: true })));
   };
+
+  // Loading state
+  if (isLoadingIngredients || getMealPlanFromDatabaseLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <HeaderComponent style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerText}>Danh sách mua sắm</Text>
+          </View>
+        </HeaderComponent>
+        
+        <View style={[styles.loadingContainer, { paddingTop: insets.top + 100 }]}>
+          <ActivityIndicator size="large" color="#35A55E" />
+          <Text style={styles.loadingText}>Đang tải danh sách nguyên liệu...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -148,14 +253,27 @@ export default function ShoppingScreen() {
                 >
                   <View style={styles.listItemLeft}>
                     <Ionicons name="square-outline" size={20} color="#aaa" />
-                    <Text style={styles.listItemText}>{item.text}</Text>
-                    <View style={styles.menuItemBadge}>
-                      <Text style={styles.menuItemBadgeText}>{item.menuName}</Text>
+                    <View style={styles.listItemTextContainer}>
+                      <Text style={styles.listItemText}>
+                        {item.text} - {item.quantity} {item.unit}
+                      </Text>
+                      <View style={styles.menuItemBadge}>
+                        <Text style={styles.menuItemBadgeText}>{item.mealName}</Text>
+                      </View>
                     </View>
                   </View>
                 </TouchableOpacity>
               ))}
             </View>
+          </View>
+        )}
+
+        {/* Empty state for menu ingredients */}
+        {pendingMenuItems.length === 0 && pendingUserItems.length === 0 && completedItems.length === 0 && (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="cart-outline" size={64} color="#CCCCCC" />
+            <Text style={styles.emptyText}>Chưa có nguyên liệu nào</Text>
+            <Text style={styles.emptySubtext}>Thêm nguyên liệu hoặc tạo thực đơn mới</Text>
           </View>
         )}
 
@@ -198,12 +316,17 @@ export default function ShoppingScreen() {
                 >
                   <View style={styles.listItemLeft}>
                     <Ionicons name="checkbox" size={20} color="#35A55E" />
-                    <Text style={[styles.listItemText, styles.listItemTextCompleted]}>{item.text}</Text>
-                    {item.fromMenu && (
-                      <View style={styles.menuItemBadge}>
-                        <Text style={styles.menuItemBadgeText}>{item.menuName}</Text>
-                      </View>
-                    )}
+                    <View style={styles.listItemTextContainer}>
+                      <Text style={[styles.listItemText, styles.listItemTextCompleted]}>
+                        {item.text}
+                        {item.quantity && ` - ${item.quantity} ${item.unit}`}
+                      </Text>
+                      {item.fromMenu && (
+                        <View style={styles.menuItemBadge}>
+                          <Text style={styles.menuItemBadgeText}>{item.mealName}</Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
                 </TouchableOpacity>
               ))}

@@ -114,7 +114,7 @@ export default function QuestionsScreen() {
         
         console.log('✅ Survey saved successfully');
         dispatch(resetOnboarding());
-        router.replace('/(tabs)');
+        router.back();
       } catch (error) {
         console.error('❌ Error saving survey:', error);
       }

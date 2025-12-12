@@ -827,6 +827,35 @@ export default function PageRenderAI() {
     });
   };
 
+  // Lấy target nutrition từ nutritionGoals
+  const getTargetNutrition = () => {
+    // Nếu không có data thì return 0
+    if (!nutritionGoals || !nutritionGoals.nutritionGoals) {
+      return {
+        calories: 0,
+        protein: 0,
+        fat: 0,
+        carbs: 0
+      };
+    }
+
+    const goals = nutritionGoals.nutritionGoals;
+    const caloriesPerDay = goals.caloriesPerDay || 0;
+
+    // Tính macro từ calories và percentages
+    // 1g protein = 4 calo, 1g carbs = 4 calo, 1g fat = 9 calo
+    const proteinCalories = (caloriesPerDay * (goals.proteinPercentage || 0)) / 100;
+    const carbsCalories = (caloriesPerDay * (goals.carbPercentage || 0)) / 100;
+    const fatCalories = (caloriesPerDay * (goals.fatPercentage || 0)) / 100;
+
+    return {
+      calories: caloriesPerDay,
+      protein: Math.round(proteinCalories / 4),
+      carbs: Math.round(carbsCalories / 4),
+      fat: Math.round(fatCalories / 9)
+    };
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />

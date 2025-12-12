@@ -94,20 +94,30 @@ export default function RecordMeal() {
 
     // Lấy target nutrition từ nutritionGoals
     const getTargetNutrition = () => {
-        if (!nutritionGoals || !nutritionGoals.nutritionGoals || !nutritionGoals.macroDetails) {
+        // Nếu không có data thì return 0
+        if (!nutritionGoals || !nutritionGoals.nutritionGoals) {
             return {
-                calories: 2000,
-                protein: 150,
-                fat: 70,
-                carbs: 250
+                calories: 0,
+                protein: 0,
+                fat: 0,
+                carbs: 0
             };
         }
 
+        const goals = nutritionGoals.nutritionGoals;
+        const caloriesPerDay = goals.caloriesPerDay || 0;
+
+        // Tính macro từ calories và percentages
+        // 1g protein = 4 calo, 1g carbs = 4 calo, 1g fat = 9 calo
+        const proteinCalories = (caloriesPerDay * (goals.proteinPercentage || 0)) / 100;
+        const carbsCalories = (caloriesPerDay * (goals.carbPercentage || 0)) / 100;
+        const fatCalories = (caloriesPerDay * (goals.fatPercentage || 0)) / 100;
+
         return {
-            calories: nutritionGoals.nutritionGoals.caloriesPerDay,
-            protein: Math.round(nutritionGoals.macroDetails.protein.grams),
-            fat: Math.round(nutritionGoals.macroDetails.fat.grams),
-            carbs: Math.round(nutritionGoals.macroDetails.carbs.grams)
+            calories: caloriesPerDay,
+            protein: Math.round(proteinCalories / 4),
+            carbs: Math.round(carbsCalories / 4),
+            fat: Math.round(fatCalories / 9)
         };
     };
 
