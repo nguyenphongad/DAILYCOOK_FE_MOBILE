@@ -439,7 +439,7 @@ export default function MealDetail() {
                             ) : steps.length > 0 ? (
                                 steps.map((step, index) => (
                                     <Text key={index} style={styles.stepText}>
-                                        {index + 1}. {step}
+                                        Bước {index + 1}. {step}
                                     </Text>
                                 ))) : (
                                 <Text style={{ textAlign: 'center', color: '#999', paddingVertical: 20 }}>

@@ -60,9 +60,9 @@ const MenuItemCard = React.memo(({ item, onPress, onAcknowledge }) => {
       >
         <Image source={item.imageUrl} style={styles.menuItemImageVertical} />
 
-        <View style={styles.typeMealContainer}>
+        {/* <View style={styles.typeMealContainer}>
           <Text style={styles.typeMealText}>{item.typeMeal}</Text>
-        </View>
+        </View> */}
 
         <View style={styles.menuItemContentVertical}>
           <View style={styles.menuItemInfo}>
@@ -87,11 +87,12 @@ const MenuItemCard = React.memo(({ item, onPress, onAcknowledge }) => {
               activeOpacity={item.isEaten ? 1 : 0.7}
               disabled={item.isEaten}
             >
+              {!item.isEaten ? "" : <Ionicons name="checkmark-circle" size={16} color="#bfc9c2" />}
               <Text style={[
                 styles.acknowledgeButtonText,
                 item.isEaten && styles.acknowledgeButtonTextDisabled
               ]}>
-                {item.isEaten ? 'Đã ghi nhận' : 'Ghi nhận'}
+                {item.isEaten ? 'Đã ăn' : 'Ghi nhận'}
               </Text>
             </TouchableOpacity>
           </View>

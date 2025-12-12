@@ -23,11 +23,11 @@ export default function MealTab() {
     const [page, setPage] = useState(1);
 
     // Redux selectors
-    const { 
-        randomMeals, 
-        randomMealsLoading, 
+    const {
+        randomMeals,
+        randomMealsLoading,
         randomMealsError,
-        randomMealsPagination 
+        randomMealsPagination
     } = useSelector((state) => state.meal);
 
     // Load meals khi component mount
@@ -69,26 +69,26 @@ export default function MealTab() {
             onPress={() => handleViewMealDetail(item)}
             activeOpacity={0.7}
         >
-            <Image 
+            <Image
                 source={
-                    item.mealImage 
-                        ? { uri: item.mealImage } 
+                    item.mealImage
+                        ? { uri: item.mealImage }
                         : require('../../../assets/images/food1.png')
-                } 
-                style={styles.logo} 
+                }
+                style={styles.logo}
             />
             <Text style={styles.title} numberOfLines={2}>
                 {item.nameMeal}
             </Text>
-            
-            {/* Hiển thị category nếu có */}
+
+            {/* Hiển thị category nếu có
             {item.mealCategory && (
                 <View style={styles.categoryBadge}>
                     <Text style={styles.categoryText}>
                         {item.mealCategory.title}
                     </Text>
                 </View>
-            )}
+            )} */}
         </TouchableOpacity>
     );
 
@@ -103,7 +103,7 @@ export default function MealTab() {
 
     const renderFooter = () => {
         if (!randomMealsLoading) return null;
-        
+
         return (
             <View style={styles.footerLoader}>
                 <ActivityIndicator size="small" color="#35A55E" />
@@ -140,10 +140,11 @@ export default function MealTab() {
             {/* Thanh tìm kiếm + icon sắp xếp */}
             <View style={styles.searchBarContainer}>
                 <View style={styles.searchInputContainer}>
-                    <Ionicons name="search-outline" size={20} color="#35A55E" />
+                    <Ionicons name="search" size={18} color="#999" style={styles.searchIcon} />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder="Tìm món ăn..."
+                        placeholder="Tìm kiếm món ăn..."
+                        placeholderTextColor="#999"
                         value={search}
                         onChangeText={setSearch}
                     />
@@ -154,9 +155,6 @@ export default function MealTab() {
                     )}
                 </View>
 
-                <TouchableOpacity style={styles.sortButton}>
-                    <Ionicons name="filter-outline" size={22} color="#35A55E" />
-                </TouchableOpacity>
             </View>
 
             {/* Danh sách món ăn với FlatList */}
@@ -231,18 +229,25 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        paddingHorizontal: 10,
-        height: 42,
+        backgroundColor: '#e6f2ed',
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 0.2,
+        borderRadius: 12,
+        paddingHorizontal: 8,
+        height: 40,
         borderWidth: 1,
         borderColor: '#35A55E',
     },
+    searchIcon: {
+        marginRight: 8,
+    },
     searchInput: {
         flex: 1,
-        marginLeft: 8,
-        fontSize: 14,
-        height: 40,
+        fontSize: 13,
         color: '#333',
     },
     sortButton: {
@@ -261,15 +266,17 @@ const styles = StyleSheet.create({
     },
     card: {
         width: '31%',
-        backgroundColor: '#fff',
+        backgroundColor: '#e6f2ed',
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 0.2,
         borderRadius: 10,
         padding: 8,
         alignItems: 'center',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
         position: 'relative',
     },
     logo: {

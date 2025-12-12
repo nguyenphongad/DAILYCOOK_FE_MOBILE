@@ -38,13 +38,13 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
   },
-  
+
   // Cập nhật styles cho date header section
   dateHeaderSection: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 15,
-    marginBottom: 16,
+    // marginBottom: 16,
   },
   dayTitle: {
     fontSize: 20,
@@ -61,8 +61,8 @@ const styles = StyleSheet.create({
     color: '#666666',
     fontWeight: '400',
   },
-  
-  
+
+
   // Thêm style mới cho phần nutrition
   nutritionSection: {
     paddingHorizontal: 15,
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-  
+
   calendarContainer: {
     marginTop: 20,
     paddingHorizontal: 10,
@@ -145,9 +145,9 @@ const styles = StyleSheet.create({
   monthTitle: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#35A55E', 
+    color: '#35A55E',
   },
-  
+
   calendarNavigationContainer: {
     position: 'relative',
     marginBottom: 10,
@@ -163,25 +163,25 @@ const styles = StyleSheet.create({
     alignSelf: 'center', // Căn giữa tuần
   },
   dateItem: {
-    width: 40, 
+    width: 40,
     height: 65,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 25,
-    backgroundColor: 'transparent', 
+    backgroundColor: 'transparent',
     marginHorizontal: 3,
     // Thêm viền xanh nhạt cho tất cả các item ngày
     borderWidth: 1,
     borderColor: 'rgba(53, 165, 94, 0.3)',
   },
   activeDateItem: {
-    backgroundColor: 'transparent', 
+    backgroundColor: 'transparent',
     // Viền xanh đậm cho item ngày active
     borderWidth: 1,
     borderColor: '#35A55E',
   },
   futureDateItem: {
-    backgroundColor: 'transparent', 
+    backgroundColor: 'transparent',
     // Viền xám nhạt cho ngày tương lai
     borderWidth: 1,
     borderColor: '#E0E0E0',
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   futureDayText: {
     color: '#999',
   },
-  
+
   // Điều chỉnh lại style của date circle (không cần viền vì đã có viền ở item cha)
   dateCircle: {
     width: 32,
@@ -218,16 +218,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderWidth: 0,
   },
-  
+
   menuSection: {
-    marginTop: 10,
+    marginTop: 8,
     marginHorizontal: 15,
   },
   menuHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    // marginBottom: 10,
   },
   settingsButton: {
     width: 36,
@@ -237,12 +237,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
+
   // Section-based layout styles (giống như PageRenderAI)
   mealTimeSection: {
-    marginBottom: 24,
+    marginBottom: 10,
   },
-  
+
   mealTimeSectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -260,7 +260,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(53, 165, 94, 0.2)',
   },
   mealTimeSectionContent: {
-    paddingLeft: 12, // Thụt vào bên trái
   },
 
   // Remove or comment out tab-related styles
@@ -335,15 +334,15 @@ const styles = StyleSheet.create({
   aiSuggestionButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
-    marginRight:20,
-    fontSize:14
+    marginRight: 20,
+    fontSize: 14
   },
 
   // Settings sheet styles
   settingsSheetContent: {
     padding: 16,
   },
-  
+
   settingsSheetTitle: {
     fontSize: 18,
     fontWeight: '600',
@@ -351,7 +350,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
-  
+
   settingsOption: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -362,12 +361,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
   },
-  
+
   settingsOptionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  
+
   settingsOptionText: {
     fontSize: 16,
     color: '#333333',
@@ -382,7 +381,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontWeight: '500',
   },
-  
+
   // AI Modal styles
   aiModalOverlay: {
     flex: 1,
@@ -392,7 +391,7 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 50,
   },
-  
+
   aiModalContent: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
@@ -405,7 +404,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-  
+
   aiModalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -413,7 +412,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#35A55E',
   },
-  
+
   aiModalIconContainer: {
     width: 36,
     height: 36,
@@ -423,69 +422,69 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
-  
+
   aiModalTitle: {
     flex: 1,
     fontSize: 18,
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  
+
   aiModalCloseButton: {
     padding: 8,
   },
-  
+
   aiModalBody: {
     maxHeight: '70%',
   },
-  
+
   aiModalBodyContent: {
     padding: 16,
     paddingBottom: 0,
   },
-  
+
   aiLoadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 40,
   },
-  
+
   aiLoadingImage: {
     width: 80,
     height: 80,
     marginBottom: 16,
   },
-  
+
   aiLoadingText: {
     fontSize: 16,
     color: '#666666',
     textAlign: 'center',
   },
-  
+
   aiSuggestionContainer: {
     // Để trống cho animation
   },
-  
+
   aiAnalysisContainer: {
     backgroundColor: '#F8F9FA',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
   },
-  
+
   aiAnalysisTitle: {
     fontSize: 16,
     fontWeight: '500',
     color: '#333333',
     marginBottom: 12,
   },
-  
+
   aiAnalysisItemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
   },
-  
+
   aiAnalysisCheckmarkContainer: {
     width: 24,
     height: 24,
@@ -495,48 +494,48 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 8,
   },
-  
+
   aiAnalysisCheckmark: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
   },
-  
+
   aiAnalysisItem: {
     fontSize: 14,
     color: '#666666',
     flex: 1,
     fontWeight: '400',
   },
-  
+
   aiIntroText: {
     fontSize: 14,
     color: '#333333',
     marginBottom: 12,
     lineHeight: 20,
   },
-  
+
   aiMealSuggestions: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     elevation: 2,
   },
-  
+
   aiMealHeader: {
     fontSize: 16,
     fontWeight: '500',
     color: '#35A55E',
     marginBottom: 8,
   },
-  
+
   aiMealItem: {
     fontSize: 14,
     color: '#333333',
     marginBottom: 4,
     lineHeight: 20,
   },
-  
+
   aiAcceptButton: {
     backgroundColor: '#35A55E',
     borderRadius: 12,
@@ -549,23 +548,23 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 4,
   },
-  
+
   aiAcceptButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 16,
     letterSpacing: 0.5,
   },
-  
+
   menuGrid: {
     marginTop: 5,
   },
-  
+
   // Thêm styles cho layout dọc
   menuItemCardVertical: {
     flexDirection: 'row',
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#e6f2ed',
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -575,45 +574,46 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 12,
   },
-  
+
   menuItemImageVertical: {
-    width: 80,
-    height: 80,
+    width: 50,
+    height: 50,
     borderRadius: 10,
     resizeMode: 'cover',
   },
-  
+
   menuItemContentVertical: {
     flex: 1,
     marginLeft: 12,
     justifyContent: 'space-between',
+    flexDirection: "row"
   },
-  
+
   menuItemInfo: {
     flex: 1,
   },
-  
+
   menuItemNameVertical: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#333333',
     marginBottom: 4,
   },
-  
+
   menuItemDescription: {
     fontSize: 13,
     color: '#666666',
     marginBottom: 8,
     lineHeight: 18,
   },
-  
+
   menuItemActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 8,
   },
-  
+
   viewDetailButton: {
     backgroundColor: '#F0F8F0',
     borderRadius: 6,
@@ -622,20 +622,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#35A55E',
   },
-  
+
   viewDetailButtonText: {
     fontSize: 12,
     color: '#35A55E',
     fontWeight: '500',
   },
-  
+
   acknowledgeButton: {
     backgroundColor: '#35A55E',
-    borderRadius: 6,
+    borderRadius: 15,
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderWidth: 1,
     borderColor: '#35A55E',
+    flexDirection: 'row',
+    marginBottom:-20
   },
   acknowledgeButtonDisabled: {
     backgroundColor: '#E0E0E0',
@@ -643,14 +645,14 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   acknowledgeButtonText: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#FFFFFF',
     fontWeight: '500',
   },
   acknowledgeButtonTextDisabled: {
     color: '#999999',
   },
-  
+
   // Cập nhật typeMealContainer cho layout dọc
   typeMealContainer: {
     position: 'absolute',
@@ -661,7 +663,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 4,
   },
-  
+
   typeMealText: {
     fontSize: 11,
     fontWeight: '600',

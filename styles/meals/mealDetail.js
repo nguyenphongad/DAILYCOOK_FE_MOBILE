@@ -184,6 +184,6 @@ export const styles = StyleSheet.create({
         fontSize: 14,
         color: '#333',
         lineHeight: 22,
-        marginBottom: 6
+        marginBottom: 12
     },
 });
