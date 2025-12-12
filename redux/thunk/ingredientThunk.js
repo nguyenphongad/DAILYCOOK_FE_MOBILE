@@ -63,16 +63,30 @@ export const batchGetIngredientDetails = createAsyncThunk(
       console.log('Ingredient IDs:', ingredientIds);
       console.log('====================================');
       
-      // Gọi API cho từng ingredient
-      const promises = ingredientIds.map(id => 
-        dispatch(getIngredientDetail(id)).unwrap()
+      // Gọi API cho từng ingredient và bắt lỗi riêng biệt
+      const results = await Promise.allSettled(
+        ingredientIds.map(id => 
+          dispatch(getIngredientDetail(id)).unwrap()
+        )
       );
       
-      const results = await Promise.all(promises);
+      // Lọc ra các kết quả thành công
+      const successResults = results
+        .filter(result => result.status === 'fulfilled')
+        .map(result => result.value);
       
-      console.log('Batch get ingredients completed:', results.length);
+      // Log các ingredient bị lỗi
+      const failedIds = results
+        .map((result, index) => result.status === 'rejected' ? ingredientIds[index] : null)
+        .filter(Boolean);
       
-      return results;
+      if (failedIds.length > 0) {
+        console.warn('⚠️ Failed to load ingredients:', failedIds);
+      }
+      
+      console.log(`✅ Batch get ingredients completed: ${successResults.length}/${ingredientIds.length} successful`);
+      
+      return successResults;
     } catch (error) {
       console.error('=== BATCH GET INGREDIENTS ERROR ===');
       console.error('Error:', error);
