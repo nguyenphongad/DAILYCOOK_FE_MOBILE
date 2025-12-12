@@ -37,6 +37,7 @@ export const ENDPOINT = {
     
     // meal detail
     GET_MEAL_DETAIL: (mealId) => `${BASE_ENDPOINT}/meals/meal/${mealId}`,
+    GET_RANDOM_MEALS: `${BASE_ENDPOINT}/meals/random`,
     
     // ingredient endpoints
     GET_INGREDIENT_DETAIL: (ingredientId) => `${BASE_ENDPOINT}/ingredients/ingredient/${ingredientId}`,

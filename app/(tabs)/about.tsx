@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import RecipesTab from '../(stacks)/about/RecipesTab';
 import IngredientsTab from '../(stacks)/about/IngredientsTab';
+import MealTab from '../(stacks)/about/MealTab';
 import HeaderComponent from '@/components/header/HeaderComponent';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -45,7 +45,7 @@ export default function AboutScreen() {
         </TouchableOpacity>
       </View>
       {/* Nội dung */}
-      {activeTab === 'ingredients' ? <IngredientsTab /> : <RecipesTab />}
+      {activeTab === 'ingredients' ? <IngredientsTab /> : <MealTab />}
     </View>
   );
 }

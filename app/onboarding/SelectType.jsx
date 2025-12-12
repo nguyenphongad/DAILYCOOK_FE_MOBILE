@@ -15,18 +15,18 @@ export default function SelectType() {
 
   const accountTypes = [
     {
-      value: 'family',
-      title: 'Gia đình',
-      icon: '👨‍👩‍👧‍👦',
-      description: 'Quản lý dinh dưỡng cho nhiều thành viên trong gia đình. Theo dõi nhu cầu dinh dưỡng khác nhau theo độ tuổi, giúp lập thực đơn phù hợp với từng người.',
-      color: '#FF6B6B'
-    },
-    {
       value: 'personal',
       title: 'Cá nhân',
       icon: '👤',
       description: 'Kiểm soát cân nặng và dinh dưỡng cá nhân một cách hiệu quả. Theo dõi lượng calo, protein, carb và các chất dinh dưỡng cần thiết cho bản thân.',
       color: '#4ECDC4'
+    },
+    {
+      value: 'family',
+      title: 'Gia đình',
+      icon: '👨‍👩‍👧‍👦',
+      description: 'Quản lý dinh dưỡng cho nhiều thành viên trong gia đình. Theo dõi nhu cầu dinh dưỡng khác nhau theo độ tuổi, giúp lập thực đơn phù hợp với từng người.',
+      color: '#FF6B6B'
     }
   ];
 

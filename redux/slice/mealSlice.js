@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { getDietTypes, getMealDetail } from '../thunk/mealThunk';
+import { getDietTypes, getMealDetail, getRandomMeals } from '../thunk/mealThunk';
 
 const initialState = {
   dietTypes: [],
@@ -10,6 +10,16 @@ const initialState = {
   mealDetail: null,
   mealDetailLoading: false,
   mealDetailError: null,
+  
+  // Random meals state
+  randomMeals: [],
+  randomMealsLoading: false,
+  randomMealsError: null,
+  randomMealsPagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalMeals: 0,
+  },
 };
 
 const mealSlice = createSlice({
@@ -27,6 +37,10 @@ const mealSlice = createSlice({
     clearMealDetail: (state) => {
       state.mealDetail = null;
       state.mealDetailError = null;
+    },
+    clearRandomMeals: (state) => {
+      state.randomMeals = [];
+      state.randomMealsError = null;
     },
   },
   extraReducers: (builder) => {
@@ -65,6 +79,26 @@ const mealSlice = createSlice({
       .addCase(getMealDetail.rejected, (state, action) => {
         state.mealDetailLoading = false;
         state.mealDetailError = action.payload;
+      })
+      // Get random meals
+      .addCase(getRandomMeals.pending, (state) => {
+        state.randomMealsLoading = true;
+        state.randomMealsError = null;
+      })
+      .addCase(getRandomMeals.fulfilled, (state, action) => {
+        state.randomMealsLoading = false;
+        if (action.payload && action.payload.data) {
+          state.randomMeals = action.payload.data.meals || [];
+          state.randomMealsPagination = {
+            currentPage: action.payload.data.currentPage || 1,
+            totalPages: action.payload.data.totalPages || 1,
+            totalMeals: action.payload.data.totalMeals || 0,
+          };
+        }
+      })
+      .addCase(getRandomMeals.rejected, (state, action) => {
+        state.randomMealsLoading = false;
+        state.randomMealsError = action.payload;
       });
   },
 });
@@ -72,7 +106,8 @@ const mealSlice = createSlice({
 export const { 
   clearError,
   resetMealState,
-  clearMealDetail 
+  clearMealDetail,
+  clearRandomMeals 
 } = mealSlice.actions;
 
 export default mealSlice.reducer;

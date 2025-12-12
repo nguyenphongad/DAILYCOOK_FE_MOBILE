@@ -85,7 +85,7 @@ const PersonalInfo = () => {
                 ...prev,
                 dietType: {
                     ...prev.dietType,
-                    value: matchingDiet ? matchingDiet.title : 'Chưa chọn chế độ ăn'
+                    value: matchingDiet ? matchingDiet.title : 'loading...'
                 }
             }));
         } else if (!dietaryPreferencesLoading) {
@@ -93,7 +93,7 @@ const PersonalInfo = () => {
                 ...prev,
                 dietType: {
                     ...prev.dietType,
-                    value: 'Chưa chọn chế độ ăn'
+                    value: 'loading...'
                 }
             }));
         }

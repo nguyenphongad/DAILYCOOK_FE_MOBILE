@@ -21,13 +21,13 @@ export default function IngredientsTab() {
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Redux selectors
-  const { 
-    randomIngredients, 
-    randomIngredientsLoading, 
+  const {
+    randomIngredients,
+    randomIngredientsLoading,
     randomIngredientsError,
-    randomIngredientsPagination 
+    randomIngredientsPagination
   } = useSelector((state) => state.ingredient);
 
   // Load random ingredients khi mount
@@ -63,8 +63,8 @@ export default function IngredientsTab() {
   );
 
   const renderIngredientItem = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.ingredientCard} 
+    <TouchableOpacity
+      style={styles.ingredientCard}
       activeOpacity={0.7}
       onPress={() => router.push(`/(stacks)/ingredients/IngredientDetail?id=${item._id}`)}
     >
@@ -76,13 +76,13 @@ export default function IngredientsTab() {
         }
         style={styles.ingredientImage}
       />
-      
+
       <View style={styles.ingredientInfo}>
-        <Text style={styles.ingredientName}>{item.nameIngredient}</Text>
-        <Text style={styles.ingredientDescription} numberOfLines={2}>
+        <Text style={styles.ingredientName} numberOfLines={1}>{item.nameIngredient}</Text>
+        <Text style={styles.ingredientDescription} numberOfLines={1}>
           {item.description}
         </Text>
-        
+
         {item.nutrition && (
           <View style={styles.nutritionRow}>
             <Text style={styles.nutritionText}>
@@ -94,7 +94,7 @@ export default function IngredientsTab() {
           </View>
         )}
       </View>
-      
+
       <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
     </TouchableOpacity>
   );
@@ -110,7 +110,7 @@ export default function IngredientsTab() {
 
   const renderFooter = () => {
     if (!randomIngredientsLoading) return null;
-    
+
     return (
       <View style={styles.footerLoader}>
         <ActivityIndicator size="small" color="#35A55E" />
@@ -147,7 +147,7 @@ export default function IngredientsTab() {
       {/* Search Box */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
-          <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+          <Ionicons name="search" size={18} color="#999" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Tìm kiếm nguyên liệu..."
@@ -161,11 +161,7 @@ export default function IngredientsTab() {
             </TouchableOpacity>
           )}
         </View>
-        
-        {/* Filter Button */}
-        <TouchableOpacity style={styles.filterButton}>
-          <Ionicons name="options-outline" size={20} color="#35A55E" />
-        </TouchableOpacity>
+
       </View>
 
       <FlatList
@@ -184,9 +180,9 @@ export default function IngredientsTab() {
             tintColor="#35A55E"
           />
         }
-        // Tắt load more - comment out onEndReached
-        // onEndReached={handleLoadMore}
-        // onEndReachedThreshold={0.5}
+      // Tắt load more - comment out onEndReached
+      // onEndReached={handleLoadMore}
+      // onEndReachedThreshold={0.5}
       />
     </View>
   );
@@ -202,34 +198,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 0,
     gap: 10,
-    marginBottom:15,
-    marginTop:15,
+    marginBottom: 15,
+    marginTop: 15,
   },
   searchBox: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#e6f2ed',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 0.2,
     borderRadius: 12,
     paddingHorizontal: 8,
-    height: 48,
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#35A55E',
   },
   searchIcon: {
     marginRight: 8,
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 13,
     color: '#333',
   },
-  filterButton: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+
   listContent: {
     padding: 0,
     paddingTop: 0,
@@ -237,7 +234,13 @@ const styles = StyleSheet.create({
   },
   ingredientCard: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#e6f2ed',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 0.2,
     borderRadius: 12,
     padding: 8,
     marginBottom: 12,
@@ -254,7 +257,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   ingredientName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#333',
     marginBottom: 4,

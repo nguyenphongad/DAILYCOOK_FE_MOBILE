@@ -90,7 +90,7 @@ const planItems = [
     id: 'meal-history',
     title: 'Lịch sử thực đơn',
     icon: require('../../assets/images/icons_account/s6.png'),
-    navigateTo: '/plan/meal-history',
+    navigateTo: '/(stacks)/account/HistoryMealPlan',
     badge: null,
     rightComponent: 'arrow'
   },

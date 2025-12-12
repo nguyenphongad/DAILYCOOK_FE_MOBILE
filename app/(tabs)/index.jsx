@@ -60,9 +60,9 @@ const MenuItemCard = React.memo(({ item, onPress, onAcknowledge }) => {
       >
         <Image source={item.imageUrl} style={styles.menuItemImageVertical} />
 
-        <View style={styles.typeMealContainer}>
+        {/* <View style={styles.typeMealContainer}>
           <Text style={styles.typeMealText}>{item.typeMeal}</Text>
-        </View>
+        </View> */}
 
         <View style={styles.menuItemContentVertical}>
           <View style={styles.menuItemInfo}>
@@ -87,11 +87,12 @@ const MenuItemCard = React.memo(({ item, onPress, onAcknowledge }) => {
               activeOpacity={item.isEaten ? 1 : 0.7}
               disabled={item.isEaten}
             >
+              {!item.isEaten ? "" : <Ionicons name="checkmark-circle" size={16} color="#bfc9c2" />}
               <Text style={[
                 styles.acknowledgeButtonText,
                 item.isEaten && styles.acknowledgeButtonTextDisabled
               ]}>
-                {item.isEaten ? 'Đã ghi nhận' : 'Ghi nhận'}
+                {item.isEaten ? 'Đã ăn' : 'Ghi nhận'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -261,7 +262,7 @@ export default function HomeScreen() {
           protein: recipe?.nutrition?.protein || 0,
           carbs: recipe?.nutrition?.carbs || 0,
           fat: recipe?.nutrition?.fat || 0,
-          typeMeal: mealDetail.mealCategory?.title || 'Món chính',
+          typeMeal: mealDetail.mealCategory?.title || '',
           imageUrl: mealDetail.mealImage 
             ? { uri: mealDetail.mealImage }
             : require('../../assets/images/food1.png'),
@@ -457,7 +458,7 @@ export default function HomeScreen() {
   );
 
   // Lấy tên user từ Redux state hoặc fallback
-  const displayName = user?.fullName  || 'Người dùng';
+  const displayName = user?.fullName  || '';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -469,7 +470,7 @@ export default function HomeScreen() {
       {/* Header cố định */}
       <HeaderComponent>
         <Text style={styles.headerText}>
-          Xin chào, {isLoading ? 'đang tải...' : displayName}
+          Xin chào {isLoading ? 'đang tải...' : displayName}
         </Text>
         <View style={styles.headerRight}>
           <Image source={weatherIcon} style={styles.weatherIcon} />
