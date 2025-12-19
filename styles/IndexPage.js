@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
     marginTop: -80,
   },
   contentContainer: {
-    paddingBottom: 20, // Thêm padding dưới để tránh bị cắt nội dung
+    paddingBottom: 60, // Thêm padding dưới để tránh bị cắt nội dung
   },
   headerText: {
     fontSize: 15,
@@ -312,30 +312,59 @@ const styles = StyleSheet.create({
     flex: 1,
     fontWeight: '400',
   },
-  aiSuggestionButtonExternal: {
+  floatingButtonsContainer: {
     position: 'absolute',
-    bottom: 60,
-    left: 15,
-    right: 15,
+    bottom: 100,
+    left: 16,
+    right: 16,
+    gap: 12,
+    zIndex: 1000,
+  },
+  aiSuggestionButtonExternal: {
     flexDirection: 'row',
-    backgroundColor: '#35A55E',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#35A55E',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    // elevation: 3,
-    zIndex: 1000, // Đảm bảo nút luôn hiển thị trên cùng
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   aiSuggestionButtonText: {
     color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: '600',
-    marginRight: 20,
-    fontSize: 14
+    marginRight: 8,
+    flex: 1,
+    textAlign: 'center',
+  },
+  createMealButtonExternal: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#35A55E',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  createMealButtonText: {
+    color: '#35A55E',
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 8,
+    flex: 1,
+    textAlign: 'center',
   },
 
   // Settings sheet styles

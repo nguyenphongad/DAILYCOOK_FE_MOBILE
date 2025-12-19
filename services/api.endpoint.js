@@ -16,6 +16,9 @@ export const ENDPOINT = {
     
     //meal
     GET_LIST_DIETTYPE: `${BASE_ENDPOINT}/meals/diet-types`,
+    GET_MEAL_CATEGORY: (categoryId) => `${BASE_ENDPOINT}/meals/meal-category/${categoryId}`,
+    GET_MEAL_CATEGORIES: `${BASE_ENDPOINT}/meals/meal-categories`,
+    GET_MEALS_BY_CATEGORY: (categoryId) => `${BASE_ENDPOINT}/meals/category/${categoryId}`,
     
     // dietary preferences
     GET_DIETARY_PREFERENCES: (userId) => `${BASE_ENDPOINT}/surveys/users/${userId}/dietary-preferences`,
@@ -26,8 +29,9 @@ export const ENDPOINT = {
     GET_NUTRITION_GOALS: `${BASE_ENDPOINT}/surveys/nutrition-goals`,
 
     // meal plan AI
-    GENERATE_AI_MEAL_PLAN: `${BASE_ENDPOINT}/mealplans/generate-ai`,
+    GENERATE_AI_MEAL_PLAN: `${BASE_ENDPOINT}/mealplans//generate-fallback`,
     GET_MEAL_PLAN_FROM_CACHE: `${BASE_ENDPOINT}/mealplans/get-from-cache`,
+    CACHE_MEAL_PLAN: `${BASE_ENDPOINT}/mealplans/cache`,
     GET_SIMILAR_MEALS: (mealId) => `${BASE_ENDPOINT}/mealplans/similar/${mealId}`,
     REPLACE_MEAL: `${BASE_ENDPOINT}/mealplans/replace-meal`,
     SAVE_MEAL_PLAN: `${BASE_ENDPOINT}/mealplans/save`,
@@ -43,6 +47,7 @@ export const ENDPOINT = {
     GET_INGREDIENT_DETAIL: (ingredientId) => `${BASE_ENDPOINT}/ingredients/ingredient/${ingredientId}`,
     GET_MEASUREMENT_UNITS: `${BASE_ENDPOINT}/ingredients/measurement-units`,
     GET_RANDOM_INGREDIENTS: `${BASE_ENDPOINT}/ingredients/random`,
+    GET_INGREDIENT_CATEGORY_DETAIL: (categoryId) => `${BASE_ENDPOINT}/ingredients/ingredient-category/${categoryId}`,
     
     // recipe endpoints
     GET_RECIPE_DETAIL: (recipeId) => `${BASE_ENDPOINT}/recipes/${recipeId}`,

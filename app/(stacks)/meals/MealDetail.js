@@ -8,6 +8,8 @@ import {
     Animated,
     ActivityIndicator,
     StyleSheet,
+    Modal,
+    Dimensions,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -16,7 +18,9 @@ import { getMealDetail } from '../../../redux/thunk/mealThunk';
 import { clearMealDetail } from '../../../redux/slice/mealSlice';
 import { batchGetIngredientDetails, getMeasurementUnits } from '../../../redux/thunk/ingredientThunk';
 import { getRecipeDetail } from '../../../redux/thunk/recipeThunk';
+import { getMealCategory } from '../../../redux/thunk/mealThunk';
 import { styles } from '../../../styles/meals/mealDetail';
+import { WebView } from 'react-native-webview';
 
 // Skeleton Loading Components
 const SkeletonBox = ({ width, height, style }) => {
@@ -60,10 +64,12 @@ export default function MealDetail() {
     const dispatch = useDispatch();
     
     const [activeTab, setActiveTab] = useState('ingredient');
+    const [isWebViewModalVisible, setIsWebViewModalVisible] = useState(false);
+    const webViewRef = useRef(null);
     const indicatorAnim = useRef(new Animated.Value(0)).current;
 
-    // Redux selectors - thêm recipe state
-    const { mealDetail, mealDetailLoading, mealDetailError } = useSelector((state) => state.meal);
+    // Redux selectors - thêm mealCategories
+    const { mealDetail, mealDetailLoading, mealDetailError, mealCategories } = useSelector((state) => state.meal);
     const { ingredientDetails, measurementUnits, ingredientDetailLoading } = useSelector((state) => state.ingredient);
     const { recipeDetail, recipeDetailLoading } = useSelector((state) => state.recipe);
 
@@ -130,6 +136,26 @@ export default function MealDetail() {
         loadRecipeDetail();
     }, [mealDetail, dispatch]);
 
+    // Load meal category khi có mealDetail
+    useEffect(() => {
+        const loadMealCategory = async () => {
+            if (mealDetail && mealDetail.category_id) {
+                console.log('Loading meal category for ID:', mealDetail.category_id);
+                
+                try {
+                    await dispatch(getMealCategory(mealDetail.category_id)).unwrap();
+                    console.log('Meal category loaded successfully');
+                } catch (error) {
+                    console.error('Error loading meal category:', error);
+                }
+            }
+        };
+        
+        loadMealCategory();
+    }, [mealDetail, dispatch]);
+
+    console.log("mealDetail ", mealDetail)
+
     // Xử lý chuyển tab với animation
     const handleTabChange = (tab) => {
         setActiveTab(tab);
@@ -140,6 +166,53 @@ export default function MealDetail() {
             tension: 60,
             friction: 12,
         }).start();
+    };
+
+    // JavaScript code để inject vào WebView
+    const getInjectedJavaScript = (mealName) => {
+        return `
+            (function() {
+                // Đợi trang load xong
+                function waitForElement(selector, callback) {
+                    const checkExist = setInterval(function() {
+                        const element = document.evaluate(selector, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            clearInterval(checkExist);
+                            callback(element);
+                        }
+                    }, 100);
+                    
+                    // Timeout sau 10 giây
+                    setTimeout(() => clearInterval(checkExist), 10000);
+                }
+                
+                // Đợi input và button xuất hiện
+                setTimeout(() => {
+                    // Tìm input field bằng XPath
+                    const searchInput = document.evaluate('//*[@id="search-input"]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                    
+                    if (searchInput) {
+                        // Điền giá trị
+                        searchInput.value = "${mealName}";
+                        
+                        // Trigger input event
+                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        searchInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        
+                        // Đợi một chút rồi click button search
+                        setTimeout(() => {
+                            const searchButton = document.evaluate('//*[@id="search-form"]/div/div[4]/div/button[1]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                            
+                            if (searchButton) {
+                                searchButton.click();
+                            }
+                        }, 500);
+                    }
+                }, 2000);
+                
+                true;
+            })();
+        `;
     };
 
     // Skeleton Loading UI
@@ -224,139 +297,134 @@ export default function MealDetail() {
         );
     }
 
-    // Extract data từ API response - fix steps extraction
+    // Extract data từ API response
     const recipe = mealDetail.recipeDetail || {};
-    const recipeNutrition = recipe.nutrition || {};
+    
+    // Lấy meal category từ Redux store
+    const mealCategory = mealCategories[mealDetail.category_id];
+    const categoryTitle = mealCategory?.title || 'Danh mục';
+    
+    // Lấy nutrition từ nutritional_components
+    const nutritionalComponents = mealDetail.nutritional_components || [];
     
     // Transform ingredients với data từ ingredientDetails
     const ingredients = mealDetail.ingredientDetails || mealDetail.ingredients?.map(ing => {
-        const ingredientId = ing.ingredient_id?._id || ing.ingredient_id;
+        const ingredientId = ing.ingredient_id;
         const ingredientDetail = ingredientDetails[ingredientId];
         
         // Tìm measurement unit name
-        const unitData = measurementUnits.find(u => u.key === ing.unit_id);
+        const unitData = measurementUnits.find(u => u.key === ing.unit);
         
         return {
             ingredientId: ingredientId,
-            nameIngredient: ingredientDetail?.nameIngredient || ing.ingredient_id?.nameIngredient || 'Đang tải...',
-            ingredientImage: ingredientDetail?.ingredientImage || ing.ingredient_id?.ingredientImage,
+            nameIngredient: ingredientDetail?.nameIngredient || ing.detail?.nameIngredient || 'Đang tải...',
+            ingredientImage: ingredientDetail?.ingredientImage || ing.detail?.image,
             quantity: ing.quantity || 0,
-            unit: unitData?.label || ing.unit_id?.unitName || 'g',
+            unit: unitData?.label || ing.unit || 'g',
             category: ingredientDetail?.ingredientCategory?.title,
             nutrition: ingredientDetail?.nutrition,
         };
     }) || [];
     
-    // Tính tổng dinh dưỡng từ ingredients
-    const calculateNutritionFromIngredients = () => {
-        let totalNutrition = {
-            calories: 0,
-            protein: 0,
-            carbs: 0,
-            fat: 0
-        };
+    // Lấy steps từ mealDetail.steps
+    const steps = mealDetail.steps || [];
 
-        ingredients.forEach(ingredient => {
-            if (ingredient.nutrition) {
-                // Giả sử nutrition trong ingredient là per 100g
-                // Cần tính toán dựa trên quantity thực tế
-                const multiplier = ingredient.quantity / 100;
-                
-                totalNutrition.calories += (ingredient.nutrition.calories || 0) * multiplier;
-                totalNutrition.protein += (ingredient.nutrition.protein || 0) * multiplier;
-                totalNutrition.carbs += (ingredient.nutrition.carbs || 0) * multiplier;
-                totalNutrition.fat += (ingredient.nutrition.fat || 0) * multiplier;
+    // Nhóm nutrition theo từng dòng 4 items
+    const groupNutrition = (items) => {
+        const grouped = [];
+        for (let i = 0; i < items.length; i += 4) {
+            grouped.push(items.slice(i, i + 4));
+        }
+        return grouped;
+    };
+
+    const groupedNutrition = groupNutrition(nutritionalComponents);
+
+    // Render stars cho popularity
+    const renderStars = (rating) => {
+        const stars = [];
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 !== 0;
+        
+        for (let i = 0; i < 5; i++) {
+            if (i < fullStars) {
+                stars.push(<Ionicons key={i} name="star" size={16} color="#FFD700" />);
+            } else if (i === fullStars && hasHalfStar) {
+                stars.push(<Ionicons key={i} name="star-half" size={16} color="#FFD700" />);
+            } else {
+                stars.push(<Ionicons key={i} name="star-outline" size={16} color="#FFD700" />);
             }
-        });
-
-        return totalNutrition;
+        }
+        return stars;
     };
-
-    // Tính dinh dưỡng hiển thị với adjustment từ recipe
-    const getAdjustedNutrition = () => {
-        // Tính tổng từ ingredients
-        const ingredientTotal = calculateNutritionFromIngredients();
-
-        // Lấy giá trị từ recipe nutrition (đây là % adjustment)
-        const adjustments = {
-            calories: recipeNutrition.calories || 100,
-            protein: recipeNutrition.protein || 100,
-            carbs: recipeNutrition.carbs || 100,
-            fat: recipeNutrition.fat || 100
-        };
-
-        // Apply adjustments (nếu 105 thì tăng 5%, nếu 95 thì giảm 5%)
-        return {
-            calories: Math.round(ingredientTotal.calories * (adjustments.calories / 100)),
-            protein: Math.round(ingredientTotal.protein * (adjustments.protein / 100)),
-            carbs: Math.round(ingredientTotal.carbs * (adjustments.carbs / 100)),
-            fat: Math.round(ingredientTotal.fat * (adjustments.fat / 100))
-        };
-    };
-
-    // Sử dụng adjusted nutrition
-    const nutrition = getAdjustedNutrition();
-    
-    // Lấy steps từ recipeDetail
-    let steps = [];
-    if (recipeDetail && recipeDetail.steps && Array.isArray(recipeDetail.steps)) {
-        steps = recipeDetail.steps
-            .sort((a, b) => a.stepNumber - b.stepNumber)
-            .map(step => step.description);
-    } else if (recipe.instructions && Array.isArray(recipe.instructions)) {
-        steps = recipe.instructions;
-    }
 
     return (
         <View style={styles.container}>
             {/* Ảnh Header */}
             <View style={styles.imageContainer}>
                 <Image 
-                    source={mealDetail.mealImage ? { uri: mealDetail.mealImage } : require('../../../assets/images/food1.png')} 
+                    source={mealDetail.image ? { uri: mealDetail.image } : require('../../../assets/images/food1.png')} 
                     style={styles.image} 
                 />
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                     <Ionicons name="chevron-back" size={26} color="#fff" />
                 </TouchableOpacity>
-                  <View style={styles.typeMealContainer}>
-                    <Text style={styles.typeMealText}>{mealDetail.mealCategory?.title || 'danh mục'}</Text>
+                <View style={styles.typeMealContainer}>
+                    <Text style={styles.typeMealText}>{categoryTitle}</Text>
                 </View>
             </View>
 
             {/* Nội dung */}
             <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 20 }}>
-
-              
-
                 <Text style={styles.mealName}>{mealDetail.nameMeal}</Text>
+
+                {/* Popularity Rating */}
+                {mealDetail.popularity && (
+                    <View style={styles.ratingContainer}>
+                        <View style={styles.starsContainer}>
+                            {renderStars(mealDetail.popularity)}
+                        </View>
+                        <Text style={styles.ratingText}>
+                            {mealDetail.popularity.toFixed(1)} / 5.0
+                        </Text>
+                    </View>
+                )}
 
                 {/* Thông tin thời gian */}
                 <View style={styles.timeContainer}>
                     <View style={styles.timeItem}>
                         <Ionicons name="time-outline" size={16} color="#666" />
-                        <Text style={styles.timeValue}>{recipe.prepTime || '15'} phút</Text>
+                        <Text style={styles.timeValue}>{mealDetail.prepTimeMinutes || '15'} phút</Text>
                     </View>
 
                     <View style={styles.timeItem}>
                         <Ionicons name="flame-outline" size={16} color="#666" />
-                        <Text style={styles.timeValue}>{recipe.cookTime || '30'} phút</Text>
+                        <Text style={styles.timeValue}>{mealDetail.cookTimeMinutes || '30'} phút</Text>
                     </View>
                 </View>
 
-                {/* Thông tin dinh dưỡng - Sử dụng nutrition đã tính toán */}
-                <View style={styles.nutritionContainer}>
-                    {[
-                        {value: `${nutrition.calories}kcal`, label: 'Calories', color: '#8ea846' },
-                        { value: `${nutrition.protein}g`, label: 'Protein', color: '#35A55E' },
-                        { value: `${nutrition.carbs}g`, label: 'Carbs', color: '#FF9500' },
-                        { value: `${nutrition.fat}g`, label: 'Fat', color: '#FF6B6B' },
-                    ].map((item, index) => (
-                        <View key={index} style={[styles.nutritionItem, index === 0 && { borderLeftWidth: 0 }]}>
-                            <Text style={[styles.nutritionValue, { color: item.color }]}>{item.value}</Text>
-                            <Text style={styles.nutritionLabel}>{item.label}</Text>
+                {/* Thông tin dinh dưỡng */}
+                {nutritionalComponents.length > 0 && (
+                    <>
+                        <Text style={styles.sectionTitle}>Thông tin dinh dưỡng (100g)</Text>
+                        <View style={styles.nutritionGridContainer}>
+                            {groupedNutrition.map((row, rowIndex) => (
+                                <View key={rowIndex} style={styles.nutritionRow}>
+                                    {row.map((item, index) => (
+                                        <View key={item._id || index} style={styles.nutritionGridItem}>
+                                            <Text style={styles.nutritionGridValue}>
+                                                {item.amount} {item.unit_name}
+                                            </Text>
+                                            <Text style={styles.nutritionGridName} numberOfLines={2}>
+                                                {item.name}
+                                            </Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            ))}
                         </View>
-                    ))}
-                </View>
+                    </>
+                )}
 
                 {/* Tab chuyển đổi */}
                 <View style={styles.tabContainer}>
@@ -429,19 +497,20 @@ export default function MealDetail() {
                         </View>
                     ) : (
                         <View style={styles.guideContainer}>
-                            {recipeDetailLoading ? (
-                                <View style={{ paddingVertical: 20 }}>
-                                    <ActivityIndicator size="small" color="#35A55E" />
-                                    <Text style={{ textAlign: 'center', color: '#999', marginTop: 8 }}>
-                                        Đang tải hướng dẫn...
-                                    </Text>
-                                </View>
-                            ) : steps.length > 0 ? (
-                                steps.map((step, index) => (
-                                    <Text key={index} style={styles.stepText}>
-                                        Bước {index + 1}. {step}
-                                    </Text>
-                                ))) : (
+                            {steps.length > 0 ? (
+                                steps
+                                    .sort((a, b) => a.stepNumber - b.stepNumber)
+                                    .map((step, index) => (
+                                        <View key={index} style={styles.stepContainer}>
+                                            <Text style={styles.stepTitle}>
+                                                Bước {step.stepNumber}. {step.title}
+                                            </Text>
+                                            <Text style={styles.stepDescription}>
+                                                {step.description}
+                                            </Text>
+                                        </View>
+                                    ))
+                            ) : (
                                 <Text style={{ textAlign: 'center', color: '#999', paddingVertical: 20 }}>
                                     Chưa có hướng dẫn nấu
                                 </Text>
@@ -449,7 +518,82 @@ export default function MealDetail() {
                         </View>
                     )}
                 </View>
+
+                {/* WebView - Tra cứu dinh dưỡng món ăn */}
+                <View style={styles.webviewSection}>
+                    <View style={styles.webviewHeader}>
+                        <Text style={styles.sectionTitle}>Tra cứu giá trị dinh dưỡng món ăn</Text>
+                        <TouchableOpacity 
+                            style={styles.expandButton}
+                            onPress={() => setIsWebViewModalVisible(true)}
+                        >
+                            <Ionicons name="expand-outline" size={24} color="#35A55E" />
+                        </TouchableOpacity>
+                    </View>
+                    
+                    <View style={styles.webviewContainer}>
+                        <WebView
+                            ref={webViewRef}
+                            source={{ uri: 'https://viendinhduong.vn/vi/cong-cu-va-tien-ich/gia-tri-dinh-duong-mon-an?page=2&pageSize=15' }}
+                            style={styles.webview}
+                            startInLoadingState={true}
+                            injectedJavaScript={getInjectedJavaScript(mealDetail.nameMeal)}
+                            javaScriptEnabled={true}
+                            domStorageEnabled={true}
+                            renderLoading={() => (
+                                <ActivityIndicator
+                                    color="#35A55E"
+                                    size="large"
+                                    style={styles.webviewLoader}
+                                />
+                            )}
+                            onMessage={(event) => {
+                                console.log('WebView message:', event.nativeEvent.data);
+                            }}
+                        />
+                    </View>
+                </View>
             </ScrollView>
+
+            {/* Modal WebView toàn màn hình */}
+            <Modal
+                visible={isWebViewModalVisible}
+                animationType="slide"
+                onRequestClose={() => setIsWebViewModalVisible(false)}
+            >
+                <View style={styles.modalContainer}>
+                    {/* Header Modal */}
+                    <View style={styles.modalHeader}>
+                        <TouchableOpacity 
+                            style={styles.modalCloseButton}
+                            onPress={() => setIsWebViewModalVisible(false)}
+                        >
+                            <Ionicons name="close" size={28} color="#333" />
+                        </TouchableOpacity>
+                        <Text style={styles.modalTitle}>viendinhduong.vn</Text>
+                        <View style={{ width: 40 }} />
+                    </View>
+
+                    {/* WebView toàn màn hình */}
+                    <WebView
+                        source={{ uri: 'https://viendinhduong.vn/vi/cong-cu-va-tien-ich/gia-tri-dinh-duong-mon-an?page=2&pageSize=15' }}
+                        style={styles.modalWebview}
+                        startInLoadingState={true}
+                        injectedJavaScript={getInjectedJavaScript(mealDetail.nameMeal)}
+                        javaScriptEnabled={true}
+                        domStorageEnabled={true}
+                        renderLoading={() => (
+                            <View style={styles.modalLoadingContainer}>
+                                <ActivityIndicator
+                                    color="#35A55E"
+                                    size="large"
+                                />
+                                <Text style={styles.modalLoadingText}>Đang tải...</Text>
+                            </View>
+                        )}
+                    />
+                </View>
+            </Modal>
         </View>
     );
 }

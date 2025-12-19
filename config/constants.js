@@ -5,4 +5,5 @@ export const EXPO_CLIENT_ID = '182265024272-do9chd5rkkmgm10nhn204mjts8fvq9ie.app
 
 
 // API Configuration
-export const API_BASE_URL = 'http://192.168.1.7:5000';
+// export const API_BASE_URL = 'https://isonomous-burbly-shakia.ngrok-free.dev';
+export const API_BASE_URL = 'http:192.168.1.11:5000'; // Local development server

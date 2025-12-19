@@ -102,6 +102,14 @@ const planItems = [
     badge: null,
     rightComponent: 'arrow'
   },
+  {
+    id: 'sleep-reminder',
+    title: 'Cài đặt nhắc đi ngủ',
+    icon: require('../../assets/images/icons_account/sleep.png'),
+    navigateTo: '/(stacks)/account/SleepReminderSettings',
+    badge: null,
+    rightComponent: 'arrow'
+  },
 ];
 
 // Danh sách các mục trong phần Chung

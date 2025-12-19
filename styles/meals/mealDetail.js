@@ -1,9 +1,12 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width, height } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#D4E9E1',
+        paddingBottom:50
     },
     imageContainer: {
         position: 'relative',
@@ -185,5 +188,161 @@ export const styles = StyleSheet.create({
         color: '#333',
         lineHeight: 22,
         marginBottom: 12
+    },
+
+    /** Đánh giá */
+    ratingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    starsContainer: {
+        flexDirection: 'row',
+        marginRight: 8,
+    },
+    ratingText: {
+        fontSize: 14,
+        color: '#666',
+        fontWeight: '600',
+    },
+
+    /** Tiêu đề phần */
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#35A55E',
+        marginTop: 20,
+        marginBottom: 12,
+    },
+
+    /** Lưới dinh dưỡng */
+    nutritionGridContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 10,
+    },
+    nutritionRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+        gap: 8,
+    },
+    nutritionGridItem: {
+        flex: 1,
+        alignItems: 'center',
+        backgroundColor: '#F8F9FA',
+        padding: 12,
+        borderRadius: 12,
+        minHeight: 70,
+        justifyContent: 'center',
+    },
+    nutritionGridValue: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#35A55E',
+        marginBottom: 4,
+    },
+    nutritionGridName: {
+        fontSize: 11,
+        color: '#666',
+        textAlign: 'center',
+    },
+
+    stepContainer: {
+        marginBottom: 20,
+    },
+    stepTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 8,
+    },
+    stepDescription: {
+        fontSize: 14,
+        color: '#666',
+        lineHeight: 22,
+        textAlign: 'justify',
+    },
+
+    /** Webview */
+    webviewSection: {
+        marginTop: 20,
+    },
+    webviewHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    expandButton: {
+        padding: 8,
+        backgroundColor: 'rgba(53, 165, 94, 0.1)',
+        borderRadius: 8,
+    },
+    webviewContainer: {
+        height: 1200,
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        overflow: 'hidden',
+        marginBottom: 20,
+    },
+    webview: {
+        flex: 1,
+    },
+    webviewLoader: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        marginLeft: -20,
+        marginTop: -20,
+    },
+
+    /** Modal styles */
+    modalContainer: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        paddingTop: 50,
+        backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+    },
+    modalCloseButton: {
+        padding: 4,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#333',
+    },
+    modalWebview: {
+        flex: 1,
+    },
+    modalLoadingContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    },
+    modalLoadingText: {
+        marginTop: 12,
+        fontSize: 14,
+        color: '#666',
     },
 });

@@ -599,16 +599,29 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
 
-      {/* AI Suggestion Button - chỉ hiện khi showAISuggestionButton = true */}
+      {/* AI Suggestion Buttons - chỉ hiện khi showAISuggestionButton = true */}
       {showAISuggestionButton && (
-        <TouchableOpacity
-          style={styles.aiSuggestionButtonExternal}
-          onPress={() => router.push('/(stacks)/mealPlan/PageRenderAI')}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.aiSuggestionButtonText}>Gợi ý thực đơn hôm nay</Text>
-          <Ionicons name="arrow-forward-circle" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
+        <View style={styles.floatingButtonsContainer}>
+          <TouchableOpacity
+            style={styles.aiSuggestionButtonExternal}
+            onPress={() => router.push('/(stacks)/mealPlan/PageRenderAI')}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="sparkles" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+            <Text style={styles.aiSuggestionButtonText}>Gợi ý thực đơn hôm nay</Text>
+            <Ionicons name="arrow-forward-circle" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.createMealButtonExternal}
+            onPress={() => router.push('/(stacks)/mealPlan/PageSelectMeal')}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="restaurant" size={20} color="#35A55E" style={{ marginRight: 8 }} />
+            <Text style={styles.createMealButtonText}>Tạo thực đơn từ món ăn</Text>
+            <Ionicons name="arrow-forward-circle" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
       )}
 
       {/* Settings Sheet */}
@@ -621,24 +634,26 @@ export default function HomeScreen() {
         <View style={styles.settingsSheetContent}>
           <Text style={styles.settingsSheetTitle}>Cài đặt thực đơn</Text>
 
-          <TouchableOpacity
-            style={styles.settingsOption}
-            onPress={() => {
-              setIsSettingsSheetOpen(false);
-              setTimeout(() => {
-                router.replace('/(stacks)/mealPlan/PageRenderAI');
-              }, 300);
-            }}
-          >
-            <View style={styles.settingsOptionLeft}>
-              <Ionicons name="refresh" size={20} color="#35A55E" />
-              <Text style={styles.settingsOptionText}>
-                {acceptedMealsData ? 'Tạo thực đơn mới' : 'Làm mới gợi ý AI'}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#CCCCCC" />
-          </TouchableOpacity>
+          {/* Chỉ hiện nút này khi CHƯA có acceptedMealsData */}
+          {!acceptedMealsData && (
+            <TouchableOpacity
+              style={styles.settingsOption}
+              onPress={() => {
+                setIsSettingsSheetOpen(false);
+                setTimeout(() => {
+                  router.replace('/(stacks)/mealPlan/PageRenderAI');
+                }, 300);
+              }}
+            >
+              <View style={styles.settingsOptionLeft}>
+                <Ionicons name="refresh" size={20} color="#35A55E" />
+                <Text style={styles.settingsOptionText}>Làm mới gợi ý AI</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#CCCCCC" />
+            </TouchableOpacity>
+          )}
 
+          {/* Chỉ hiện nút xóa khi CÓ acceptedMealsData */}
           {acceptedMealsData && (
             <TouchableOpacity
               style={styles.settingsOption}
