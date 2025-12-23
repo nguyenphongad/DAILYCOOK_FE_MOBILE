@@ -3,7 +3,8 @@ import {
   getIngredientDetail, 
   getMeasurementUnits, 
   batchGetIngredientDetails,
-  getRandomIngredients 
+  getRandomIngredients,
+  getIngredientCategoryDetail
 } from '../thunk/ingredientThunk';
 
 const initialState = {
@@ -30,6 +31,11 @@ const initialState = {
     totalItems: 0,
     limit: 10,
   },
+
+  // Ingredient category details
+  ingredientCategoryDetails: {}, // { [categoryId]: categoryData }
+  ingredientCategoryLoading: false,
+  ingredientCategoryError: null,
 };
 
 const ingredientSlice = createSlice({
@@ -47,6 +53,10 @@ const ingredientSlice = createSlice({
     clearRandomIngredients: (state) => {
       state.randomIngredients = [];
       state.randomIngredientsError = null;
+    },
+    clearIngredientCategoryDetails: (state) => {
+      state.ingredientCategoryDetails = {};
+      state.ingredientCategoryError = null;
     },
   },
   extraReducers: (builder) => {
@@ -122,13 +132,30 @@ const ingredientSlice = createSlice({
         state.randomIngredientsLoading = false;
         state.randomIngredientsError = action.payload;
       });
+    
+    // Get ingredient category detail
+    builder
+      .addCase(getIngredientCategoryDetail.pending, (state) => {
+        state.ingredientCategoryLoading = true;
+        state.ingredientCategoryError = null;
+      })
+      .addCase(getIngredientCategoryDetail.fulfilled, (state, action) => {
+        state.ingredientCategoryLoading = false;
+        const { categoryId, data } = action.payload;
+        state.ingredientCategoryDetails[categoryId] = data.data || {};
+      })
+      .addCase(getIngredientCategoryDetail.rejected, (state, action) => {
+        state.ingredientCategoryLoading = false;
+        state.ingredientCategoryError = action.payload;
+      });
   },
 });
 
 export const { 
   clearIngredientDetails, 
   clearSingleIngredient,
-  clearRandomIngredients 
+  clearRandomIngredients,
+  clearIngredientCategoryDetails
 } = ingredientSlice.actions;
 
 export default ingredientSlice.reducer;

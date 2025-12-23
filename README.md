@@ -1,3 +1,7 @@
+# npx expo start --tunnel
+
+# npx ngrok http 5000
+
 # DailyCook - Ứng dụng Quản lý Thực đơn & Dinh dưỡng
 
 ## 📱 Giới thiệu

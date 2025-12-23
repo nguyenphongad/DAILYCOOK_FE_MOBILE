@@ -7,7 +7,8 @@ import {
   saveMealPlan,
   getMealPlanFromDatabase,
   toggleMealEaten,
-  getMealHistory
+  getMealHistory,
+  cacheMealPlan
 } from '../thunk/mealPlanThunk';
 
 const initialState = {
@@ -35,6 +36,10 @@ const initialState = {
   mealHistory: null,
   mealHistoryLoading: false,
   mealHistoryError: null,
+
+  // Cache meal plan
+  cacheMealPlanLoading: false,
+  cacheMealPlanError: null,
 };
 
 const mealPlanSlice = createSlice({
@@ -245,6 +250,19 @@ const mealPlanSlice = createSlice({
         console.log('getMealHistory.rejected:', action.payload);
         state.mealHistoryLoading = false;
         state.mealHistoryError = action.payload;
+      })
+      // Cache meal plan
+      .addCase(cacheMealPlan.pending, (state) => {
+        state.cacheMealPlanLoading = true;
+        state.cacheMealPlanError = null;
+      })
+      .addCase(cacheMealPlan.fulfilled, (state, action) => {
+        state.cacheMealPlanLoading = false;
+        console.log('Cache meal plan successful:', action.payload);
+      })
+      .addCase(cacheMealPlan.rejected, (state, action) => {
+        state.cacheMealPlanLoading = false;
+        state.cacheMealPlanError = action.payload;
       });
   },
 });

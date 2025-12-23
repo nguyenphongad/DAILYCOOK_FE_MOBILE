@@ -126,3 +126,29 @@ export const getRandomIngredients = createAsyncThunk(
     }
   }
 );
+
+// Get ingredient category detail
+export const getIngredientCategoryDetail = createAsyncThunk(
+  'ingredient/getCategoryDetail',
+  async (categoryId, { rejectWithValue }) => {
+    try {
+      console.log('=== GET INGREDIENT CATEGORY DETAIL REQUEST ===');
+      console.log('Category ID:', categoryId);
+      console.log('==============================================');
+      
+      const response = await apiService.get(ENDPOINT.GET_INGREDIENT_CATEGORY_DETAIL(categoryId));
+      
+      console.log('API Response - Ingredient Category Detail:', response);
+      
+      return { categoryId, data: response };
+    } catch (error) {
+      console.error('=== GET INGREDIENT CATEGORY DETAIL ERROR ===');
+      console.error('Error:', error);
+      console.error('============================================');
+      
+      return rejectWithValue(
+        error.response?.data?.message || 'Không thể lấy thông tin danh mục nguyên liệu'
+      );
+    }
+  }
+);

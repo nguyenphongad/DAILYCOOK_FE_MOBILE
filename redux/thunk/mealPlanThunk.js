@@ -180,6 +180,40 @@ export const saveMealPlan = createAsyncThunk(
   }
 );
 
+// Cache meal plan - Lưu meal plan vào cache trước khi save vào database
+export const cacheMealPlan = createAsyncThunk(
+  'mealPlan/cache',
+  async ({ date, mealPlan }, { rejectWithValue }) => {
+    try {
+      const requestDate = formatDateString(date);
+      const requestData = { 
+        date: requestDate,
+        mealPlan: mealPlan
+      };
+      
+      console.log('=== CACHE MEAL PLAN REQUEST ===');
+      console.log('Request data:', requestData);
+      console.log('===============================');
+      
+      const response = await apiService.post(ENDPOINT.CACHE_MEAL_PLAN, requestData);
+      
+      console.log('API Response - Cache Meal Plan:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('=== CACHE MEAL PLAN ERROR ===');
+      console.error('Error type:', error.constructor?.name);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response?.data);
+      console.error('=============================');
+      
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Không thể cache thực đơn'
+      );
+    }
+  }
+);
+
 // Get meal plan from database
 export const getMealPlanFromDatabase = createAsyncThunk(
   'mealPlan/getFromDatabase',

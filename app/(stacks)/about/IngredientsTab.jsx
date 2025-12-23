@@ -83,7 +83,7 @@ export default function IngredientsTab() {
           {item.description}
         </Text>
 
-        {item.nutrition && (
+        {/* {item.nutrition && (
           <View style={styles.nutritionRow}>
             <Text style={styles.nutritionText}>
               🔥 {Math.round(item.nutrition.calories)} kcal
@@ -92,7 +92,7 @@ export default function IngredientsTab() {
               🥩 {Math.round(item.nutrition.protein)}g
             </Text>
           </View>
-        )}
+        )} */}
       </View>
 
       <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
