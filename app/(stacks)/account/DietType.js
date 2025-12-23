@@ -169,30 +169,35 @@ export default function DietType() {
 
     // Set selectedDiet khi có dữ liệu dietary preferences và diet types
     useEffect(() => {
-       
+        console.log('useEffect - Setting selected diet:', {
+            hasPreferences: !!currentDietaryPreferences,
+            hasDietTypes: dietTypes.length > 0,
+            dietTypeId: currentDietaryPreferences?.DietType_id,
+            initialDietLoaded
+        });
         
-        if (!initialDietLoaded && 
-            currentDietaryPreferences && 
+        if (currentDietaryPreferences && 
             dietTypes.length > 0 && 
-            currentDietaryPreferences.DietType_id) {
+            currentDietaryPreferences.DietType_id &&
+            !initialDietLoaded) {
             
             // Tìm diet có keyword matching với DietType_id
             const matchingDiet = dietTypes.find(diet => 
                 diet.keyword === currentDietaryPreferences.DietType_id
             );
             
-            console.log('Debug - searching for diet:', {
+            console.log('Debug - Matching diet search:', {
                 searchKeyword: currentDietaryPreferences.DietType_id,
-                availableDiets: dietTypes.map(d => ({ id: d._id, keyword: d.keyword, title: d.title })),
-                matchingDiet: matchingDiet ? { id: matchingDiet._id, keyword: matchingDiet.keyword, title: matchingDiet.title } : null
+                availableKeywords: dietTypes.map(d => d.keyword),
+                matchingDiet: matchingDiet ? matchingDiet.title : null
             });
             
             if (matchingDiet) {
-                console.log('Found matching diet, setting selectedDiet:', matchingDiet._id);
+                console.log('✅ Found matching diet, setting selectedDiet:', matchingDiet.title);
                 setSelectedDiet(matchingDiet._id);
                 setInitialDietLoaded(true);
             } else {
-                console.warn('No matching diet found for keyword:', currentDietaryPreferences.DietType_id);
+                console.warn('❌ No matching diet found for keyword:', currentDietaryPreferences.DietType_id);
                 setInitialDietLoaded(true);
             }
         }
@@ -343,21 +348,26 @@ export default function DietType() {
     // Reset state mỗi khi trang được focus
     useFocusEffect(
         useCallback(() => {
-            console.log('DietType screen focused - resetting state');
+            console.log('🔄 DietType screen focused - resetting state');
             setInitialDietLoaded(false);
-            setSelectedDiet(null);
             setHasChanges(false);
             
             // Lấy lại dietary preferences
             if (user && user._id) {
+                console.log('📡 Fetching dietary preferences for user:', user._id);
                 dispatch(getDietaryPreferences(user._id));
             }
             
+            // Đảm bảo có diet types
+            if (dietTypes.length === 0) {
+                console.log('📡 Fetching diet types');
+                dispatch(getDietTypes());
+            }
+            
             return () => {
-                // Cleanup khi unfocus
-                console.log('DietType screen unfocused');
+                console.log('👋 DietType screen unfocused');
             };
-        }, [user, dispatch])
+        }, [user, dispatch, dietTypes.length])
     );
 
     // Hiển thị loading skeleton khi đang tải dữ liệu, refreshing, hoặc khi dietTypes không phải là array

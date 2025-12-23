@@ -63,34 +63,35 @@ export default function MealTab() {
         });
     };
 
-    const renderMealItem = ({ item }) => (
-        <TouchableOpacity
-            style={styles.card}
-            onPress={() => handleViewMealDetail(item)}
-            activeOpacity={0.7}
-        >
-            <Image
-                source={
-                    item.mealImage
-                        ? { uri: item.mealImage }
-                        : require('../../../assets/images/food1.png')
-                }
-                style={styles.logo}
-            />
-            <Text style={styles.title} numberOfLines={2}>
-                {item.nameMeal}
-            </Text>
-
-            {/* Hiển thị category nếu có
-            {item.mealCategory && (
-                <View style={styles.categoryBadge}>
-                    <Text style={styles.categoryText}>
-                        {item.mealCategory.title}
-                    </Text>
-                </View>
-            )} */}
-        </TouchableOpacity>
-    );
+    const renderMealItem = ({ item }) => {
+        // Log để debug
+        console.log('Meal item:', item);
+        console.log('Meal image field:', item.image);
+        console.log('Meal mealImage field:', item.mealImage);
+        
+        // Thử nhiều field có thể chứa image
+        const imageUri = item.image || item.mealImage || item.imageUrl || item.picture;
+        
+        return (
+            <TouchableOpacity
+                style={styles.card}
+                onPress={() => handleViewMealDetail(item)}
+                activeOpacity={0.7}
+            >
+                <Image
+                    source={
+                        imageUri
+                            ? { uri: imageUri }
+                            : require('../../../assets/images/food1.png')
+                    }
+                    style={styles.logo}
+                />
+                <Text style={styles.title} numberOfLines={2}>
+                    {item.nameMeal}
+                </Text>
+            </TouchableOpacity>
+        );
+    };
 
     const renderEmptyComponent = () => (
         <View style={styles.emptyContainer}>
@@ -154,8 +155,11 @@ export default function MealTab() {
                         </TouchableOpacity>
                     )}
                 </View>
-
             </View>
+
+            {/* Log để debug */}
+            {console.log("Filtered meals count:", filteredMeals.length)}
+            {filteredMeals.length > 0 && console.log("First meal:", filteredMeals[0])}
 
             {/* Danh sách món ăn với FlatList */}
             <FlatList

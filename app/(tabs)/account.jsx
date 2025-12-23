@@ -40,14 +40,14 @@ const nutritionItems = [
     badge: null,
     rightComponent: 'arrow'
   },
-  {
-    id: 'goals',
-    title: 'Mục tiêu',
-    icon: require('../../assets/images/icons_account/s2.png'),
-    navigateTo: '/account/goals',
-    badge: null,
-    rightComponent: 'arrow'
-  },
+  // {
+  //   id: 'goals',
+  //   title: 'Mục tiêu',
+  //   icon: require('../../assets/images/icons_account/s2.png'),
+  //   navigateTo: '/account/goals',
+  //   badge: null,
+  //   rightComponent: 'arrow'
+  // },
   // {
   //   id: 'diet',
   //   title: 'Chế độ ăn',
@@ -56,15 +56,15 @@ const nutritionItems = [
   //   badge: null,
   //   rightComponent: 'arrow'
   // },
-  {
-    id: 'disliked-food',
-    title: 'Thực phẩm không thích',
-    icon: require('../../assets/images/icons_account/s4.png'),
-    navigateTo: '/account/disliked-food',
-    badge: 4,
-    badgeColor: '#E86F50',
-    rightComponent: 'arrow'
-  },
+  // {
+  //   id: 'disliked-food',
+  //   title: 'Thực phẩm không thích',
+  //   icon: require('../../assets/images/icons_account/s4.png'),
+  //   navigateTo: '/account/disliked-food',
+  //   badge: 4,
+  //   badgeColor: '#E86F50',
+  //   rightComponent: 'arrow'
+  // },
   // {
   //   id: 'cooking-skills',
   //   title: 'Kĩ năng nấu ăn',
@@ -78,14 +78,14 @@ const nutritionItems = [
 
 // Danh sách các mục trong phần Kế Hoạch
 const planItems = [
-  {
-    id: 'meal-schedule',
-    title: 'Kế hoạch thực đơn',
-    icon: require('../../assets/images/icons_account/s6-1.png'),
-    navigateTo: '/plan/meal-schedule',
-    badge: null,
-    rightComponent: 'arrow'
-  },
+  // {
+  //   id: 'meal-schedule',
+  //   title: 'Kế hoạch thực đơn',
+  //   icon: require('../../assets/images/icons_account/s6-1.png'),
+  //   navigateTo: '/plan/meal-schedule',
+  //   badge: null,
+  //   rightComponent: 'arrow'
+  // },
   {
     id: 'meal-history',
     title: 'Lịch sử thực đơn',
@@ -99,6 +99,14 @@ const planItems = [
     title: 'Cài đặt nhắc uống nước',
     icon: require('../../assets/images/icons_account/s7.png'),
     navigateTo: '/(stacks)/account/WaterReminderSettings',
+    badge: null,
+    rightComponent: 'arrow'
+  },
+  {
+    id: 'sleep-reminder',
+    title: 'Cài đặt nhắc đi ngủ',
+    icon: require('../../assets/images/icons_account/sleep.png'),
+    navigateTo: '/(stacks)/account/SleepReminderSettings',
     badge: null,
     rightComponent: 'arrow'
   },

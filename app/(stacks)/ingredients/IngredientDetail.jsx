@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Animated, ActivityIndicator } from 'react-native';
+import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Animated, ActivityIndicator, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { getIngredientDetail } from '../../../redux/thunk/ingredientThunk';
+import { WebView } from 'react-native-webview';
 
 // Skeleton Loading Component
 const SkeletonBox = ({ width, height, style }) => {
@@ -45,6 +46,7 @@ export default function IngredientDetail() {
     const router = useRouter();
     const dispatch = useDispatch();
     const params = useLocalSearchParams();
+    const [isWebViewModalVisible, setIsWebViewModalVisible] = useState(false);
 
     // Redux selectors
     const { ingredientDetails, ingredientDetailLoading, ingredientDetailError } = useSelector(
@@ -62,6 +64,9 @@ export default function IngredientDetail() {
     // Lấy data từ Redux store
     const ingredientDetail = ingredientDetails[params.id];
 
+    console.log("ingredientDetails[params.id] : ", ingredientDetails[params.id])
+
+
     // Skeleton Loading UI
     if (ingredientDetailLoading && !ingredientDetail) {
         return (
@@ -77,13 +82,13 @@ export default function IngredientDetail() {
                 <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
                     {/* Skeleton Category */}
                     <SkeletonBox width={120} height={20} style={{ alignSelf: 'flex-end', marginBottom: 10 }} />
-                    
+
                     {/* Skeleton Title */}
                     <SkeletonBox width="60%" height={24} style={{ marginBottom: 10 }} />
-                    
+
                     {/* Skeleton Description */}
                     <SkeletonBox width="100%" height={80} style={{ marginBottom: 20 }} />
-                    
+
                     {/* Skeleton Nutrition */}
                     <SkeletonBox width={200} height={20} style={{ marginBottom: 10 }} />
                     <View style={styles.nutritionContainer}>
@@ -108,7 +113,7 @@ export default function IngredientDetail() {
                 </TouchableOpacity>
                 <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B" />
                 <Text style={styles.errorText}>{ingredientDetailError}</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={styles.retryButton}
                     onPress={() => dispatch(getIngredientDetail(params.id))}
                 >
@@ -131,27 +136,38 @@ export default function IngredientDetail() {
     }
 
     // Extract data
-    const nutrition = ingredientDetail.nutrition || {};
+    const nutrition = ingredientDetail.nutrition || [];
     const commonUses = ingredientDetail.commonUses || [];
     const defaultAmount = ingredientDetail.defaultAmount || 100;
     const defaultUnit = ingredientDetail.defaultUnit || 'g';
+
+    // Nhóm nutrition theo từng dòng 4 items
+    const groupNutrition = (items) => {
+        const grouped = [];
+        for (let i = 0; i < items.length; i += 4) {
+            grouped.push(items.slice(i, i + 4));
+        }
+        return grouped;
+    };
+
+    const groupedNutrition = groupNutrition(nutrition);
 
     return (
         <View style={styles.container}>
             {/* Ảnh Header */}
             <View style={styles.imageContainer}>
-                <Image 
+                <Image
                     source={
-                        ingredientDetail.ingredientImage 
-                            ? { uri: ingredientDetail.ingredientImage } 
+                        ingredientDetail.ingredientImage
+                            ? { uri: ingredientDetail.ingredientImage }
                             : require('../../../assets/images/logo.png')
-                    } 
-                    style={styles.image} 
+                    }
+                    style={styles.image}
                 />
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                     <Ionicons name="chevron-back" size={26} color="#fff" />
                 </TouchableOpacity>
-                
+
                 <View style={styles.categoryBadge}>
                     <Text style={styles.categoryBadgeText}>
                         {ingredientDetail.ingredientCategory?.title || 'Thực phẩm'}
@@ -160,48 +176,40 @@ export default function IngredientDetail() {
             </View>
 
             {/* Nội dung */}
-            <ScrollView 
+            <ScrollView
                 style={styles.scrollContainer}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
                 <Text style={styles.ingredientName}>{ingredientDetail.nameIngredient}</Text>
-                
+
                 <Text style={styles.description}>{ingredientDetail.description}</Text>
 
                 {/* Dinh dưỡng */}
-                <Text style={styles.sectionTitle}>
-                    Giá trị dinh dưỡng (trong {defaultAmount}{defaultUnit})
-                </Text>
+                {nutrition.length > 0 && (
+                    <>
+                        <Text style={styles.sectionTitle}>
+                            Giá trị dinh dưỡng (trong {defaultAmount}{defaultUnit})
+                        </Text>
 
-                <View style={styles.nutritionContainer}>
-                    {/* Calories */}
-                    <View style={styles.nutritionItemCalories}>
-                        <Text style={styles.nutritionValue}>{Math.round(nutrition.calories || 0)}</Text>
-                        <Text style={styles.nutritionName}>Calories</Text>
-                    </View>
-
-                    {/* 3 nhóm còn lại */}
-                    <View style={styles.nutritionItems}>
-                        <View style={styles.nutritionItem}>
-                            <Text style={styles.nutritionValue}>{Math.round(nutrition.protein || 0)}g</Text>
-                            <Text style={styles.nutritionName}>Protein</Text>
-                            <View style={[styles.nutritionBar, styles.proteinBar]} />
+                        <View style={styles.nutritionContainer}>
+                            {groupedNutrition.map((row, rowIndex) => (
+                                <View key={rowIndex} style={styles.nutritionRow}>
+                                    {row.map((item, index) => (
+                                        <View key={item._id || index} style={styles.nutritionItem}>
+                                            <Text style={styles.nutritionValue}>
+                                                {item.value} {item.unit}
+                                            </Text>
+                                            <Text style={styles.nutritionName} numberOfLines={2}>
+                                                {item.name}
+                                            </Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            ))}
                         </View>
-
-                        <View style={styles.nutritionItem}>
-                            <Text style={styles.nutritionValue}>{Math.round(nutrition.carbs || 0)}g</Text>
-                            <Text style={styles.nutritionName}>Carbs</Text>
-                            <View style={[styles.nutritionBar, styles.carbsBar]} />
-                        </View>
-
-                        <View style={styles.nutritionItem}>
-                            <Text style={styles.nutritionValue}>{Math.round(nutrition.fat || 0)}g</Text>
-                            <Text style={styles.nutritionName}>Fat</Text>
-                            <View style={[styles.nutritionBar, styles.fatBar]} />
-                        </View>
-                    </View>
-                </View>
+                    </>
+                )}
 
                 {/* Công dụng */}
                 {commonUses.length > 0 && (
@@ -216,7 +224,76 @@ export default function IngredientDetail() {
                         </View>
                     </>
                 )}
+
+                {/* WebView - Tra cứu dinh dưỡng */}
+                <View style={styles.webviewSection}>
+                    <View style={styles.webviewHeader}>
+                        <Text style={styles.sectionTitle}>Tra cứu giá trị dinh dưỡng</Text>
+                        <TouchableOpacity 
+                            style={styles.expandButton}
+                            onPress={() => setIsWebViewModalVisible(true)}
+                        >
+                            <Ionicons name="expand-outline" size={24} color="#35A55E" />
+                        </TouchableOpacity>
+                    </View>
+                    
+                    <View style={styles.webviewContainer}>
+                        <WebView
+                            source={{ uri: 'https://viendinhduong.vn/vi/cong-cu-va-tien-ich/gia-tri-dinh-duong-thuc-pham' }}
+                            style={styles.webview}
+                            startInLoadingState={true}
+                            javaScriptEnabled={true}
+                            domStorageEnabled={true}
+                            renderLoading={() => (
+                                <ActivityIndicator
+                                    color="#35A55E"
+                                    size="large"
+                                    style={styles.webviewLoader}
+                                />
+                            )}
+                        />
+                    </View>
+                </View>
             </ScrollView>
+
+            {/* Modal WebView toàn màn hình */}
+            <Modal
+                visible={isWebViewModalVisible}
+                animationType="slide"
+                onRequestClose={() => setIsWebViewModalVisible(false)}
+            >
+                <View style={styles.modalContainer}>
+                    {/* Header Modal */}
+                    <View style={styles.modalHeader}>
+                        <TouchableOpacity 
+                            style={styles.modalCloseButton}
+                            onPress={() => setIsWebViewModalVisible(false)}
+                        >
+                            <Ionicons name="close" size={28} color="#333" />
+                        </TouchableOpacity>
+                        <Text style={styles.modalTitle}>viendinhduong.vn</Text>
+                        <View style={{ width: 40 }} />
+                    </View>
+
+                    {/* WebView toàn màn hình */}
+                    <WebView
+                        source={{ uri: 'https://viendinhduong.vn/vi/cong-cu-va-tien-ich/gia-tri-dinh-duong-thuc-pham' }}
+                        style={styles.modalWebview}
+                        startInLoadingState={true}
+                        javaScriptEnabled={true}
+                        domStorageEnabled={true}
+                        renderLoading={() => (
+                            <View style={styles.modalLoadingContainer}>
+                                <ActivityIndicator
+                                    color="#35A55E"
+                                    size="large"
+                                />
+                                <Text style={styles.modalLoadingText}>Đang tải...</Text>
+                            </View>
+                        )}
+                    />
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -296,45 +373,31 @@ const styles = StyleSheet.create({
         padding: 16,
         marginTop: 8,
     },
-    nutritionItemCalories: {
-        alignItems: 'center',
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderColor: '#E0E0E0',
-        marginBottom: 16,
-    },
-    nutritionItems: {
+    nutritionRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginBottom: 16,
+        gap: 8,
     },
     nutritionItem: {
-        alignItems: 'center',
         flex: 1,
+        alignItems: 'center',
+        backgroundColor: '#F8F9FA',
+        padding: 12,
+        borderRadius: 12,
+        minHeight: 70,
+        justifyContent: 'center',
     },
     nutritionValue: {
-        fontSize: 20,
+        fontSize: 16,
         fontWeight: 'bold',
-        color: '#333',
+        color: '#35A55E',
+        marginBottom: 4,
     },
     nutritionName: {
-        fontSize: 13,
+        fontSize: 11,
         color: '#666',
-        marginTop: 4,
-        marginBottom: 8,
-    },
-    nutritionBar: {
-        width: '80%',
-        height: 4,
-        borderRadius: 2,
-    },
-    proteinBar: {
-        backgroundColor: '#35A55E',
-    },
-    carbsBar: {
-        backgroundColor: '#FF9500',
-    },
-    fatBar: {
-        backgroundColor: '#FF6B6B',
+        textAlign: 'center',
     },
     usesContainer: {
         flexDirection: 'row',
@@ -343,7 +406,7 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     useChip: {
-        backgroundColor: 'rgba(53, 165, 94, 0.1)', 
+        backgroundColor: 'rgba(53, 165, 94, 0.1)',
         borderRadius: 16,
         paddingVertical: 8,
         paddingHorizontal: 14,
@@ -371,5 +434,86 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '600',
+    },
+    webviewSection: {
+        marginTop: 20,
+    },
+    webviewHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 0,
+        marginTop: 0,
+    },
+    expandButton: {
+        padding: 8,
+        backgroundColor: 'rgba(53, 165, 94, 0.1)',
+        borderRadius: 8,
+    },
+    webviewContainer: {
+        height: 600,
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        overflow: 'hidden',
+        marginTop: 8,
+        marginBottom: 20,
+    },
+    webview: {
+        flex: 1,
+    },
+    webviewLoader: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        marginLeft: -20,
+        marginTop: -20,
+    },
+    
+    // Modal styles
+    modalContainer: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        paddingTop: 50,
+        backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+    },
+    modalCloseButton: {
+        padding: 4,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#333',
+    },
+    modalWebview: {
+        flex: 1,
+    },
+    modalLoadingContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    },
+    modalLoadingText: {
+        marginTop: 12,
+        fontSize: 14,
+        color: '#666',
     },
 });
