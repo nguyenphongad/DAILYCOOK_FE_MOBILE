@@ -77,23 +77,49 @@ const PersonalInfo = () => {
 
     // Update diet type value khi có data
     useEffect(() => {
-        if (currentDietaryPreferences && dietTypes.length > 0) {
+        console.log('PersonalInfo - Update diet type effect:', {
+            hasPreferences: !!currentDietaryPreferences,
+            hasDietTypes: dietTypes.length > 0,
+            dietTypeId: currentDietaryPreferences?.DietType_id,
+            isLoading: dietaryPreferencesLoading
+        });
+
+        if (dietaryPreferencesLoading) {
+            // Đang loading
+            setPersonalInfo(prev => ({
+                ...prev,
+                dietType: {
+                    ...prev.dietType,
+                    value: 'Đang tải...'
+                }
+            }));
+            return;
+        }
+
+        if (currentDietaryPreferences && dietTypes.length > 0 && currentDietaryPreferences.DietType_id) {
             const dietTypeKeyword = currentDietaryPreferences.DietType_id;
             const matchingDiet = dietTypes.find(diet => diet.keyword === dietTypeKeyword);
+            
+            console.log('PersonalInfo - Matching diet:', {
+                searchKeyword: dietTypeKeyword,
+                availableKeywords: dietTypes.map(d => d.keyword),
+                matchingDiet: matchingDiet ? matchingDiet.title : null
+            });
             
             setPersonalInfo(prev => ({
                 ...prev,
                 dietType: {
                     ...prev.dietType,
-                    value: matchingDiet ? matchingDiet.title : 'loading...'
+                    value: matchingDiet ? matchingDiet.title : 'Chưa chọn chế độ ăn'
                 }
             }));
-        } else if (!dietaryPreferencesLoading) {
+        } else {
+            // Không có data
             setPersonalInfo(prev => ({
                 ...prev,
                 dietType: {
                     ...prev.dietType,
-                    value: 'loading...'
+                    value: 'Chưa chọn chế độ ăn'
                 }
             }));
         }

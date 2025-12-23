@@ -271,7 +271,7 @@ export default function PageRenderAI() {
         mealSuggestions[servingTime] = mealTime.meals.map(meal => {
           const mealDetail = meal.mealDetail;
           const calories = mealDetail.recipeDetail?.nutrition?.calories || 0;
-          return `${mealDetail.nameMeal} - ${calories} kcal`;
+          return `${mealDetail.nameMeal}`;
         });
       });
     }
